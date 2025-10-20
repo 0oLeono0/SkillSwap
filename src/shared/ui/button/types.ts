@@ -9,6 +9,6 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode;
   leftIcon?: ButtonIconProps;
   rightIcon?: ButtonIconProps;
-  variant: 'primary' | 'secondary' | 'tertiary';
+  variant: 'primary' | 'secondary' | 'tertiary' | 'empty';
   className?: string
 };

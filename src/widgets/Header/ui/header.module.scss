@@ -1,0 +1,78 @@
+@import '/src/app/styles/_variables.css';
+
+.header {
+  background-color: var(--bg-color-secondary);
+  margin: 32px 36px;
+  color: var(--font-color-primary);
+
+  .logo {
+    display: flex;
+    color: inherit;
+    text-decoration: none;
+    align-items: center;
+    gap: 12px;
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-lg);
+    letter-spacing: var(--letter-spacing-title);
+    line-height: var(--font-line-lg);
+    font-family: var(--font-family-title);
+  }
+
+  .navGroup {
+    display: flex;
+    gap: 32px;
+  }
+
+  .liGroup {
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+    width: 189px;
+  }
+
+  /* TODO: временный класс для представления вида с searchInput потом убрать, и в Header тоже*/
+  .searchInput {
+    min-width: 402px;
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 12px 24px;
+    list-style: none;
+    padding: 5px 0 0 0;
+    font-family: var(--font-family-main);
+    line-height: var(--font-line-md);
+  }
+
+  .icons {
+    display: grid;
+    grid-template-columns: repeat(3, 46px);
+  }
+
+  .buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+
+    & a {
+      text-decoration: none;
+    }
+  }
+
+  .link {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .active {
+    cursor: default;
+  }
+}
+
+.copyright {
+  color: var(--font-color-secondary);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-main);
+  font-family: var(--font-family-main);
+}
