@@ -1,0 +1,86 @@
+.card {
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    gap: 20px;
+    background-color: var(--bg-color-secondary);
+    min-width: 324px;
+}
+
+.author {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+}
+
+.avatar {
+    inline-size: 100px;
+    block-size: 100px;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.author-name {
+    font-family: var(--font-family-card-username), sans-serif;
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-md);
+    line-height: var(--font-line-md);
+    letter-spacing: var(--letter-spacing-title);
+}
+
+.author-details-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.author-details {
+    font-family: var(--font-family-main), sans-serif;
+    font-size: var(--font-size-sm);
+    line-height: var(--font-line-xs);
+    letter-spacing: var(--letter-spacing-main);
+    font-weight: var(--font-weight-regular);
+}
+
+.about {
+    font-family: var(--font-family-main), sans-serif;
+    font-size: var(--font-size-sm);
+    line-height: var(--font-line-md);
+    letter-spacing: var(--letter-spacing-main);
+    margin: 0;
+}
+
+.like-button {
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.skills {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tags {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tag-title {
+    font-family: var(--font-family-main), sans-serif;
+    font-size: var(--font-size-sm);
+    line-height: var(--font-line-md);
+    font-weight: var(--font-weight-medium);
+}
+
+.tag-list {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+}
+

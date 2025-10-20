@@ -1,0 +1,44 @@
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+}
+
+.option {
+    cursor: pointer;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.label {
+    font-family: var(--font-family-main), sans-serif;
+    font-size: var(--font-size-sm);
+    line-height: var(--font-line-md);
+}
+
+.options {
+    margin-left: 32px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+}
+
+.options-opened {
+    max-height: 1000px;
+}
+
+.opened-icon {
+    cursor: pointer;
+    transition: transform 0.25s ease;
+    outline: none;
+}
+
+.rotated {
+    transform: rotate(-180deg);
+}

@@ -1,0 +1,36 @@
+.panel {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 40px;
+    background-color: var(--bg-color-secondary);
+    border-radius: var(--border-radius);
+}
+
+.title {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.reset {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    line-height: var(--font-line-lg);
+    color: var(--font-color-accent);
+    cursor: pointer;
+}
+
+.filters {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.filter {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}

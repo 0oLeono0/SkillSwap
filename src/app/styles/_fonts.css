@@ -1,0 +1,72 @@
+/* Roboto */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    local('Roboto Regular'),
+    url('../../shared/assets/fonts/Roboto-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src:
+    local('Roboto Medium'),
+    url('../../shared/assets/fonts/Roboto-Medium.woff2') format('woff2');
+}
+
+/* Jost */
+@font-face {
+  font-family: 'Jost';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    local('Jost Regular'),
+    url('../../shared/assets/fonts/Jost-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Jost';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src:
+    local('Jost Medium'),
+    url('../../shared/assets/fonts/Jost-Medium.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Jost';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src:
+    local('Jost SemiBold'),
+    url('../../shared/assets/fonts/Jost-SemiBold.woff2') format('woff2');
+}
+
+/* Open Sans */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    local('Open Sans Regular'),
+    url('../../shared/assets/fonts/OpenSans-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src:
+    local('Open Sans SemiBold'),
+    url('../../shared/assets/fonts/OpenSans-SemiBold.woff2') format('woff2');
+}

@@ -1,0 +1,94 @@
+@import '../../../app/styles/_variables.css';
+
+.input {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border: none;
+  min-width: 350px;
+}
+
+.input[data-disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.input.error .inputFormWrap {
+  border-color: var(--error-color);
+}
+
+.input.error .inputHint {
+  color: var(--error-color);
+}
+
+.inputTitle {
+  font-family: var(--font-family-main);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-sm);
+  line-height: var(--font-line-md);
+  letter-spacing: 2%;
+}
+
+.inputFormWrap {
+  display: flex;
+  border: 1px solid var(--font-color-secondary);
+  background-color: var(--bg-color-secondary);
+  border-radius: 12px;
+  padding-top: 12px;
+  padding-right: 20px;
+  padding-bottom: 12px;
+  padding-left: 20px;
+  gap: 8px;
+  align-items: center;
+}
+
+.inputForm {
+  display: inline-flex;
+  flex-grow: 1;
+  padding: 0;
+  gap: 10px;
+  opacity: 1;
+  border: none;
+  font-family: var(--font-family-main);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-sm);
+  line-height: var(--font-line-md);
+  caret-color: var(--font-color-accent);
+  letter-spacing: var(--letter-spacing-main);
+}
+
+.inputForm:focus {
+  border: none;
+  outline: none;
+}
+
+.inputHint {
+  font-family: var(--font-family-main);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-xs);
+  line-height: var(--font-line-xs);
+  letter-spacing: var(--letter-spacing-main);
+}
+
+.leftIcon,
+.rightIcon {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+}
+
+.iconButton {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.searchInput {
+  width: 529px;
+}
+.searchInputWrap {
+  border: none;
+  padding-inline-start: 12px;
+}
+

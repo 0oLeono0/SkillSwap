@@ -1,0 +1,20 @@
+.title {
+  margin: 0;
+  color: inherit;
+}
+
+.title--xl {
+  font: var(--font-title-xl); 
+}
+
+.title--lg {
+  font: var(--font-title-lg); 
+}
+
+.title--md {
+  font: var(--font-title-md); 
+}
+
+.title--sm {
+  font: var(--font-title-sm); 
+}

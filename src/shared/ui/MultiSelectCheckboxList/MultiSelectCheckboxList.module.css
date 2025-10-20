@@ -1,0 +1,19 @@
+.select {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item {
+  display: flex;
+  flex-direction: row;
+  padding: 4px 0;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.label {
+  font-family: var(--font-family-main), sans-serif;
+  font-size: var(--font-size-sm);
+  line-height: var(--font-line-md);
+}

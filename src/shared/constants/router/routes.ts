@@ -1,0 +1,24 @@
+export const ROUTES = {
+  HOME: '/',
+  CATALOG: '/catalog',
+  PROFILE: {
+    ROOT: '/profile',
+    CHILDREN: {
+      INDEX: '',
+      REQUESTS: 'requests',
+      EXCHANGES: 'exchanges',
+      FAVORITES: 'favorites',
+      SKILLS: 'skills',
+    },
+  },
+  CREATE: '/create',
+  LOGIN: '/login',
+  REGISTER: '/register',
+  ABOUT: '/about',
+  CONTACTS: '/contacts',
+  BLOG: '/blog',
+  POLICY: '/policy',
+  TERMS: '/terms',
+  NOTFOUND: '*',
+  SERVER_ERROR: '/500',
+} as const;

@@ -1,0 +1,18 @@
+.more {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    line-height: var(--font-line-lg);
+    color: var(--font-color-accent);
+    cursor: pointer;
+    gap: 4px;
+}
+
+.icon {
+    transition: transform 0.3s ease;
+}
+
+.icon-open {
+    transform: rotate(-180deg);
+    transition: transform 0.3s ease;
+}

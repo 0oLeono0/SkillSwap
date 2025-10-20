@@ -1,0 +1,95 @@
+.toast {
+  position: relative;
+  z-index: 500;
+  bottom: 36px;
+  left: 36px;
+  width: 340px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+  background: var(--button-color-hover);
+  color: var(--font-color-primary);
+  font-family: var(--font-family-title);
+  font-size: var(--font-size-md);
+  text-align: left;
+  outline: none;
+}
+
+.toastCloseButton {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  right: 4px;
+  top: 4px;
+  border: none;
+  cursor: pointer;
+  background-color: transparent;
+}
+
+.toastButton {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 6px;
+  background-color: var(--bg-color-secondary);
+  font-family: var(--font-family-main);
+  color: var(--font-color-primary);
+  font-size: 12px;
+  padding: 8px 12px;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.toast:hover .toastButton {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.toastIkon {
+  width: 24px;
+  height: 24px;
+}
+
+.showToast {
+    visibility: visible;
+    opacity: 1;
+    transition:
+        opacity 0.5s ease-in-out,
+        visibility 0s;
+    animation: show-animation 0.5s ease-in-out;
+}
+
+.hiddenToast {
+    visibility: hidden;
+    opacity: 0;
+    transition:
+        visibility 0s 0.5s,
+        opacity 0.5s ease-in-out;
+}
+
+.absoluteToast {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+}
+
+@keyframes show-animation {
+    from {
+        transform: translateY(8px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}

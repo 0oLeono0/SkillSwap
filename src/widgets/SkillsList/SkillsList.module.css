@@ -1,0 +1,28 @@
+.skillsList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(324px, 1fr));
+  gap: 20px;
+  padding: 20px;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .skillsList {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 16px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .skillsList {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.emptyMessage {
+  font-family: var(--font-family-main);
+  font-size: var(--font-size-md);
+  color: var(--font-color-secondary);
+  text-align: center;
+}

@@ -1,0 +1,84 @@
+:root {
+  /* Семейства шрифтов */
+  --font-family-main: 'Roboto', sans-serif;
+  --font-family-title: 'Jost', sans-serif;
+  --font-family-card-username: 'Open Sans', sans-serif;
+
+  /* Размер шрифтов */
+  --font-size-xl: 32px;
+  --font-size-lg: 24px;
+  --font-size-md: 20px;
+  --font-size-sm: 16px;
+  --font-size-xs: 12px;
+
+  /* Интерлиньяж */
+  --font-line-xl: 40px;
+  --font-line-lg: 32px;
+  --font-line-ml: 28px;
+  --font-line-md: 24px;
+  --font-line-sm: 20px; /* имена в карточках */
+  --font-line-xs: 16px;
+
+  /* Межбуквенный интервал */
+  --letter-spacing-title: -0.011em;
+  --letter-spacing-main: 0.02em;
+
+  /* Переменные веса шрифтов */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  /* Шрифты для текста (вес, размер, интерлиньяж, семейство шрифта) */
+  --logo-font: var(--font-weight-semibold) var(--font-size-lg) / var(--font-line-lg) var(--font-family-title); /* лого */
+  --card-username-font: var(--font-weight-semibold) var(--font-size-md) / var(--font-line-md) var(--font-family-card-username); /* имя в карточке */
+  
+  --font-title-xl: var(--font-weight-medium) var(--font-size-xl) / var(--font-line-xl) var(--font-family-title); /* заголовок h1 */
+  --font-title-lg: var(--font-weight-medium) var(--font-size-lg) / var(--font-line-lg) var(--font-family-title); /* заголовок h2 */
+  --font-title-md: var(--font-weight-medium) var(--font-size-md) / var(--font-line-md) var(--font-family-title); /* заголовок h3 */
+  --font-title-sm: var(--font-weight-medium) var(--font-size-sm) / var(--font-line-sm) var(--font-family-main); /* заголовок h4 */
+
+  --font-text-sm: var(--font-weight-regular) var(--font-size-sm) / var(--font-line-sm) var(--font-family-main); /* основной текст */
+  --font-text-xs: var(--font-weight-regular) var(--font-size-xs) / var(--font-line-xs) var(--font-family-main); /* подписи */
+
+  /* Переменные цвета фона */
+  --bg-color-primary: #F9FAF7;
+  --bg-color-secondary: #FFF;
+
+  /* Переменные цвета текста */
+  --font-color-primary: #253017;
+  --font-color-secondary: #69735D;
+  --font-color-accent: #508826; /* text link, button pressed */
+  --font-color-disabled: #9CA197;
+
+  /* Переменные цвета кнопки */
+  --button-color-accent: #ABD27A;
+  --button-color-hover: #DEEBC5;
+  --button-color-active: var(--font-color-accent);
+  --button-color-disabled: #E4E8DF;
+
+  /* Переменные цвета границ кнопки */
+  --button-border-color-accent: var(--button-color-accent);
+  --button-border-color-hover: var(--button-color-hover);
+  --button-border-color-active: var(--button-color-active);
+  --button-border-color-disabled: var(--button-color-disabled);
+
+  /* Переменные цвета дропдауна */
+	--select-color-border: var(--font-color-secondary);
+	--select-color-hover: #E4E8DF;
+  --select-color-disabled: #E4E8DF;
+
+  /* Переменные цвета тегов */
+  --tag-color-business: #EEE7F7;
+  --tag-color-art: #F7E7F2;
+  --tag-color-languages: #EBE5C5;
+  --tag-color-education: #E7F2F6;
+  --tag-color-home: #F7EBE5;
+  --tag-color-health: #E9F7E7;
+  --tag-color-plus: #E8ECF7;
+
+  /* Переменные цвета ошибок/предупреждений */
+  --alarm-color: #E0796E;
+  --error-color: #BF3920;
+
+  --border-radius: 12px;
+}
