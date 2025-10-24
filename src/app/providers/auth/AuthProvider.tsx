@@ -1,5 +1,12 @@
-import React, { createContext, useEffect, useMemo, useState } from 'react';
-import type { User } from 'src/entities/User/types';
+import {
+  createContext,
+  useEffect,
+  useMemo,
+  useState,
+  type FC,
+  type ReactNode,
+} from 'react';
+import type { User } from '@/entities/User/types';
 
 export interface AuthContextType {
   user: User | null;
@@ -29,17 +36,19 @@ function readTokenFromStorage(): string | null {
   return localStorage.getItem(AUTH_TOKEN_KEY);
 }
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => readUserFromStorage());
   const [token, setToken] = useState<string | null>(() => readTokenFromStorage());
 
-  const login = (u: User, t: string) => {
-    setUser(u);
-    setToken(t);
+  const login = (nextUser: User, authToken: string) => {
+    setUser(nextUser);
+    setToken(authToken);
     try {
-      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(u));
-      localStorage.setItem(AUTH_TOKEN_KEY, t);
-    } catch {}
+      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(nextUser));
+      localStorage.setItem(AUTH_TOKEN_KEY, authToken);
+    } catch (error) {
+      console.warn('[AuthProvider] Failed to persist auth data', error);
+    }
   };
 
   const logout = () => {
@@ -48,7 +57,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       localStorage.removeItem(AUTH_USER_KEY);
       localStorage.removeItem(AUTH_TOKEN_KEY);
-    } catch {}
+    } catch (error) {
+      console.warn('[AuthProvider] Failed to clear auth data', error);
+    }
   };
 
   useEffect(() => {

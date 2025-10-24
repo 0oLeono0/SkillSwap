@@ -7,12 +7,17 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       const item = window.localStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
+      console.warn('[useLocalStorage] Failed to read key', key, error);
       return initialValue;
     }
   });
   const setValue = (value: T) => {
     setStoredValue(value);
-    window.localStorage.setItem(key, JSON.stringify(value));
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+      console.warn('[useLocalStorage] Failed to persist key', key, error);
+    }
   };
   return [storedValue, setValue] as const;
 }

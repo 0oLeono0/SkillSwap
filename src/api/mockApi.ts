@@ -3,8 +3,12 @@ import type { User, City, SkillCategory } from './types';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const createError = (message: string, status: number) => {
-  const error = new Error(message) as any;
+interface ApiError extends Error {
+  status: number;
+}
+
+const createError = (message: string, status: number): ApiError => {
+  const error: ApiError = new Error(message) as ApiError;
   error.status = status;
   return error;
 };

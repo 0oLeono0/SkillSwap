@@ -1,4 +1,11 @@
-import React, { createContext, useEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  useEffect,
+  useMemo,
+  useState,
+  type FC,
+  type ReactNode,
+} from 'react';
 
 export type Theme = 'light' | 'dark';
 
@@ -20,14 +27,16 @@ function initialTheme(): Theme {
   return prefersDark ? 'dark' : 'light';
 }
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => initialTheme());
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     try {
       localStorage.setItem(THEME_KEY, theme);
-    } catch {}
+    } catch (error) {
+      console.warn('[ThemeProvider] Failed to persist theme', error);
+    }
   }, [theme]);
 
   useEffect(() => {

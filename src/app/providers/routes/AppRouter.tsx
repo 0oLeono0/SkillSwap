@@ -1,4 +1,5 @@
-import React, { Suspense } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { Suspense, type FC } from 'react';
 import { createBrowserRouter, useLocation, Outlet, NavLink } from 'react-router-dom';
 import BaseLayout from '@/app/layouts/BaseLayout';
 import { NotFound } from '@/pages/NotFound';
@@ -7,25 +8,25 @@ import { ROUTES } from '@/shared/constants';
 import { ProtectedRoute } from '@/shared/lib/ProtectedRoute/ProtectedRoute';
 import Catalog from '@/pages/Catalog/ui/Catalog';
 
-const Stub: React.FC<{ title: string }> = ({ title }) => {
+const Stub: FC<{ title: string }> = ({ title }) => {
   const { pathname } = useLocation();
   return (
     <div style={{ padding: 24 }}>
       <h1 style={{ margin: 0 }}>{title}</h1>
       <p style={{ opacity: 0.7, marginTop: 8 }}>
-        Путь: <code>{pathname}</code>
+        Текущий путь: <code>{pathname}</code>
       </p>
     </div>
   );
 };
 
-const LayoutStub: React.FC<{ title: string }> = ({ title }) => {
+const LayoutStub: FC<{ title: string }> = ({ title }) => {
   const { pathname } = useLocation();
   return (
     <div style={{ padding: 24 }}>
       <h1 style={{ margin: 0 }}>{title}</h1>
       <p style={{ opacity: 0.7, marginTop: 8 }}>
-        Путь: <code>{pathname}</code>
+        Текущий путь: <code>{pathname}</code>
       </p>
 
       <nav style={{ display: 'flex', gap: 12, marginTop: 12 }}>
