@@ -6,7 +6,7 @@ export const SkillCategories = {
   EDUCATION: 'Образование и развитие',
   LANGUAGES: 'Иностранные языки',
   ART: 'Творчество и искусство',
-  BUSINESS: 'Бизнес и карьера'
+  BUSINESS: 'Бизнес и карьера',
 } as const;
 
 export type SkillCategory = typeof SkillCategories[keyof typeof SkillCategories];

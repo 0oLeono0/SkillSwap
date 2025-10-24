@@ -3,49 +3,55 @@ import { Tag } from './Tag';
 import { CATEGORY_CLASS_MAP, type TagCategory, type TagProps } from './types';
 
 const meta: Meta<typeof Tag> = {
-  title: 'UI/Tags',
+  title: 'UI/Tag',
   component: Tag,
   parameters: {
-    layout: 'centered'
-  }
+    layout: 'centered',
+  },
 };
 
 export default meta;
 
+const categoryOptions = Object.keys(CATEGORY_CLASS_MAP) as TagCategory[];
+
 export const Categories: StoryObj<typeof Tag> = {
   render: () => (
     <div style={{ display: 'flex', gap: 20, flexDirection: 'column', padding: 16 }}>
-      {Object.keys(CATEGORY_CLASS_MAP).map((cat) => (
-        <Tag key={cat} category={cat as TagCategory}>{cat}</Tag>
+      {categoryOptions.map((category) => (
+        <Tag key={category} category={category}>
+          {category}
+        </Tag>
       ))}
       <Tag>+4</Tag>
     </div>
-  )
+  ),
 };
 
 export const Variants: StoryObj<typeof Tag> = {
   argTypes: {
     category: {
       control: 'select',
-      options: Object.keys(CATEGORY_CLASS_MAP),
-      description: 'Категория тега'
+      options: categoryOptions,
+      description: 'Категория навыка',
     },
     children: {
       control: 'text',
-      description: 'Содержимое тега'
+      description: 'Текст внутри тега',
     },
     className: {
       control: 'text',
-      description: 'Дополнительные CSS-классы'
-    }
+      description: 'Дополнительный CSS-класс',
+    },
   },
   args: {
-    category: 'Здоровье и лайфстайл',
-    children: 'Пример тега'
+    category: categoryOptions[0],
+    children: 'Играть на барабанах',
   },
   render: ({ children, className, category }: TagProps) => (
     <div style={{ display: 'flex', gap: 20, flexDirection: 'column', padding: 16 }}>
-      <Tag className={className} category={category}>{children}</Tag>
+      <Tag className={className} category={category}>
+        {children}
+      </Tag>
     </div>
-  )
+  ),
 };

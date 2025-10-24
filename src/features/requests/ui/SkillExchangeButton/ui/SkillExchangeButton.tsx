@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Toast } from '@/shared/ui/toast/Toast';
+import { Toast } from '@/shared/ui/Toast/Toast';
 import { createRequest } from '@/features/requests/model/actions';
 
 interface SkillExchangeButtonProps {

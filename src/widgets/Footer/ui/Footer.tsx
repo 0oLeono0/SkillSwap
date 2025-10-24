@@ -17,11 +17,9 @@ function Footer() {
             <li key={link.path} className={styles.item}>
               <NavLink
                 to={link.path}
-                end={link.path === '/'}
+                end={false}
                 className={({ isActive }) =>
-                  isActive
-                    ? `${styles.link} ${styles.active}`
-                    : styles.link
+                  isActive ? `${styles.link} ${styles.active}` : styles.link
                 }
               >
                 {link.label}

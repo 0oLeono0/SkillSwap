@@ -10,6 +10,8 @@ export const CATEGORY_CLASS_MAP = {
   [SkillCategories.BUSINESS]: 'business'
 } as const;
 
+export type TagCategory = keyof typeof CATEGORY_CLASS_MAP;
+
 export interface TagProps {
   children: ReactNode;
   category?: SkillCategory;

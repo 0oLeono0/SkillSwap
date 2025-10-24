@@ -3,20 +3,25 @@ interface ApiSubskill {
   name: string;
 }
 
-export interface ApiSkillCategory {
+export interface SkillCategory {
   id: number;
   name: string;
   subskills: ApiSubskill[];
 }
 
-export interface ApiCity {
+export type ApiSkillCategory = SkillCategory;
+
+export interface City {
   id: number;
   name: string;
 }
 
-export type Gender = 'Мужской' | 'Женский';
+export type ApiCity = City;
 
-export interface ApiUser {
+export type ApiGender = 'Женский' | 'Мужской';
+export type Gender = ApiGender;
+
+export interface User {
   id: number;
   email: string;
   password: string;
@@ -29,6 +34,8 @@ export interface ApiUser {
   teachableSkills: number[];
   learningSkills: number[];
 }
+
+export type ApiUser = User;
 
 export interface ApiMockData {
   users: ApiUser[];
