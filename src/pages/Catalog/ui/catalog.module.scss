@@ -1,0 +1,119 @@
+@import "/src/app/styles/_variables.css";
+
+.catalog {
+  padding: 32px 36px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 32px;
+  align-items: flex-start;
+}
+
+.sidebar {
+  position: sticky;
+  top: 16px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  min-height: 320px;
+}
+
+.heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.meta {
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sectionAction {
+  border: none;
+  background: transparent;
+  color: var(--font-color-accent);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--font-color-primary);
+  }
+}
+
+.state {
+  padding: 32px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.04);
+  color: rgba(0, 0, 0, 0.7);
+  font-size: 18px;
+  text-align: center;
+}
+
+.stateError {
+  @extend .state;
+  color: #b3261e;
+  background: rgba(179, 38, 30, 0.12);
+}
+
+@media (max-width: 1024px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .catalog {
+    padding: 24px 0;
+  }
+
+  .meta {
+    font-size: 14px;
+  }
+
+  .state {
+    padding: 24px;
+    font-size: 16px;
+  }
+}

@@ -39,7 +39,6 @@ export const SkillCard: React.FC<SkillCardProps> = (props: SkillCardProps) => {
           </span>
         </div>
       </div>
-      {author.about && (<p className={styles.about}>{author.about}</p>)}
       <div className={styles.skills}>
         <div className={styles.tags}>
           <span className={styles.tagTitle}>Может научить:</span>

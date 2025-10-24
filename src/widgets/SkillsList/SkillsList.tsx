@@ -1,43 +1,71 @@
 import { SkillCard } from '../SkillCard/ui/SkillCard';
 import type { GroupedSkills, SkillsListProps } from './types';
 import styles from './SkillsList.module.css';
-import avatar from '../../shared/assets/images/avatars/avatar.jpg'
+import avatar from '../../shared/assets/images/avatars/avatar.jpg';
 import type { Skill } from '@/entities/Skill/types';
 import type { SkillProps } from '../SkillCard/ui/types';
 
-export const SkillsList: React.FC<SkillsListProps> = ({ 
-  skills, 
+type SkillWithAuthor = Skill & {
+  authorName?: string;
+  authorCity?: string;
+  authorAge?: number;
+  authorAbout?: string;
+};
+
+export const SkillsList: React.FC<SkillsListProps> = ({
+  skills,
   onToggleFavorite,
-  onDetailsClick 
+  onDetailsClick,
 }) => {
   if (!skills.length) {
-    return (
-        <p className={styles.emptyMessage}>Нет навыков</p>
-    );
+    return <p className={styles.emptyMessage}>Ничего не найдено</p>;
   }
 
-  const groupedByAuthor = skills.reduce<Record<number, GroupedSkills>>((acc, skill) => {
-    if (!acc[skill.authorId]) {
-      acc[skill.authorId] = {
-        authorId: skill.authorId,
-        avatar: skill.imageUrl || avatar,
-        name: 'Пользователь', // Нужно будет подтягивать имя пользователя
-        city: 'Город', // Так же город
-        age: 25, // Так же возраст
-        about: skill.description,
-        canTeach: [],
-        wantsToLearn: [],
-      };
-    }
+  const groupedByAuthor = skills.reduce<Record<number, GroupedSkills>>(
+    (acc, rawSkill) => {
+      const skill = rawSkill as SkillWithAuthor;
 
-    if (skill.type === 'teach') {
-      acc[skill.authorId].canTeach.push(skill);
-    } else {
-      acc[skill.authorId].wantsToLearn.push(skill);
-    }
+      if (!acc[skill.authorId]) {
+        acc[skill.authorId] = {
+          authorId: skill.authorId,
+          avatar: skill.imageUrl || avatar,
+          name: skill.authorName || 'Имя не указано',
+          city: skill.authorCity || 'Город не указан',
+          age: typeof skill.authorAge === 'number' ? skill.authorAge : 0,
+          about: skill.authorAbout ?? skill.description,
+          canTeach: [],
+          wantsToLearn: [],
+        };
+      }
 
-    return acc;
-  }, {});
+      const group = acc[skill.authorId];
+
+      if (skill.imageUrl) {
+        group.avatar = skill.imageUrl;
+      }
+      if (skill.authorName) {
+        group.name = skill.authorName;
+      }
+      if (skill.authorCity) {
+        group.city = skill.authorCity;
+      }
+      if (typeof skill.authorAge === 'number') {
+        group.age = skill.authorAge;
+      }
+      if (skill.authorAbout || skill.description) {
+        group.about = skill.authorAbout ?? skill.description;
+      }
+
+      if (skill.type === 'teach') {
+        group.canTeach.push(skill);
+      } else {
+        group.wantsToLearn.push(skill);
+      }
+
+      return acc;
+    },
+    {},
+  );
 
   const authorCards = Object.values(groupedByAuthor);
 
@@ -52,16 +80,16 @@ export const SkillsList: React.FC<SkillsListProps> = ({
   };
 
   const mapSkillToSkillProps = (skill: Skill): SkillProps => ({
-    id: parseInt(skill.id),
+    id: parseInt(skill.id, 10),
     name: skill.title,
     category: skill.category as any,
   });
 
   return (
     <div className={styles.skillsList}>
-      {authorCards.map(author => {
+      {authorCards.map((author) => {
         const mainSkill = author.canTeach[0] || author.wantsToLearn[0];
-        
+
         if (!mainSkill) return null;
 
         return (
@@ -72,10 +100,10 @@ export const SkillsList: React.FC<SkillsListProps> = ({
               name: author.name,
               city: author.city,
               age: author.age,
-              about: author.about
+              about: author.about,
             }}
-            isLikeButtonVisible={true}
-            isDetailsButtonVisible={true}
+            isLikeButtonVisible
+            isDetailsButtonVisible
             skill={mapSkillToSkillProps(mainSkill)}
             skillsToLearn={author.wantsToLearn.map(mapSkillToSkillProps)}
             onDetailsButtonClick={() => handleDetailsClick(author.authorId)}
