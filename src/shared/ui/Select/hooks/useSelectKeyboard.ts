@@ -1,4 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  type KeyboardEvent,
+} from 'react';
 
 interface UseSelectKeyboardProps {
   isOpen: boolean;
@@ -41,12 +47,12 @@ export const useSelectKeyboard = ({
   }, [highlightedIndex]);
 
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
+    (event: KeyboardEvent) => {
       if (disabled) return;
 
-      switch (e.key) {
+      switch (event.key) {
         case 'ArrowDown':
-          e.preventDefault();
+          event.preventDefault();
           if (!isOpen) {
             onOpen();
             setHighlightedIndex(0);
@@ -58,7 +64,7 @@ export const useSelectKeyboard = ({
           break;
 
         case 'ArrowUp':
-          e.preventDefault();
+          event.preventDefault();
           if (!isOpen) {
             onOpen();
             setHighlightedIndex(optionsCount - 1);
@@ -70,7 +76,7 @@ export const useSelectKeyboard = ({
           break;
 
         case 'Enter':
-          e.preventDefault();
+          event.preventDefault();
           if (isOpen && highlightedIndex !== -1) {
             onSelect(highlightedIndex);
           } else if (!isOpen) {
@@ -80,7 +86,7 @@ export const useSelectKeyboard = ({
           break;
 
         case 'Escape':
-          e.preventDefault();
+          event.preventDefault();
           onClose();
           onClearSearch();
           break;

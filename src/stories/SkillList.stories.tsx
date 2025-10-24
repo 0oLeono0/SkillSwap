@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { Skill } from '@/entities/Skill/types';
 import { SkillsList } from '@/widgets/SkillsList';
 import { SkillCategories } from '@/shared/lib/constants';
@@ -7,9 +7,9 @@ const meta: Meta<typeof SkillsList> = {
   title: 'Widget/SkillsList',
   component: SkillsList,
   parameters: {
-    layout: 'fullscreen'
+    layout: 'fullscreen',
   },
-  tags: ['autodocs']
+  tags: ['autodocs'],
 };
 
 export default meta;
@@ -18,66 +18,66 @@ type Story = StoryObj<typeof SkillsList>;
 const mockSkills: Skill[] = [
   {
     id: '11',
-    title: 'Управление командой',
+    title: 'Игра на барабанах',
     description: '',
     type: 'teach',
-    category: SkillCategories.BUSINESS,
-    tags: ['business'],
+    category: SkillCategories.ART,
+    tags: ['music'],
     authorId: 1,
-    isFavorite: false
+    isFavorite: false,
   },
   {
     id: '64',
-    title: 'Осознанность',
-    description: '',
-    type: 'learn',
-    category: SkillCategories.HEALTH,
-    tags: ['health'],
-    authorId: 1,
-    isFavorite: true
-  },
-  {
-    id: '36',
-    title: 'Японский',
+    title: 'Английский язык',
     description: '',
     type: 'learn',
     category: SkillCategories.LANGUAGES,
-    tags: ['japanese'],
+    tags: ['language'],
+    authorId: 1,
+    isFavorite: true,
+  },
+  {
+    id: '36',
+    title: 'Маркетинг',
+    description: '',
+    type: 'learn',
+    category: SkillCategories.BUSINESS,
+    tags: ['business'],
     authorId: 2,
-    isFavorite: false
+    isFavorite: false,
   },
   {
     id: '24',
-    title: 'Музыка и звук',
+    title: 'Рисование акварелью',
     description: '',
     type: 'teach',
     category: SkillCategories.ART,
     tags: ['art'],
     authorId: 2,
-    isFavorite: false
-  }
+    isFavorite: false,
+  },
 ];
 
 export const Default: Story = {
   args: {
     skills: mockSkills,
     onToggleFavorite: (authorId: number) => {
-      alert(`click on like button of authorId = ${authorId}`);
+      alert(`Избранное: authorId=${authorId}`);
     },
     onDetailsClick: (authorId: number) => {
-      alert(`click on details button of authorId = ${authorId}`);
-    }
-  }
+      alert(`Подробнее: authorId=${authorId}`);
+    },
+  },
 };
 
 export const Empty: Story = {
   args: {
     skills: [],
     onToggleFavorite: (authorId: number) => {
-      alert(`click on like button of authorId = ${authorId}`);
+      alert(`Избранное: authorId=${authorId}`);
     },
     onDetailsClick: (authorId: number) => {
-      alert(`click on details button of authorId = ${authorId}`);
-    }
-  }
+      alert(`Подробнее: authorId=${authorId}`);
+    },
+  },
 };

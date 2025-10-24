@@ -1,13 +1,14 @@
-import './Title.css';
-import type { TitleProps } from './types';
-import '../../../app/styles/index.css';
+import type { FC } from 'react';
 import clsx from 'clsx';
+import './Title.css';
+import '../../../app/styles/index.css';
+import type { TitleProps } from './types';
 
-export const Title: React.FC<TitleProps> = ({
+export const Title: FC<TitleProps> = ({
   tag = 'h1',
   variant,
   children,
-  className
+  className,
 }) => {
   const Tag = tag;
 

@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Tag } from './Tag';
 import { CATEGORY_CLASS_MAP, type TagCategory, type TagProps } from './types';
 
@@ -36,7 +36,7 @@ export const Variants: StoryObj<typeof Tag> = {
     },
     children: {
       control: 'text',
-      description: 'Текст внутри тега',
+      description: 'Текст тега',
     },
     className: {
       control: 'text',
@@ -45,7 +45,7 @@ export const Variants: StoryObj<typeof Tag> = {
   },
   args: {
     category: categoryOptions[0],
-    children: 'Играть на барабанах',
+    children: 'Предпринимательство',
   },
   render: ({ children, className, category }: TagProps) => (
     <div style={{ display: 'flex', gap: 20, flexDirection: 'column', padding: 16 }}>

@@ -1,4 +1,10 @@
-import { type FC, useState, useEffect, type SVGProps } from 'react';
+import {
+  type ChangeEvent,
+  type FC,
+  type SVGProps,
+  useEffect,
+  useState,
+} from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Input } from '@/shared/ui/Input';
 import { useDebounce } from '@/shared/hooks/useDebounce';
@@ -12,14 +18,21 @@ interface SearchInputProps {
   paramKey?: string;
 }
 
-const SearchInput = ({leftIcon, rightIcon, placeholder, searchInput, debounceDelay = 500, paramKey = "search"}: SearchInputProps) => {
+const SearchInput: FC<SearchInputProps> = ({
+  leftIcon,
+  rightIcon,
+  placeholder,
+  searchInput,
+  debounceDelay = 500,
+  paramKey = 'search',
+}) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [value, setValue] = useState<string>(searchParams.get(paramKey) || '');
 
   const debouncedValue = useDebounce<string>(value, debounceDelay);
 
-  const handleChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    setValue(evt.target.value);
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setValue(event.target.value);
   };
 
   const handleReset = () => {
@@ -29,11 +42,11 @@ const SearchInput = ({leftIcon, rightIcon, placeholder, searchInput, debounceDel
 
   useEffect(() => {
     if (debouncedValue) {
-      setSearchParams({ search: debouncedValue });
+      setSearchParams({ [paramKey]: debouncedValue });
     } else {
       setSearchParams({});
     }
-  }, [debouncedValue, setSearchParams]);
+  }, [debouncedValue, paramKey, setSearchParams]);
 
   return (
     <Input

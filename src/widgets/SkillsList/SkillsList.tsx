@@ -1,9 +1,11 @@
+import type { FC } from 'react';
 import { SkillCard } from '../SkillCard/ui/SkillCard';
 import type { GroupedSkills, SkillsListProps } from './types';
 import styles from './SkillsList.module.css';
-import avatar from '../../shared/assets/images/avatars/avatar.jpg';
+import fallbackAvatar from '../../shared/assets/images/avatars/avatar.jpg';
 import type { Skill } from '@/entities/Skill/types';
 import type { SkillProps } from '../SkillCard/ui/types';
+import type { SkillCategory } from '@/shared/lib/constants';
 
 type SkillWithAuthor = Skill & {
   authorName?: string;
@@ -12,7 +14,7 @@ type SkillWithAuthor = Skill & {
   authorAbout?: string;
 };
 
-export const SkillsList: React.FC<SkillsListProps> = ({
+export const SkillsList: FC<SkillsListProps> = ({
   skills,
   onToggleFavorite,
   onDetailsClick,
@@ -28,7 +30,7 @@ export const SkillsList: React.FC<SkillsListProps> = ({
       if (!acc[skill.authorId]) {
         acc[skill.authorId] = {
           authorId: skill.authorId,
-          avatar: skill.imageUrl || avatar,
+          avatar: skill.imageUrl || fallbackAvatar,
           name: skill.authorName || 'Имя не указано',
           city: skill.authorCity || 'Город не указан',
           age: typeof skill.authorAge === 'number' ? skill.authorAge : 0,
@@ -69,20 +71,18 @@ export const SkillsList: React.FC<SkillsListProps> = ({
 
   const authorCards = Object.values(groupedByAuthor);
 
-  const handleDetailsClick = (skillId: number) => {
-    if (onDetailsClick) {
-      onDetailsClick(skillId);
-    }
+  const handleDetailsClick = (authorId: number) => {
+    onDetailsClick?.(authorId);
   };
 
-  const handleLikeClick = (skillId: number) => {
-    onToggleFavorite(skillId);
+  const handleLikeClick = (authorId: number) => {
+    onToggleFavorite(authorId);
   };
 
   const mapSkillToSkillProps = (skill: Skill): SkillProps => ({
     id: parseInt(skill.id, 10),
     name: skill.title,
-    category: skill.category as any,
+    category: skill.category as SkillCategory,
   });
 
   return (

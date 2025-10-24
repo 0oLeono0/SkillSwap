@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type FC } from 'react';
 import IdeaIcon from '../../assets/icons/status/idea.svg?react';
 import CrossIcon from '../../assets/icons/actions/cross.svg?react';
 import './Toast.css';
@@ -12,7 +12,7 @@ export type ToastProps = {
   onClose: () => void;
 };
 
-export const Toast: React.FC<ToastProps> = ({
+export const Toast: FC<ToastProps> = ({
   message,
   isShow,
   isHide,

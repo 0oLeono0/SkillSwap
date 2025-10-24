@@ -1,5 +1,11 @@
+import type {
+  ChangeEvent,
+  FocusEvent,
+  MouseEvent,
+  FC,
+} from 'react';
 import CloseIcon from '../../../assets/icons/actions/cross.svg';
-import Chevron from '../../../assets/icons/navigation/chevron.svg';
+import ChevronIcon from '../../../assets/icons/navigation/chevron.svg';
 
 interface SelectInputProps {
   id: string;
@@ -11,14 +17,14 @@ interface SelectInputProps {
   isSearchable: boolean;
   isMultipleWithSelection: boolean;
   selectedCount: number;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onFocus: () => void;
-  onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
-  onClear: (e: React.MouseEvent) => void;
+  onBlur: (event: FocusEvent<HTMLInputElement>) => void;
+  onClear: (event: MouseEvent<HTMLButtonElement>) => void;
   onToggle: () => void;
 }
 
-export const SelectInput: React.FC<SelectInputProps> = ({
+export const SelectInput: FC<SelectInputProps> = ({
   id,
   value,
   placeholder,
@@ -32,7 +38,7 @@ export const SelectInput: React.FC<SelectInputProps> = ({
   onFocus,
   onBlur,
   onClear,
-  onToggle
+  onToggle,
 }) => {
   const displayValue = isMultipleWithSelection
     ? `Выбрано: ${selectedCount}`
@@ -44,7 +50,7 @@ export const SelectInput: React.FC<SelectInputProps> = ({
     <>
       <input
         id={id}
-        className='custom-select__input'
+        className="custom-select__input"
         value={displayValue}
         onChange={onChange}
         onFocus={onFocus}
@@ -62,19 +68,21 @@ export const SelectInput: React.FC<SelectInputProps> = ({
       {hasValue && isSearchable && !isMultipleWithSelection && (
         <button
           onClick={onClear}
-          type='button'
-          className='custom-select__close-button'
+          type="button"
+          className="custom-select__close-button"
+          aria-label="Очистить выбранное значение"
         >
-          <img src={CloseIcon} alt='Close' />
+          <img src={CloseIcon} alt="Очистить" />
         </button>
       )}
       {(!hasValue || !isSearchable || isMultipleWithSelection) && (
         <button
           onClick={onToggle}
-          type='button'
-          className='custom-select__chevron-button'
+          type="button"
+          className="custom-select__chevron-button"
+          aria-label="Открыть список вариантов"
         >
-          <img src={Chevron} alt='Toggle' />
+          <img src={ChevronIcon} alt="Открыть" />
         </button>
       )}
     </>

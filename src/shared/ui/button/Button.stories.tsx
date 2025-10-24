@@ -1,8 +1,13 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import type { ComponentProps } from 'react';
 import CrossIcon from '../../assets/icons/actions/cross.svg?react';
 import SortIcon from '../../assets/icons/navigation/sort.svg?react';
-import { Button } from './Button.tsx';
-import type { ComponentProps } from 'react';
+import { Button } from './Button';
+
+type ButtonStoryArgs = ComponentProps<typeof Button> & {
+  showLeftIcon: boolean;
+  showRightIcon: boolean;
+};
 
 const meta: Meta<typeof Button> = {
   title: 'UI/Button',
@@ -10,44 +15,42 @@ const meta: Meta<typeof Button> = {
   parameters: {
     layout: 'centered',
   },
+  argTypes: {
+    leftIcon: { control: { type: null } },
+    rightIcon: { control: { type: null } },
+    variant: {
+      control: { type: 'radio' },
+      options: ['primary', 'secondary', 'tertiary', 'empty'],
+    },
+  },
 };
 
 export default meta;
 
-type ButtonStoryArgs = Omit<ComponentProps<typeof Button>, never> & {
-  showLeftIcon: boolean;
-  showRightIcon: boolean;
-};
-
 export const ButtonVariants: StoryObj<ButtonStoryArgs> = {
   args: {
-    children: 'Interactive Button Text',
+    children: 'Нажми меня',
     variant: 'primary',
     disabled: false,
     showLeftIcon: false,
     showRightIcon: false,
-    onClick: () => alert('click')
   },
-  argTypes: {
-    variant: {
-      control: { type: 'radio' },
-      options: ['primary', 'secondary', 'tertiary']
-    },
-    disabled: { control: 'boolean' },
-    leftIcon: { control: false },
-    rightIcon: { control: false }
-  },
-  render: (args) => {
-    const { showLeftIcon, showRightIcon, ...rest } = args;
-
-    return (
-      <div style={{ display: 'flex', flexFlow: 'column', width: '324px', padding: '20px', backgroundColor: '#F9FAF7' }}>
-        <Button
-          {...rest}
-          rightIcon={{ icon: <CrossIcon />, show: showLeftIcon }}
-          leftIcon={{ icon:  <SortIcon />, show: showRightIcon }}
-        />
-      </div>
-    );
-  }
+  render: ({ showLeftIcon, showRightIcon, ...rest }) => (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        width: '324px',
+        padding: '20px',
+        backgroundColor: '#F9FAF7',
+      }}
+    >
+      <Button
+        {...rest}
+        leftIcon={{ icon: <SortIcon />, show: showLeftIcon }}
+        rightIcon={{ icon: <CrossIcon />, show: showRightIcon }}
+      />
+    </div>
+  ),
 };

@@ -1,9 +1,9 @@
-import React from 'react';
+import type { FC } from 'react';
 import { Checkbox } from '../Checkbox/Checkbox';
 import type { MultiSelectCheckboxListProps } from './types';
 import styles from './MultiSelectCheckboxList.module.css';
 
-export const MultiSelectCheckboxList: React.FC<MultiSelectCheckboxListProps> = ({
+export const MultiSelectCheckboxList: FC<MultiSelectCheckboxListProps> = ({
   options,
   selectedIds,
   onChange,
@@ -12,13 +12,13 @@ export const MultiSelectCheckboxList: React.FC<MultiSelectCheckboxListProps> = (
     if (checked) {
       onChange([...selectedIds, optionId]);
     } else {
-      onChange(selectedIds.filter(id => id !== optionId));
+      onChange(selectedIds.filter((id) => id !== optionId));
     }
   };
 
   return (
     <div className={styles.select}>
-      {options.map(option => (
+      {options.map((option) => (
         <label key={option.id} className={styles.item}>
           <Checkbox
             variant={selectedIds.includes(option.id) ? 'done' : 'empty'}

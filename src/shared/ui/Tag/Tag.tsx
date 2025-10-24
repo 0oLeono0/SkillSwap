@@ -1,21 +1,16 @@
-import React from 'react';
-import type { TagProps } from './types.ts';
-import { CATEGORY_CLASS_MAP } from './types.ts';
-import styles from './tag.module.css';
+import type { FC } from 'react';
 import clsx from 'clsx';
+import styles from './tag.module.css';
+import { CATEGORY_CLASS_MAP, type TagProps } from './types';
 
-export const Tag: React.FC<TagProps> = (props: TagProps) => {
-  const { category, className, children } = props;
-
-
-
-  return (
-    <span className={clsx(
+export const Tag: FC<TagProps> = ({ category, className, children }) => (
+  <span
+    className={clsx(
       styles.tag,
       category && styles[CATEGORY_CLASS_MAP[category]],
-      className
-    )}>
-      {children}
-    </span>
-  );
-};
+      className,
+    )}
+  >
+    {children}
+  </span>
+);

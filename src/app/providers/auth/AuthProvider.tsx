@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useEffect,
@@ -12,7 +13,7 @@ export interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
-  login: (u: User, t: string) => void;
+  login: (user: User, token: string) => void;
   logout: () => void;
 }
 
@@ -63,8 +64,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   };
 
   useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === AUTH_USER_KEY || e.key === AUTH_TOKEN_KEY) {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === AUTH_USER_KEY || event.key === AUTH_TOKEN_KEY) {
         setUser(readUserFromStorage());
         setToken(readTokenFromStorage());
       }
@@ -75,7 +76,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   const value = useMemo<AuthContextType>(
     () => ({ user, token, login, logout, isAuthenticated: !!user && !!token }),
-    [user, token]
+    [user, token],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,26 +1,32 @@
-import { useRef, useMemo, useId, useCallback } from 'react';
-import type { SelectProps } from './types';
-import { SelectVariant } from './types';
+import {
+  useRef,
+  useMemo,
+  useId,
+  useCallback,
+  type ChangeEvent,
+  type FocusEvent,
+  type MouseEvent,
+  type FC,
+} from 'react';
 import '../../../app/styles/index.css';
 import './Select.css';
 import type { SelectOption } from '../MultiSelectCheckboxList/types';
-
+import { SelectVariant, type SelectProps } from './types';
 import { useSelectState } from './hooks/useSelectState';
 import { useSelectSearch } from './hooks/useSelectSearch';
 import { useSelectKeyboard } from './hooks/useSelectKeyboard';
 import { useClickOutside } from './hooks/useClickOutside';
-
 import { SelectInput } from './ui/SelectInput';
 import { SelectOptionsList } from './ui/SelectOptionsList';
 
-export const Select: React.FC<SelectProps> = ({
+export const Select: FC<SelectProps> = ({
   options,
   value,
   onChange,
-  placeholder = 'Выберите...',
+  placeholder = 'Введите значение…',
   disabled = false,
   label,
-  variant = 'closed'
+  variant = SelectVariant.Closed,
 }) => {
   const selectRef = useRef<HTMLDivElement | null>(null);
   const uniqueId = useId();
@@ -45,12 +51,12 @@ export const Select: React.FC<SelectProps> = ({
     if (isMultiple && Array.isArray(normalizedValue)) {
       return options.filter((opt) => normalizedValue.includes(opt.value));
     }
-    return options.find((opt) => opt.value === normalizedValue);
+    return options.find((opt) => opt.value === normalizedValue) ?? null;
   }, [options, normalizedValue, isMultiple]);
 
   const hasValue = isMultiple
     ? Array.isArray(normalizedValue) && normalizedValue.length > 0
-    : !!normalizedValue;
+    : Boolean(normalizedValue);
 
   const handleOptionClick = useCallback(
     (optionValue: string) => {
@@ -59,7 +65,7 @@ export const Select: React.FC<SelectProps> = ({
           ? normalizedValue
           : [];
         const newValues = currentValues.includes(optionValue)
-          ? currentValues.filter((value) => value !== optionValue)
+          ? currentValues.filter((item) => item !== optionValue)
           : [...currentValues, optionValue];
         onChange(newValues);
       } else {
@@ -68,7 +74,7 @@ export const Select: React.FC<SelectProps> = ({
         clearSearch();
       }
     },
-    [isMultiple, normalizedValue, onChange, close, clearSearch]
+    [isMultiple, normalizedValue, onChange, close, clearSearch],
   );
 
   const handleSelectByIndex = useCallback(
@@ -77,28 +83,32 @@ export const Select: React.FC<SelectProps> = ({
         handleOptionClick(filteredOptions[index].value);
       }
     },
-    [filteredOptions, handleOptionClick]
+    [filteredOptions, handleOptionClick],
   );
 
-  const { highlightedIndex, setHighlightedIndex, handleKeyDown, optionsRef } =
-    useSelectKeyboard({
-      isOpen,
-      disabled,
-      optionsCount: filteredOptions.length,
-      onOpen: open,
-      onClose: close,
-      onSelect: handleSelectByIndex,
-      onClearSearch: clearSearch
-    });
+  const {
+    highlightedIndex,
+    setHighlightedIndex,
+    handleKeyDown,
+    optionsRef,
+  } = useSelectKeyboard({
+    isOpen,
+    disabled,
+    optionsCount: filteredOptions.length,
+    onOpen: open,
+    onClose: close,
+    onSelect: handleSelectByIndex,
+    onClearSearch: clearSearch,
+  });
 
   useClickOutside(selectRef, () => {
     close();
     clearSearch();
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (isSearchable || isMultiple) {
-      updateSearch(e.target.value);
+      updateSearch(event.target.value);
       if (!isOpen) {
         open();
       }
@@ -113,18 +123,18 @@ export const Select: React.FC<SelectProps> = ({
     }
   };
 
-  const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleInputBlur = (event: FocusEvent<HTMLInputElement>) => {
     if (
       selectRef.current &&
-      !selectRef.current.contains(e.relatedTarget as Node)
+      !selectRef.current.contains(event.relatedTarget as Node)
     ) {
       close();
       clearSearch();
     }
   };
 
-  const handleClear = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleClear = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
     onChange(isMultiple ? [] : '');
     clearSearch();
   };
@@ -133,26 +143,23 @@ export const Select: React.FC<SelectProps> = ({
     if (isOpen && (isSearchable || isMultiple)) {
       return searchTerm;
     }
-    if (
-      !isMultiple &&
-      selectedOptions &&
-      typeof selectedOptions === 'object' &&
-      'label' in selectedOptions
-    ) {
+
+    if (!isMultiple && selectedOptions && 'label' in selectedOptions) {
       return selectedOptions.label;
     }
+
     return '';
   }, [isOpen, searchTerm, selectedOptions, isSearchable, isMultiple]);
 
   const multiSelectOptions: SelectOption[] = options.map((option, index) => ({
     id: index,
-    name: option.label
+    name: option.label,
   }));
 
   const selectedMultiIds = useMemo(() => {
     if (!isMultiple || !Array.isArray(normalizedValue)) return [];
     return normalizedValue
-      .map((value) => options.findIndex((option) => option.value === value))
+      .map((item) => options.findIndex((option) => option.value === item))
       .filter((idx) => idx !== -1);
   }, [normalizedValue, options, isMultiple]);
 
@@ -172,7 +179,7 @@ export const Select: React.FC<SelectProps> = ({
   return (
     <>
       {label && (
-        <label htmlFor={uniqueId} className='custom-select__label'>
+        <label htmlFor={uniqueId} className="custom-select__label">
           {label}
         </label>
       )}
@@ -184,12 +191,12 @@ export const Select: React.FC<SelectProps> = ({
       >
         <div
           className={`custom-select ${isOpen ? 'custom-select--open' : ''}`}
-          aria-haspopup='listbox'
+          aria-haspopup="listbox"
           aria-expanded={isOpen}
           tabIndex={-1}
           onKeyDown={handleKeyDown}
         >
-          <div className='custom-select__selected-value'>
+          <div className="custom-select__selected-value">
             <SelectInput
               id={uniqueId}
               value={inputValue}
@@ -210,7 +217,7 @@ export const Select: React.FC<SelectProps> = ({
             />
           </div>
           {isOpen && (
-            <ul className='custom-select__options' role='listbox'>
+            <ul className="custom-select__options" role="listbox">
               <SelectOptionsList
                 uniqueId={uniqueId}
                 isMultiple={isMultiple}

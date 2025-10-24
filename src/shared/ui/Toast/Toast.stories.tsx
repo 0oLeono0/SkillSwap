@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Toast, type ToastProps } from './Toast';
 
 const meta: Meta<typeof Toast> = {
@@ -65,7 +65,7 @@ export const Default: Story = {
               cursor: 'pointer',
             }}
           >
-            Показать Toast заново
+            Показать Toast снова
           </button>
         )}
       </>

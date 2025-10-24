@@ -1,24 +1,33 @@
-import React from 'react';
-import type { ButtonProps } from './types.ts';
-import styles from './button.module.css';
+import type { FC } from 'react';
 import clsx from 'clsx';
+import styles from './button.module.css';
+import type { ButtonProps } from './types';
 
-export const Button: React.FC<ButtonProps> = (props: ButtonProps) => {
-  const { children, leftIcon, rightIcon, variant, className, ...rest } = props;
-
+export const Button: FC<ButtonProps> = ({
+  children,
+  leftIcon,
+  rightIcon,
+  variant,
+  className,
+  onClick,
+  type = 'button',
+  disabled,
+  ...rest
+}) => {
   const buttonClass = clsx(
     styles.button,
     styles[variant],
-    { [styles.disabled]: rest.disabled },
-    className
+    { [styles.disabled]: disabled },
+    className,
   );
 
   return (
     <button
-      type={rest.type}
+      type={type}
       className={buttonClass}
-      onClick={rest.onClick}
-      disabled={rest.disabled}
+      onClick={onClick}
+      disabled={disabled}
+      {...rest}
     >
       {leftIcon?.show && leftIcon.icon && (
         <span className={styles.icon}>{leftIcon.icon}</span>
@@ -30,4 +39,3 @@ export const Button: React.FC<ButtonProps> = (props: ButtonProps) => {
     </button>
   );
 };
-

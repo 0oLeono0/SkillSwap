@@ -1,8 +1,8 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import SearchInput from './SearchInput';
-import IcSearch from '@/shared/assets/icons/actions/search.svg?react';
-import CrossSearch from '@/shared/assets/icons/actions/cross.svg?react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { MemoryRouter } from 'react-router-dom';
+import SearchInput from './SearchInput';
+import SearchIcon from '@/shared/assets/icons/actions/search.svg?react';
+import CrossIcon from '@/shared/assets/icons/actions/cross.svg?react';
 
 const meta: Meta<typeof SearchInput> = {
   title: 'Features/SearchInput',
@@ -12,9 +12,9 @@ const meta: Meta<typeof SearchInput> = {
       <MemoryRouter>
         <div
           style={{
-            backgroundColor: '#000000',
-            minHeight: '100vh', 
-            padding: '40px',    
+            backgroundColor: '#000',
+            minHeight: '100vh',
+            padding: '40px',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
@@ -26,7 +26,7 @@ const meta: Meta<typeof SearchInput> = {
     ),
   ],
   parameters: {
-    layout: 'fullscreen', 
+    layout: 'fullscreen',
   },
 };
 
@@ -37,10 +37,10 @@ type Story = StoryObj<typeof SearchInput>;
 export const SearchInputSkills: Story = {
   args: {
     paramKey: 'search',
-    placeholder: 'Поиск навыка...',
+    placeholder: 'Искать навык…',
     searchInput: true,
     debounceDelay: 300,
-    leftIcon: IcSearch,
-    rightIcon: CrossSearch,
+    leftIcon: SearchIcon,
+    rightIcon: CrossIcon,
   },
 };

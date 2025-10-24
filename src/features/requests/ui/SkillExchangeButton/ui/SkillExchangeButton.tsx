@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Toast } from '@/shared/ui/Toast/Toast';
 import { createRequest } from '@/features/requests/model/actions';
+import { Button } from '@/shared/ui/button/Button';
 
 interface SkillExchangeButtonProps {
   fromUserId: number;
@@ -8,7 +9,11 @@ interface SkillExchangeButtonProps {
   skillId: string;
 }
 
-export const SkillExchangeButton = ({ fromUserId, toUserId, skillId }: SkillExchangeButtonProps) => {
+export const SkillExchangeButton = ({
+  fromUserId,
+  toUserId,
+  skillId,
+}: SkillExchangeButtonProps) => {
   const [isShow, setIsShow] = useState(false);
   const [isHide, setIsHide] = useState(false);
 
@@ -25,11 +30,13 @@ export const SkillExchangeButton = ({ fromUserId, toUserId, skillId }: SkillExch
 
   return (
     <>
-      <button onClick={handleClick}>Предложить обмен</button>
+      <Button variant="primary" onClick={handleClick}>
+        Предложить обмен
+      </Button>
 
       {isShow && (
         <Toast
-          message="Заявка отправлена!"
+          message="Вы предложили обмен!"
           isShow={isShow}
           isHide={isHide}
           onClose={handleClose}

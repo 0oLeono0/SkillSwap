@@ -1,16 +1,22 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import styles from './catalog.module.scss';
 import { FilterPanel } from '@/features/Filter/ui/FilterPanel.tsx';
 import type {
   CityOption,
   Filters,
   SearchMode,
-  SkillCategories as SkillGroup
+  SkillCategories as SkillGroup,
 } from '@/features/Filter/types.ts';
 import {
   collectSkillIds,
   countActiveFilters,
-  mapCityIdsToCityNames
+  mapCityIdsToCityNames,
 } from '@/features/Filter/utils.ts';
 import { SkillsList } from '@/widgets/SkillsList';
 import { Title } from '@/shared/ui/Title';
@@ -19,10 +25,10 @@ import {
   createUsersMap,
   filterCatalogSkills,
   loadCatalogBaseData,
-  type CatalogSkill
+  type CatalogSkill,
 } from '@/pages/Catalog/model/catalogData';
 import type { User } from '@/entities/User/types';
-import { Button } from '@/shared/ui';
+import { Button } from '@/shared/ui/button/Button';
 
 type CatalogVariant = 'home' | 'catalog';
 
@@ -37,7 +43,13 @@ interface SectionConfig {
   skills: CatalogSkill[];
 }
 
-const SECTION_SIZE = 3;
+const SECTION_SIZE = 4;
+
+const SECTION_META: Record<string, string> = {
+  popular: 'Популярное',
+  new: 'Новое',
+  recommended: 'Рекомендуем',
+};
 
 const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   const [filters, setFilters] = useState<Filters>({ ...DEFAULT_FILTERS });
@@ -65,7 +77,10 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
 
   const usersById = useMemo(() => createUsersMap(users), [users]);
 
-  const filtersCount = useMemo(() => countActiveFilters(filters), [filters]);
+  const filtersCount = useMemo(
+    () => countActiveFilters(filters),
+    [filters],
+  );
 
   const filteredSkills = useMemo(
     () =>
@@ -73,9 +88,9 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
         skills,
         filters,
         cityOptions,
-        usersById
+        usersById,
       }),
-    [skills, filters, cityOptions, usersById]
+    [skills, filters, cityOptions, usersById],
   );
 
   const visibleAuthorsCount = useMemo(() => {
@@ -86,32 +101,26 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
 
   const authorOrder = useMemo(
     () => Array.from(new Set(filteredSkills.map((skill) => skill.authorId))),
-    [filteredSkills]
+    [filteredSkills],
   );
 
   const buildSectionSkills = useCallback(
     (authorIds: number[]) =>
       filteredSkills.filter((skill) => authorIds.includes(skill.authorId)),
-    [filteredSkills]
+    [filteredSkills],
   );
 
   const sections = useMemo<SectionConfig[]>(() => {
-    if (variant !== 'home' || !filteredSkills.length) {
-      return [];
-    }
+    if (variant !== 'home' || !filteredSkills.length) return [];
 
-    const top = authorOrder.slice(0, SECTION_SIZE);
-    const mid = authorOrder.slice(SECTION_SIZE, SECTION_SIZE * 2);
-    const tail = authorOrder.slice(SECTION_SIZE * 2, SECTION_SIZE * 5);
+    const popularIds = authorOrder.slice(0, SECTION_SIZE);
+    const newIds = authorOrder.slice(SECTION_SIZE, SECTION_SIZE * 2);
+    const recommendedIds = authorOrder.slice(SECTION_SIZE * 2);
 
     return [
-      { key: 'popular', title: 'Популярное', skills: buildSectionSkills(top) },
-      { key: 'new', title: 'Новое', skills: buildSectionSkills(mid) },
-      {
-        key: 'recommended',
-        title: 'Рекомендуем',
-        skills: buildSectionSkills(tail)
-      }
+      { key: 'popular', title: SECTION_META.popular, skills: buildSectionSkills(popularIds) },
+      { key: 'new', title: SECTION_META.new, skills: buildSectionSkills(newIds) },
+      { key: 'recommended', title: SECTION_META.recommended, skills: buildSectionSkills(recommendedIds) },
     ].filter((section) => section.skills.length);
   }, [authorOrder, buildSectionSkills, filteredSkills.length, variant]);
 
@@ -122,7 +131,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   const handleGenderChange = useCallback((gender: string) => {
     setFilters((prev) => ({
       ...prev,
-      gender: gender || undefined
+      gender: gender || undefined,
     }));
   }, []);
 
@@ -130,10 +139,10 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
     (cityIds: number[]) => {
       setFilters((prev) => ({
         ...prev,
-        cities: mapCityIdsToCityNames(cityOptions, cityIds)
+        cities: mapCityIdsToCityNames(cityOptions, cityIds),
       }));
     },
-    [cityOptions]
+    [cityOptions],
   );
 
   const handleSkillSelect = useCallback(
@@ -144,11 +153,11 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
           skillGroups,
           prev.skillIds,
           categoryId,
-          skillIds
-        )
+          skillIds,
+        ),
       }));
     },
-    [skillGroups]
+    [skillGroups],
   );
 
   const handleResetFilters = useCallback(() => {
@@ -158,13 +167,13 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   const handleToggleFavorite = useCallback((authorId: number) => {
     setSkills((prevSkills) => {
       const isFavorite = prevSkills.some(
-        (skill) => skill.authorId === authorId && skill.isFavorite
+        (skill) => skill.authorId === authorId && skill.isFavorite,
       );
 
       return prevSkills.map((skill) =>
         skill.authorId === authorId
           ? { ...skill, isFavorite: !isFavorite }
-          : skill
+          : skill,
       );
     });
   }, []);
@@ -178,7 +187,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
     <>
       {(heading ?? variant === 'catalog') && (
         <div className={styles.heading}>
-          <Title tag='h1' variant='xl'>
+          <Title tag="h1" variant="xl">
             {heading ?? 'Каталог навыков'}
           </Title>
           {visibleAuthorsCount !== null && (
@@ -202,14 +211,14 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
       {sections.map((section) => (
         <div key={section.key} className={styles.section}>
           <div className={styles.sectionHeader}>
-            <Title tag='h2' variant='xl'>
+            <Title tag="h2" variant="lg">
               {section.title}
             </Title>
             <Button
-              onClick={() => {}}
-              variant='secondary'
+              variant="secondary"
+              onClick={() => console.info(`[Catalog] Section "${section.key}" open requested`)}
             >
-              {'Смотреть всё'}
+              Смотреть все
             </Button>
           </div>
 
@@ -223,7 +232,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
     </div>
   );
 
-  let content: React.ReactNode = null;
+  let content: ReactNode = null;
 
   if (isLoading) {
     content = <div className={styles.state}>Загрузка данных…</div>;

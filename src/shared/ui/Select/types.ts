@@ -8,7 +8,8 @@ export const SelectVariant = {
   Multiple: 'multiple'
 } as const;
 
-export type SelectVariant = (typeof SelectVariant)[keyof typeof SelectVariant];
+export type SelectVariantType =
+  (typeof SelectVariant)[keyof typeof SelectVariant];
 
 export interface SelectProps {
   options: SelectOption[];
@@ -17,5 +18,5 @@ export interface SelectProps {
   disabled?: boolean;
   placeholder?: string;
   label?: string;
-  variant?: SelectVariant;
+  variant?: SelectVariantType;
 }

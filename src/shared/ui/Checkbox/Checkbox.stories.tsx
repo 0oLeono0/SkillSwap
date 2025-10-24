@@ -1,4 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { useState } from 'react';
 import { Checkbox } from './Checkbox';
 
 const meta: Meta<typeof Checkbox> = {
@@ -7,37 +8,47 @@ const meta: Meta<typeof Checkbox> = {
   argTypes: {
     variant: {
       control: { type: 'select' },
-      options: ['empty', 'done', 'remove']
+      options: ['empty', 'done', 'remove'],
     },
     checked: {
-      control: { type: 'boolean' }
-    }
+      control: { type: 'boolean' },
+    },
   },
   args: {
     variant: 'empty',
-    checked: false
-  }
+    checked: false,
+  },
 };
 
 export default meta;
 
-export const Empty: StoryObj<typeof Checkbox> = {
-  args: {
-    variant: 'empty',
-    checked: false
-  }
+type Story = StoryObj<typeof Checkbox>;
+
+const createInteractiveStory =
+  (variant: 'empty' | 'done' | 'remove'): Story['render'] =>
+  (args) => {
+    const [checked, setChecked] = useState(args.checked);
+
+    return (
+      <Checkbox
+        {...args}
+        variant={variant}
+        checked={checked}
+        onChange={setChecked}
+      />
+    );
+  };
+
+export const Empty: Story = {
+  render: createInteractiveStory('empty'),
 };
 
-export const Done: StoryObj<typeof Checkbox> = {
-  args: {
-    variant: 'done',
-    checked: true
-  }
+export const Done: Story = {
+  args: { checked: true },
+  render: createInteractiveStory('done'),
 };
 
-export const Remove: StoryObj<typeof Checkbox> = {
-  args: {
-    variant: 'remove',
-    checked: true
-  }
+export const Remove: Story = {
+  args: { checked: true },
+  render: createInteractiveStory('remove'),
 };

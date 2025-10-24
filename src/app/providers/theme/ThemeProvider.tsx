@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useEffect,
@@ -12,7 +13,7 @@ export type Theme = 'light' | 'dark';
 export interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
-  setTheme: (t: Theme) => void;
+  setTheme: (theme: Theme) => void;
 }
 
 export const ThemeContext = createContext<ThemeContextType | null>(null);
@@ -40,19 +41,22 @@ export const ThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
   }, [theme]);
 
   useEffect(() => {
-    const mql = window.matchMedia?.('(prefers-color-scheme: dark)');
-    if (!mql) return;
-    const handler = (e: MediaQueryListEvent) => {
+    const mediaQuery = window.matchMedia?.('(prefers-color-scheme: dark)');
+    if (!mediaQuery) return;
+    const handler = (event: MediaQueryListEvent) => {
       const stored = localStorage.getItem(THEME_KEY);
-      if (!stored) setTheme(e.matches ? 'dark' : 'light');
+      if (!stored) setTheme(event.matches ? 'dark' : 'light');
     };
-    mql.addEventListener?.('change', handler);
-    return () => mql.removeEventListener?.('change', handler);
+    mediaQuery.addEventListener?.('change', handler);
+    return () => mediaQuery.removeEventListener?.('change', handler);
   }, []);
 
-  const toggleTheme = () => setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+  const toggleTheme = () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
 
-  const value = useMemo<ThemeContextType>(() => ({ theme, toggleTheme, setTheme }), [theme]);
+  const value = useMemo<ThemeContextType>(
+    () => ({ theme, toggleTheme, setTheme }),
+    [theme],
+  );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };

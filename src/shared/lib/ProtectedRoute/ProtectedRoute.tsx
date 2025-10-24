@@ -1,9 +1,9 @@
-import React from 'react';
+import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from "@/app/providers/auth/useAuth"
+import { useAuth } from '@/app/providers/auth/useAuth';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
@@ -16,15 +16,3 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   return <>{children}</>;
 };
-
-//Раскоментить когда будет готов AuthProvider
-
-//Пример использования
-    // <Route
-    //   path="/profile"
-    //   element={
-    //     <ProtectedRoute>
-    //       <ProfilePage />
-    //     </ProtectedRoute>
-    //   }
-    // />
