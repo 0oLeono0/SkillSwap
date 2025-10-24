@@ -1,4 +1,4 @@
-import type { FC, MouseEvent } from 'react';
+import type { FC } from 'react';
 import clsx from 'classnames';
 import styles from './Checkbox.module.scss';
 import type { CheckboxVariant } from './types';
@@ -14,11 +14,6 @@ interface CheckboxProps {
 }
 
 export const Checkbox: FC<CheckboxProps> = ({ variant, checked, onChange }) => {
-  const handleClick = (event: MouseEvent<HTMLLabelElement>) => {
-    event.preventDefault();
-    onChange(!checked);
-  };
-
   const renderIcon = () => {
     switch (variant) {
       case 'done':
@@ -32,16 +27,19 @@ export const Checkbox: FC<CheckboxProps> = ({ variant, checked, onChange }) => {
   };
 
   return (
-    <label
-      className={clsx(styles.checkbox, styles[variant])}
-      onClick={handleClick}
-    >
+    <label className={clsx(styles.checkbox, styles[variant])}>
       <input
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
       />
-      <div className={styles.checkboxInner}>{renderIcon()}</div>
+      <div
+        className={styles.checkboxInner}
+        role="presentation"
+        onClick={() => onChange(!checked)}
+      >
+        {renderIcon()}
+      </div>
     </label>
   );
 };

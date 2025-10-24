@@ -1,6 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
 import {
-  createContext,
   useEffect,
   useMemo,
   useState,
@@ -8,16 +6,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { User } from '@/entities/User/types';
-
-export interface AuthContextType {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  login: (user: User, token: string) => void;
-  logout: () => void;
-}
-
-export const AuthContext = createContext<AuthContextType | null>(null);
+import { AuthContext, type AuthContextType } from './context';
 
 const AUTH_USER_KEY = 'auth:user';
 const AUTH_TOKEN_KEY = 'auth:token';
@@ -75,7 +64,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   }, []);
 
   const value = useMemo<AuthContextType>(
-    () => ({ user, token, login, logout, isAuthenticated: !!user && !!token }),
+    () => ({ user, token, login, logout, isAuthenticated: Boolean(user && token) }),
     [user, token],
   );
 

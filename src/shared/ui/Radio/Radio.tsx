@@ -16,7 +16,7 @@ export type RadioGroupProps = PropsWithChildren<{
   title?: string;
   className?: string;
   disabled?: boolean;
-  onChange?: (evt: ChangeEvent<HTMLInputElement>, value: string) => void;
+  onChange?: (_event: ChangeEvent<HTMLInputElement>, value: string) => void;
 }>;
 
 export function RadioGroup({
@@ -28,13 +28,16 @@ export function RadioGroup({
   onChange,
   children
 }: RadioGroupProps) {
-  const contextValue = useMemo(() => ({
-    name,
-    selectedValue: value,
-    onChange: (evt: ChangeEvent<HTMLInputElement>, val: string) =>
-      onChange?.(evt, val),
-    disabled
-  }), [name, value, onChange, disabled]);
+  const contextValue = useMemo(
+    () => ({
+      name,
+      selectedValue: value,
+      onChange: (event: ChangeEvent<HTMLInputElement>, val: string) =>
+        onChange?.(event, val),
+      disabled,
+    }),
+    [name, value, onChange, disabled],
+  );
 
   return (
     <RadioGroupContext.Provider value={contextValue}>

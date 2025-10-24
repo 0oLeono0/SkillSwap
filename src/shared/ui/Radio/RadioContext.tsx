@@ -3,7 +3,7 @@ import { createContext, type ChangeEvent } from 'react';
 interface IRadioGroupContext {
   name: string;
   selectedValue?: string;
-  onChange: (evt: ChangeEvent<HTMLInputElement>, value: string) => void;
+  onChange: (_event: ChangeEvent<HTMLInputElement>, value: string) => void;
   disabled?: boolean;
 }
 

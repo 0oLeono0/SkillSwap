@@ -17,10 +17,10 @@ interface SelectInputProps {
   isSearchable: boolean;
   isMultipleWithSelection: boolean;
   selectedCount: number;
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onChange: (_event: ChangeEvent<HTMLInputElement>) => void;
   onFocus: () => void;
-  onBlur: (event: FocusEvent<HTMLInputElement>) => void;
-  onClear: (event: MouseEvent<HTMLButtonElement>) => void;
+  onBlur: (_event: FocusEvent<HTMLInputElement>) => void;
+  onClear: (_event: MouseEvent<HTMLButtonElement>) => void;
   onToggle: () => void;
 }
 

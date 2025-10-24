@@ -75,8 +75,6 @@ const SkillCard: FC<SkillCardProps> = ({
         </div>
       </div>
 
-      {author.about && <p className={styles.about}>{author.about}</p>}
-
       {isDetailsButtonVisible && (
         <Button
           onClick={() => onDetailsButtonClick(skill.id)}

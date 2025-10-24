@@ -1,8 +1,4 @@
-import {
-  useState,
-  useMemo,
-  type KeyboardEvent,
-} from 'react';
+import { useState, useMemo, type KeyboardEvent } from 'react';
 import { Select } from '@/shared/ui/Select';
 import { SelectVariant } from '@/shared/ui/Select/types';
 import styles from './Calendar.module.css';
@@ -43,18 +39,20 @@ export const Calendar = ({ date, onSelect, selectedDate }: CalendarProps) => {
 
   const today = new Date();
 
-  const startOfMonth = new Date(current.getFullYear(), current.getMonth(), 1);
-  const endOfMonth = new Date(current.getFullYear(), current.getMonth() + 1, 0);
-  const daysInMonth = endOfMonth.getDate();
-
   const days = useMemo(() => {
+    const startOfMonth = new Date(current.getFullYear(), current.getMonth(), 1);
+    const endOfMonth = new Date(current.getFullYear(), current.getMonth() + 1, 0);
+    const daysInMonth = endOfMonth.getDate();
+
     const startDay = (startOfMonth.getDay() + 6) % 7;
     const daysArray: Array<number | null> = Array(startDay).fill(null);
+
     for (let i = 1; i <= daysInMonth; i += 1) {
       daysArray.push(i);
     }
+
     return daysArray;
-  }, [startOfMonth, daysInMonth]);
+  }, [current]);
 
   const isToday = (day: number) =>
     day === today.getDate() &&
@@ -111,10 +109,7 @@ export const Calendar = ({ date, onSelect, selectedDate }: CalendarProps) => {
       <div className={styles.header}>
         <Select
           value={String(current.getMonth())}
-          options={MONTH_LABELS.map((label, index) => ({
-            label,
-            value: String(index),
-          }))}
+          options={MONTH_LABELS.map((label, index) => ({ label, value: String(index) }))}
           onChange={handleMonthChange}
           variant={SelectVariant.Search}
           placeholder="Месяц"
@@ -122,10 +117,7 @@ export const Calendar = ({ date, onSelect, selectedDate }: CalendarProps) => {
 
         <Select
           value={String(current.getFullYear())}
-          options={years.map((year) => ({
-            label: String(year),
-            value: String(year),
-          }))}
+          options={years.map((year) => ({ label: String(year), value: String(year) }))}
           onChange={handleYearChange}
           variant={SelectVariant.Closed}
           placeholder="Год"
@@ -139,24 +131,29 @@ export const Calendar = ({ date, onSelect, selectedDate }: CalendarProps) => {
           </div>
         ))}
 
-        {days.map((day, index) => (
-          <div
-            key={index}
-            tabIndex={day ? 0 : -1}
-            className={`${styles.day} ${!day ? styles.empty : ''} ${
-              day && isToday(day) ? styles.today : ''
-            } ${day && isSelected(day) ? styles.selected : ''}`}
-            onClick={() =>
-              day &&
-              onSelect(new Date(current.getFullYear(), current.getMonth(), day))
-            }
-            onKeyDown={(event) => day && handleKeyDown(event, day)}
-            role={day ? 'button' : undefined}
-            aria-pressed={day ? isSelected(day) : undefined}
-          >
-            {day}
-          </div>
-        ))}
+        {days.map((day, index) => {
+          const isAvailableDay = Boolean(day);
+          const isSelectedDay = isAvailableDay && isSelected(day!);
+
+          return (
+            <div
+              key={index}
+              tabIndex={isAvailableDay ? 0 : -1}
+              className={`${styles.day} ${!isAvailableDay ? styles.empty : ''} ${
+                isAvailableDay && isToday(day as number) ? styles.today : ''
+              } ${isSelectedDay ? styles.selected : ''}`}
+              onClick={() =>
+                isAvailableDay &&
+                onSelect(new Date(current.getFullYear(), current.getMonth(), day as number))
+              }
+              onKeyDown={(event) => isAvailableDay && handleKeyDown(event, day as number)}
+              role={isAvailableDay ? 'button' : undefined}
+              aria-pressed={isSelectedDay || undefined}
+            >
+              {day}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

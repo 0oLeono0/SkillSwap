@@ -23,14 +23,19 @@ export interface Filters {
   skillIds: number[];
 }
 
+type ModeChangeHandler = (mode: SearchMode) => void;
+type GenderChangeHandler = (gender: string) => void;
+type CitySelectHandler = (cityIds: number[]) => void;
+type SkillSelectHandler = (categoryId: number, skillIds: number[]) => void;
+
 export interface FilterPanelProps {
   filters: Filters;
   cities: CityOption[];
   skillGroups: SkillCategories[];
   filtersCount: number;
-  onModeChange: (value: SearchMode) => void;
-  onGenderChange: (value: string) => void;
-  onCitySelect: (values: number[]) => void;
-  onSkillSelect: (categoryId: number, values: number[]) => void;
+  onModeChange: ModeChangeHandler;
+  onGenderChange: GenderChangeHandler;
+  onCitySelect: CitySelectHandler;
+  onSkillSelect: SkillSelectHandler;
   onFilterReset: () => void;
 }

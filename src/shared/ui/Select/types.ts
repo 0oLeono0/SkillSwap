@@ -14,7 +14,7 @@ export type SelectVariantType =
 export interface SelectProps {
   options: SelectOption[];
   value?: string | string[];
-  onChange: (value: string | string[]) => void;
+  onChange: (_value: string | string[]) => void;
   disabled?: boolean;
   placeholder?: string;
   label?: string;

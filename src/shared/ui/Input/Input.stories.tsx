@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import IcEye from '../../assets/icons/inputs/eye.svg?react';
 import IcSearch from '../../assets/icons/actions/search.svg?react';
 import { Input } from './Input';
@@ -9,89 +9,77 @@ const meta: Meta<typeof Input> = {
   component: Input,
   args: {
     name: 'field_name',
-    title: 'РРјСЏ',
-    placeholder: 'Р’РІРµРґРёС‚Рµ РІР°С€ РїР°СЂРѕР»СЊ'
+    title: 'Имя пользователя',
+    placeholder: 'Введите значение',
   },
   argTypes: {
-    error: {
-      control: { type: 'boolean' }
-    },
-    disabled: {
-      control: { type: 'boolean' }
-    }
-  }
+    error: { control: { type: 'boolean' } },
+    disabled: { control: { type: 'boolean' } },
+  },
 };
+
 export default meta;
 
-const InputWithState = (args: any) => {
-  const [state, setState] = useState<string | undefined>(args.value);
+type Story = StoryObj<typeof Input>;
+
+type InputStoryComponentProps = Omit<Parameters<typeof Input>[0], 'value' | 'onChange'> & {
+  initialValue?: string;
+};
+
+const InputWithState = ({ initialValue, ...props }: InputStoryComponentProps) => {
+  const [state, setState] = useState<string>(initialValue ?? '');
 
   return (
-    <form
-      style={{
-        width: '489px',
-        padding: '19px'
-      }}
-    >
+    <form style={{ width: '489px', padding: '19px' }}>
       <Input
-        {...args}
+        {...props}
         value={state}
-        onChange={(evt) => setState(evt.target.value)}
+        onChange={(event) => setState(event.target.value)}
       />
     </form>
   );
 };
 
-const InputWithSearch = (args: any) => {
-  const [state, setState] = useState<string | undefined>(args.value);
-
-  return (
-    <form
-      style={{
-        width: '529px',
-      }}
-    >
-      <Input
-        {...args}
-        value={state}
-        onChange={(evt) => setState(evt.target.value)}
-      />
-    </form>
-  );
-};
-
-export const Default: StoryObj<typeof Input> = {
-  render: (args) => <InputWithState {...args} />
-};
-
-export const Error: StoryObj<typeof Input> = {
+export const Default: Story = {
   render: (args) => <InputWithState {...args} />,
+};
+
+export const Error: Story = {
   args: {
-    error: 'РџР°СЂРѕР»СЊ РґРѕР»Р¶РµРЅ СЃРѕРґРµСЂР¶Р°С‚СЊ РЅРµ РјРµРЅРµРµ 8 Р·РЅР°РєРѕРІ',
-    hint: 'Р­С‚Рѕ hint'
-  }
+    error: 'Пароль должен содержать не менее 8 символов',
+    hint: 'Подсказка: используйте буквы и цифры',
+  },
+  render: (args) => <InputWithState {...args} />,
 };
 
-export const Disabled: StoryObj<typeof Input> = {
-  render: (args) => <InputWithState {...args} />,
+export const Disabled: Story = {
   args: {
-    disabled: true
-  }
+    disabled: true,
+    hint: 'Поле недоступно для редактирования',
+  },
+  render: (args) => <InputWithState {...args} />,
 };
 
-export const InputIcon: StoryObj<typeof Input> = {
-  render: (args) => <InputWithState {...args} />,
+export const WithIcons: Story = {
   args: {
     rightIcon: IcEye,
-    leftIcon: IcSearch
-  }
+    leftIcon: IcSearch,
+  },
+  render: (args) => <InputWithState {...args} />,
 };
 
-export const SearchInput: StoryObj<typeof Input> = {
-  render: (args) => <InputWithSearch {...args} />,
+const SearchTemplate: Story['render'] = (args) => (
+  <div style={{ width: '529px' }}>
+    <InputWithState {...args} />
+  </div>
+);
+
+export const SearchInput: Story = {
   args: {
-    placeholder: 'РСЃРєР°С‚СЊ РЅР°РІС‹Рє',
+    placeholder: 'Искать навык',
     leftIcon: IcSearch,
     title: undefined,
-  }
+  },
+  render: SearchTemplate,
 };
+

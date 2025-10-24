@@ -1,76 +1,70 @@
 import { useState } from 'react';
-import type { Meta, StoryObj } from '@storybook/react';
-// import { action } from '@storybook/addon-actions';
-import { DatePicker } from './DatePicker';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { ComponentProps } from 'react';
+import { DatePicker } from './DatePicker';
 
 const meta: Meta<typeof DatePicker> = {
-  title: 'ui/DatePicker',
+  title: 'UI/DatePicker',
   component: DatePicker,
   parameters: {
-    layout: 'centered'
-  }
+    layout: 'centered',
+  },
 };
 
 export default meta;
 
 type DatePickerStoryArgs = ComponentProps<typeof DatePicker>;
 
+const DatePickerStory: StoryObj<DatePickerStoryArgs>['render'] = (args) => {
+  const { value: initialValue, onChange: _onChange, ...rest } = args;
+  const [state, setState] = useState<string>(initialValue ?? '');
+
+  return (
+    <DatePicker
+      {...(rest as Omit<DatePickerStoryArgs, 'value' | 'onChange'>)}
+      value={state}
+      onChange={(date) => setState(date)}
+    />
+  );
+};
+
 export const Default: StoryObj<DatePickerStoryArgs> = {
   args: {
-    title: '–í—ã–±–µ—Ä–∏—Ç–µ –¥–∞—Ç—É',
+    title: 'ƒ‡Ú‡ ÓÊ‰ÂÌËˇ',
     value: '',
-    placeholder: '–î–î.–ú–ú.–ì–ì–ì–ì',
-    className: ''
-    // onChange: handleChangeFn
+    placeholder: 'ƒƒ.ÃÃ.√√√√',
+    className: '',
   },
-  render: (args) => {
-    const { value: initialValue, onChange: onChangeArg, ...rest } = args;
-    const [state, setState] = useState<string>(initialValue ?? '');
-
-    const handleChange = (date: string) => {
-      setState(date);
-    };
-
-    return (
-      <DatePicker
-        {...(rest as Omit<DatePickerStoryArgs, 'value' | 'onChange'>)}
-        value={state}
-        onChange={handleChange}
-      />
-    );
-  }
+  render: DatePickerStory,
 };
 
 export const WithInitialValue: StoryObj<DatePickerStoryArgs> = {
   args: {
-    title: '–î–∞—Ç–∞ —Ä–æ–∂–¥–µ–Ω–∏—è',
+    title: 'ƒ‡Ú‡ ÓÊ‰ÂÌËˇ',
     value: '05.10.1990',
-    placeholder: '–î–î.–ú–ú.–ì–ì–ì–ì',
-    className: ''
-    // onChange: handleChange
+    placeholder: 'ƒƒ.ÃÃ.√√√√',
+    className: '',
   },
-  render: Default.render // –ø–µ—Ä–µ–∏—Å–ø–æ–ª—å–∑—É–µ–º render –¥–ª—è –æ–¥–∏–Ω–∞–∫–æ–≤–æ–≥–æ –ø–æ–≤–µ–¥–µ–Ω–∏—è
+  render: DatePickerStory,
 };
 
 export const CustomPlaceholder: StoryObj<DatePickerStoryArgs> = {
   args: {
-    title: '–î–∞—Ç–∞ —Å–æ–±—ã—Ç–∏—è',
+    title: 'ƒ‡Ú‡ ‚ÒÚÂ˜Ë',
     value: '',
-    placeholder: '–¥–¥/–º–º/–≥–≥–≥–≥',
-    className: ''
-    // onChange: handleChange
+    placeholder: '√√-ÃÃ-ƒƒ',
+    className: '',
   },
-  render: Default.render
+  render: DatePickerStory,
 };
 
 export const WithCustomClass: StoryObj<DatePickerStoryArgs> = {
   args: {
-    title: '–° –∫–∞—Å—Ç–æ–º–Ω—ã–º –∫–ª–∞—Å—Å–æ–º',
+    title: 'œÓ‰ÔËÒÍ‡ ‡ÍÚË‚Ì‡ ‰Ó',
     value: '',
-    placeholder: '–î–î.–ú–ú.–ì–ì–ì–ì',
-    className: 'my-custom-class'
-    // onChange: handleChange
+    placeholder: 'ƒƒ.ÃÃ.√√√√',
+    className: 'storybook-custom-date-picker',
   },
-  render: Default.render
+  render: DatePickerStory,
 };
+

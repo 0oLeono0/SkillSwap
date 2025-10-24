@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { RadioGroup, Radio } from './Radio';
 
 const meta: Meta<typeof RadioGroup> = {
@@ -7,41 +7,46 @@ const meta: Meta<typeof RadioGroup> = {
   component: RadioGroup,
   subcomponents: { Radio },
   args: {
-    name: 'sex',
+    name: 'gender',
     title: 'Пол автора',
-    disabled: false
-  }
+    disabled: false,
+  },
 };
+
 export default meta;
 
-const RadioWithState = (args: any) => {
+type Story = StoryObj<typeof RadioGroup>;
+
+type RadioGroupStoryProps = Parameters<typeof RadioGroup>[0];
+
+const RadioWithState = (args: RadioGroupStoryProps) => {
   const [state, setState] = useState<string | undefined>(args.value);
 
   return (
     <form>
       <RadioGroup {...args} value={state} onChange={(_, val) => setState(val)}>
-        <Radio title='Не имеет значения' value='' />
-        <Radio title='Мужской' value='male' />
-        <Radio title='Женский' value='female' />
+        <Radio title="Не имеет значения" value="" />
+        <Radio title="Мужской" value="male" />
+        <Radio title="Женский" value="female" />
       </RadioGroup>
     </form>
   );
 };
 
-export const Default: StoryObj<typeof RadioGroup> = {
-  render: (args) => <RadioWithState {...args} />
+export const Default: Story = {
+  render: (args) => <RadioWithState {...args} />,
 };
 
-export const WithValue: StoryObj<typeof RadioGroup> = {
-  render: (args) => <RadioWithState {...args} />,
+export const WithValue: Story = {
   args: {
-    value: 'male'
-  }
+    value: 'male',
+  },
+  render: (args) => <RadioWithState {...args} />,
 };
 
-export const Disabled: StoryObj<typeof RadioGroup> = {
-  render: (args) => <RadioWithState {...args} />,
+export const Disabled: Story = {
   args: {
-    disabled: true
-  }
+    disabled: true,
+  },
+  render: (args) => <RadioWithState {...args} />,
 };

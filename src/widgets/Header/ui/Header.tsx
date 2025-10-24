@@ -11,8 +11,6 @@ import { SearchInput } from '@/features/SearchInput';
 import { useAuth } from '@/app/providers/auth';
 import { useTheme } from '@/app/providers/theme';
 
-type HeaderProps = Record<string, never>;
-
 function HeaderThemeToggle() {
   const { theme, toggleTheme } = useTheme();
 
@@ -27,7 +25,7 @@ function HeaderThemeToggle() {
   );
 }
 
-function Header({}: HeaderProps) {
+function Header() {
   const { isAuthenticated, login, user } = useAuth();
 
   return (

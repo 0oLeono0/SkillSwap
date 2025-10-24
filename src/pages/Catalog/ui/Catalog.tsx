@@ -43,7 +43,7 @@ interface SectionConfig {
   skills: CatalogSkill[];
 }
 
-const SECTION_SIZE = 4;
+const SECTION_SIZE = 3;
 
 const SECTION_META: Record<string, string> = {
   popular: 'Популярное',
@@ -115,7 +115,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
 
     const popularIds = authorOrder.slice(0, SECTION_SIZE);
     const newIds = authorOrder.slice(SECTION_SIZE, SECTION_SIZE * 2);
-    const recommendedIds = authorOrder.slice(SECTION_SIZE * 2);
+    const recommendedIds = authorOrder.slice(SECTION_SIZE * 2, SECTION_SIZE * 5);
 
     return [
       { key: 'popular', title: SECTION_META.popular, skills: buildSectionSkills(popularIds) },

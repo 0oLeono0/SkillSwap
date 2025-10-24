@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { GroupedMultiSelect } from './GroupedMultiSelect.tsx';
 import { db } from '@/api/mockData.ts';
 import { useState } from 'react';

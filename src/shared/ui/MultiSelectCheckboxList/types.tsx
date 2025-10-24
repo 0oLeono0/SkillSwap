@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 export interface SelectOption {
   id: number;
   name: string;
@@ -6,5 +7,5 @@ export interface SelectOption {
 export interface MultiSelectCheckboxListProps {
   options: SelectOption[];
   selectedIds: number[];
-  onChange: (selectedIds: number[]) => void;
+  onChange: (_selectedIds: number[]) => void;
 }

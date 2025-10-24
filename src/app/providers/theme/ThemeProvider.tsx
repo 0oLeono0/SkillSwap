@@ -1,22 +1,11 @@
-/* eslint-disable react-refresh/only-export-components */
 import {
-  createContext,
   useEffect,
   useMemo,
   useState,
   type FC,
   type ReactNode,
 } from 'react';
-
-export type Theme = 'light' | 'dark';
-
-export interface ThemeContextType {
-  theme: Theme;
-  toggleTheme: () => void;
-  setTheme: (theme: Theme) => void;
-}
-
-export const ThemeContext = createContext<ThemeContextType | null>(null);
+import { ThemeContext, type ThemeContextType, type Theme } from './context';
 
 const THEME_KEY = 'app:theme';
 
