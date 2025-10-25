@@ -138,8 +138,8 @@ export const filterCatalogSkills = ({
     const author = usersById.get(skill.authorId);
     if (!author) return false;
 
-    if (filters.mode === 'wantToLearn' && skill.type !== 'learn') return false;
-    if (filters.mode === 'canTeach' && skill.type !== 'teach') return false;
+    if (filters.mode === 'wantToLearn' && skill.type !== 'teach') return false;
+    if (filters.mode === 'canTeach' && skill.type !== 'learn') return false;
 
     if (filters.gender && author.gender !== filters.gender) return false;
 

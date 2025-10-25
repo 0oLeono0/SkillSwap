@@ -13,7 +13,7 @@ export const db: ApiMockData = {
       birthDate: '1990-05-15',
       gender: 'Мужской',
       bio: 'Привет! Люблю ритм, кофе по утрам и людей, которые не боятся пробовать новое',
-      teachableSkills: [31, 37],
+      teachableSkills: [31],
       learningSkills: [16, 61, 67]
     },
     {
@@ -27,7 +27,7 @@ export const db: ApiMockData = {
       birthDate: '1996-08-22',
       gender: 'Женский',
       bio: 'Графический дизайнер и фанат акварели. Мечтаю научиться управлять своим временем и найти баланс.',
-      teachableSkills: [21, 22, 28],
+      teachableSkills: [21],
       learningSkills: [16, 67]
     },
     {
@@ -41,7 +41,7 @@ export const db: ApiMockData = {
       birthDate: '1983-03-10',
       gender: 'Мужской',
       bio: 'ПМ в IT. Готов научить вас управлять проектами, а сам хочу подтянуть английский для работы с зарубежными клиентами.',
-      teachableSkills: [17, 11],
+      teachableSkills: [17],
       learningSkills: [31, 37]
     },
     {
@@ -69,7 +69,7 @@ export const db: ApiMockData = {
       birthDate: '1995-07-18',
       gender: 'Мужской',
       bio: 'Инструктор по йоге. Помогу найти гармонию. Мечтаю выучить японский для путешествий.',
-      teachableSkills: [61, 64, 65],
+      teachableSkills: [61],
       learningSkills: [36]
     },
     {
@@ -83,7 +83,7 @@ export const db: ApiMockData = {
       birthDate: '1979-01-30',
       gender: 'Женский',
       bio: 'Лайф-коуч. Помогаю ставить и достигать цели. Хочу освоить арт-терапию для новых методик в работе.',
-      teachableSkills: [46, 41],
+      teachableSkills: [46],
       learningSkills: [27, 21]
     },
     {
@@ -97,7 +97,7 @@ export const db: ApiMockData = {
       birthDate: '1986-09-12',
       gender: 'Мужской',
       bio: 'Предприниматель. Поделюсь опытом запуска стартапов. Ищу ментора по ментальному здоровью для борьбы со стрессом.',
-      teachableSkills: [18, 13],
+      teachableSkills: [18],
       learningSkills: [63, 66]
     },
     {
@@ -125,7 +125,7 @@ export const db: ApiMockData = {
       birthDate: '1974-12-08',
       gender: 'Мужской',
       bio: 'На все руки мастер. Могу починить всё в вашем доме. Хочу освоить современные методы продаж для своего маленького бизнеса.',
-      teachableSkills: [55, 56],
+      teachableSkills: [55],
       learningSkills: [13, 12]
     },
     {
@@ -139,7 +139,7 @@ export const db: ApiMockData = {
       birthDate: '1993-06-14',
       gender: 'Женский',
       bio: 'Преподаватель испанского. Заряжаюсь энергией от общения. В поисках вдохновения для креативного письма.',
-      teachableSkills: [33, 32],
+      teachableSkills: [33],
       learningSkills: [26, 23]
     },
     {
@@ -153,7 +153,7 @@ export const db: ApiMockData = {
       birthDate: '1989-02-19',
       gender: 'Мужской',
       bio: 'Сейлз-менеджер. Помогу вам прокачать навыки переговоров. Сам учу французский для переезда.',
-      teachableSkills: [13, 14],
+      teachableSkills: [13],
       learningSkills: [32, 35]
     },
     {
@@ -167,7 +167,7 @@ export const db: ApiMockData = {
       birthDate: '1984-10-03',
       gender: 'Женский',
       bio: 'Фотограф-портретист. Улавливаю лучшие черты людей. Хочу научиться видеомонтажу для создания динамичных историй.',
-      teachableSkills: [22, 21],
+      teachableSkills: [22],
       learningSkills: [23, 24]
     },
     {
@@ -181,7 +181,7 @@ export const db: ApiMockData = {
       birthDate: '2004-07-27',
       gender: 'Мужской',
       bio: 'Студент. Отлично владею техниками быстрого обучения. Могу научить скорочтению. Сам мечтаю подтянуть китайский.',
-      teachableSkills: [44, 42],
+      teachableSkills: [44],
       learningSkills: [35, 36]
     },
     {
@@ -195,7 +195,7 @@ export const db: ApiMockData = {
       birthDate: '1997-03-16',
       gender: 'Женский',
       bio: 'Дизайнер интерьеров. Создаю красивые и функциональные пространства. Хочу освоить DIY, чтобы делать мебель своими руками.',
-      teachableSkills: [28, 51],
+      teachableSkills: [28],
       learningSkills: [55]
     },
     {
@@ -209,7 +209,7 @@ export const db: ApiMockData = {
       birthDate: '1982-11-21',
       gender: 'Мужской',
       bio: 'Переводчик-германист. Свободно говорю по-немецки. Ищу тренера для физической активности, чтобы компенсировать сидячую работу.',
-      teachableSkills: [34, 31],
+      teachableSkills: [34],
       learningSkills: [65, 62]
     },
     {
@@ -223,7 +223,7 @@ export const db: ApiMockData = {
       birthDate: '1969-08-09',
       gender: 'Женский',
       bio: 'Учитель с большим стажем. Помогу вам научиться эффективно преподавать. Осваиваю осознанность и медитацию.',
-      teachableSkills: [45, 43],
+      teachableSkills: [45],
       learningSkills: [64, 61]
     },
     {
@@ -237,7 +237,7 @@ export const db: ApiMockData = {
       birthDate: '1991-12-14',
       gender: 'Мужской',
       bio: 'Маркетолог. Знаю, как продвигать личный бренд. Хочу научиться актерскому мастерству для уверенных выступлений на сцене.',
-      teachableSkills: [14, 12],
+      teachableSkills: [14],
       learningSkills: [25, 26]
     },
     {
@@ -251,7 +251,7 @@ export const db: ApiMockData = {
       birthDate: '1994-05-02',
       gender: 'Женский',
       bio: 'Профессиональный организатор пространства. Наведу порядок в вашем доме и голове. Учусь готовить здоровую и вкусную еду.',
-      teachableSkills: [51, 56, 52],
+      teachableSkills: [51],
       learningSkills: [62, 53]
     },
     {
@@ -265,7 +265,7 @@ export const db: ApiMockData = {
       birthDate: '1999-09-30',
       gender: 'Мужской',
       bio: 'Актер театра. Провожу тренинги по сценической речи и движению. Хочу разобраться в когнитивных техниках для лучшего запоминания текстов.',
-      teachableSkills: [25, 26],
+      teachableSkills: [25],
       learningSkills: [43, 44]
     },
     {
@@ -279,7 +279,7 @@ export const db: ApiMockData = {
       birthDate: '1987-04-17',
       gender: 'Женский',
       bio: 'HR-специалист. Помогу с составлением резюме и подготовкой к собеседованию. Ищу пути для достижения идеального work-life balance.',
-      teachableSkills: [15, 11],
+      teachableSkills: [15],
       learningSkills: [67, 63]
     }
   ],

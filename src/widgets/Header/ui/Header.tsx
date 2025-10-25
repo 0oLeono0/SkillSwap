@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FC } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, createSearchParams, useNavigate } from 'react-router-dom';
 import styles from './header.module.scss';
 import IcMoon from '@/shared/assets/icons/status/moon.svg?react';
 import IcSun from '@/shared/assets/icons/status/sun.svg?react';
@@ -91,6 +91,19 @@ function Header() {
 
   const closeSkillsMenu = () => setIsSkillsMenuOpen(false);
 
+  const navigate = useNavigate();
+
+  const handleSkillShortcut = (skillId: number) => {
+    navigate({
+      pathname: ROUTES.HOME,
+      search: createSearchParams({
+        skills: String(skillId),
+        mode: 'wantToLearn'
+      }).toString()
+    });
+    closeSkillsMenu();
+  };
+
   return (
     <header className={styles.header}>
       <nav aria-label='Основная навигация' className={styles.navGroup}>
@@ -160,13 +173,7 @@ function Header() {
                                 <button
                                   type='button'
                                   className={styles.skillsItem}
-                                  onClick={() => {
-                                    console.info(
-                                      '[Header] Skill shortcut clicked',
-                                      skill.id
-                                    );
-                                    closeSkillsMenu();
-                                  }}
+                                  onClick={() => handleSkillShortcut(skill.id)}
                                 >
                                   {skill.name}
                                 </button>

@@ -3,20 +3,21 @@ import {
   useEffect,
   useMemo,
   useState,
-  type ReactNode,
+  type ReactNode
 } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import styles from './catalog.module.scss';
 import { FilterPanel } from '@/features/Filter/ui/FilterPanel.tsx';
 import type {
   CityOption,
   Filters,
   SearchMode,
-  SkillCategories as SkillGroup,
+  SkillCategories as SkillGroup
 } from '@/features/Filter/types.ts';
 import {
   collectSkillIds,
   countActiveFilters,
-  mapCityIdsToCityNames,
+  mapCityIdsToCityNames
 } from '@/features/Filter/utils.ts';
 import { SkillsList } from '@/widgets/SkillsList';
 import { Title } from '@/shared/ui/Title';
@@ -25,7 +26,7 @@ import {
   createUsersMap,
   filterCatalogSkills,
   loadCatalogBaseData,
-  type CatalogSkill,
+  type CatalogSkill
 } from '@/pages/Catalog/model/catalogData';
 import type { User } from '@/entities/User/types';
 import { Button } from '@/shared/ui/button/Button';
@@ -48,11 +49,22 @@ const SECTION_SIZE = 3;
 const SECTION_META: Record<string, string> = {
   popular: 'Популярное',
   new: 'Новое',
-  recommended: 'Рекомендуем',
+  recommended: 'Рекомендуем'
 };
+
+const MODE_LABELS: Record<Exclude<SearchMode, 'all'>, string> = {
+  wantToLearn: 'Хочу учить',
+  canTeach: 'Могу научить'
+};
+
+const searchModeValues: SearchMode[] = ['all', 'wantToLearn', 'canTeach'];
+
+const isValidSearchMode = (value: string | null): value is SearchMode =>
+  value !== null && searchModeValues.includes(value as SearchMode);
 
 const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   const [filters, setFilters] = useState<Filters>({ ...DEFAULT_FILTERS });
+  const [searchParams, setSearchParams] = useSearchParams();
   const [users, setUsers] = useState<User[]>([]);
   const [skills, setSkills] = useState<CatalogSkill[]>([]);
   const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
@@ -75,12 +87,55 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
     }
   }, []);
 
+  useEffect(() => {
+    const skillParam = searchParams.get('skills');
+    const modeParam = searchParams.get('mode');
+
+    if (!skillParam && !modeParam) {
+      return;
+    }
+
+    const parsedSkillIds =
+      skillParam
+        ?.split(',')
+        .map((value) => Number(value))
+        .filter((value) => !Number.isNaN(value)) ?? [];
+
+    const nextMode = isValidSearchMode(modeParam) ? modeParam : null;
+
+    setFilters((prev) => {
+      let hasChanges = false;
+      const next = { ...prev };
+
+      if (parsedSkillIds.length) {
+        const isSameSelection =
+          parsedSkillIds.length === prev.skillIds.length &&
+          parsedSkillIds.every((id) => prev.skillIds.includes(id));
+
+        if (!isSameSelection) {
+          next.skillIds = parsedSkillIds;
+          hasChanges = true;
+        }
+      }
+
+      if (nextMode && nextMode !== prev.mode) {
+        next.mode = nextMode;
+        hasChanges = true;
+      }
+
+      return hasChanges ? next : prev;
+    });
+
+    const nextParams = new URLSearchParams(searchParams);
+    if (skillParam) nextParams.delete('skills');
+    if (modeParam) nextParams.delete('mode');
+
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, setSearchParams]);
+
   const usersById = useMemo(() => createUsersMap(users), [users]);
 
-  const filtersCount = useMemo(
-    () => countActiveFilters(filters),
-    [filters],
-  );
+  const filtersCount = useMemo(() => countActiveFilters(filters), [filters]);
 
   const filteredSkills = useMemo(
     () =>
@@ -88,9 +143,37 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
         skills,
         filters,
         cityOptions,
-        usersById,
+        usersById
       }),
-    [skills, filters, cityOptions, usersById],
+    [skills, filters, cityOptions, usersById]
+  );
+
+  const skillsByAuthor = useMemo(() => {
+    const map = new Map<number, CatalogSkill[]>();
+    skills.forEach((skill) => {
+      const list = map.get(skill.authorId) ?? [];
+      list.push(skill);
+      map.set(skill.authorId, list);
+    });
+    return map;
+  }, [skills]);
+
+  const getAuthorSkills = useCallback(
+    (subset: CatalogSkill[]) => {
+      if (!subset.length) return [];
+      const authorOrder = Array.from(
+        new Set(subset.map((skill) => skill.authorId))
+      );
+      return authorOrder.flatMap(
+        (authorId) => skillsByAuthor.get(authorId) ?? []
+      );
+    },
+    [skillsByAuthor]
+  );
+
+  const listSkills = useMemo(
+    () => getAuthorSkills(filteredSkills),
+    [filteredSkills, getAuthorSkills]
   );
 
   const visibleAuthorsCount = useMemo(() => {
@@ -101,13 +184,13 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
 
   const authorOrder = useMemo(
     () => Array.from(new Set(filteredSkills.map((skill) => skill.authorId))),
-    [filteredSkills],
+    [filteredSkills]
   );
 
   const buildSectionSkills = useCallback(
     (authorIds: number[]) =>
       filteredSkills.filter((skill) => authorIds.includes(skill.authorId)),
-    [filteredSkills],
+    [filteredSkills]
   );
 
   const sections = useMemo<SectionConfig[]>(() => {
@@ -115,14 +198,93 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
 
     const popularIds = authorOrder.slice(0, SECTION_SIZE);
     const newIds = authorOrder.slice(SECTION_SIZE, SECTION_SIZE * 2);
-    const recommendedIds = authorOrder.slice(SECTION_SIZE * 2, SECTION_SIZE * 5);
+    const recommendedIds = authorOrder.slice(
+      SECTION_SIZE * 2,
+      SECTION_SIZE * 5
+    );
 
     return [
-      { key: 'popular', title: SECTION_META.popular, skills: buildSectionSkills(popularIds) },
-      { key: 'new', title: SECTION_META.new, skills: buildSectionSkills(newIds) },
-      { key: 'recommended', title: SECTION_META.recommended, skills: buildSectionSkills(recommendedIds) },
+      {
+        key: 'popular',
+        title: SECTION_META.popular,
+        skills: buildSectionSkills(popularIds)
+      },
+      {
+        key: 'new',
+        title: SECTION_META.new,
+        skills: buildSectionSkills(newIds)
+      },
+      {
+        key: 'recommended',
+        title: SECTION_META.recommended,
+        skills: buildSectionSkills(recommendedIds)
+      }
     ].filter((section) => section.skills.length);
   }, [authorOrder, buildSectionSkills, filteredSkills.length, variant]);
+
+  const sectionsWithFullSkills = useMemo(
+    () =>
+      sections.map((section) => ({
+        ...section,
+        displaySkills: getAuthorSkills(section.skills)
+      })),
+    [sections, getAuthorSkills]
+  );
+
+  const skillNameById = useMemo(() => {
+    const map = new Map<number, string>();
+    skillGroups.forEach((group) => {
+      group.skills.forEach((skill) => map.set(skill.id, skill.name));
+    });
+    return map;
+  }, [skillGroups]);
+
+  const activeFilterLabels = useMemo(() => {
+    const labels: string[] = [];
+
+    if (filters.mode !== 'all') {
+      labels.push(MODE_LABELS[filters.mode] ?? filters.mode);
+    }
+
+    if (filters.gender) {
+      labels.push(filters.gender);
+    }
+
+    if (filters.cities.length) {
+      labels.push(...filters.cities);
+    }
+
+    if (filters.skillIds.length) {
+      labels.push(
+        ...filters.skillIds
+          .map((id) => skillNameById.get(id))
+          .filter((name): name is string => Boolean(name))
+      );
+    }
+
+    return labels;
+  }, [filters, skillNameById]);
+
+  const defaultHeading = heading ?? 'Каталог навыков';
+
+  const computedHeading = useMemo(() => {
+    if (activeFilterLabels.length === 0) {
+      return defaultHeading;
+    }
+
+    if (activeFilterLabels.length === 1) {
+      return activeFilterLabels[0];
+    }
+
+    const resultCount =
+      visibleAuthorsCount ??
+      new Set(listSkills.map((skill) => skill.authorId)).size;
+
+    return `Результатов: ${resultCount}`;
+  }, [activeFilterLabels, defaultHeading, listSkills, visibleAuthorsCount]);
+
+  const shouldShowHeading =
+    Boolean(heading) || variant === 'catalog' || activeFilterLabels.length > 0;
 
   const handleModeChange = useCallback((mode: SearchMode) => {
     setFilters((prev) => ({ ...prev, mode }));
@@ -131,7 +293,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   const handleGenderChange = useCallback((gender: string) => {
     setFilters((prev) => ({
       ...prev,
-      gender: gender || undefined,
+      gender: gender || undefined
     }));
   }, []);
 
@@ -139,10 +301,10 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
     (cityIds: number[]) => {
       setFilters((prev) => ({
         ...prev,
-        cities: mapCityIdsToCityNames(cityOptions, cityIds),
+        cities: mapCityIdsToCityNames(cityOptions, cityIds)
       }));
     },
-    [cityOptions],
+    [cityOptions]
   );
 
   const handleSkillSelect = useCallback(
@@ -153,11 +315,11 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
           skillGroups,
           prev.skillIds,
           categoryId,
-          skillIds,
-        ),
+          skillIds
+        )
       }));
     },
-    [skillGroups],
+    [skillGroups]
   );
 
   const handleResetFilters = useCallback(() => {
@@ -167,13 +329,13 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   const handleToggleFavorite = useCallback((authorId: number) => {
     setSkills((prevSkills) => {
       const isFavorite = prevSkills.some(
-        (skill) => skill.authorId === authorId && skill.isFavorite,
+        (skill) => skill.authorId === authorId && skill.isFavorite
       );
 
       return prevSkills.map((skill) =>
         skill.authorId === authorId
           ? { ...skill, isFavorite: !isFavorite }
-          : skill,
+          : skill
       );
     });
   }, []);
@@ -185,21 +347,21 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
 
   const renderList = () => (
     <>
-      {(heading ?? variant === 'catalog') && (
+      {shouldShowHeading && (
         <div className={styles.heading}>
-          <Title tag="h1" variant="xl">
-            {heading ?? 'Каталог навыков'}
+          <Title tag='h1' variant='xl'>
+            {computedHeading}
           </Title>
           {visibleAuthorsCount !== null && (
             <span className={styles.meta}>
-              Найдено специалистов: {visibleAuthorsCount}
+              Результатов: {visibleAuthorsCount}
             </span>
           )}
         </div>
       )}
 
       <SkillsList
-        skills={filteredSkills}
+        skills={listSkills}
         onToggleFavorite={handleToggleFavorite}
         onDetailsClick={handleDetailsClick}
       />
@@ -208,22 +370,26 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
 
   const renderSections = () => (
     <div className={styles.sections}>
-      {sections.map((section) => (
+      {sectionsWithFullSkills.map((section) => (
         <div key={section.key} className={styles.section}>
           <div className={styles.sectionHeader}>
-            <Title tag="h2" variant="lg">
-              {section.title}
+            <Title tag='h2' variant='lg'>
+              {shouldShowHeading ? computedHeading : section.title}
             </Title>
             <Button
-              variant="secondary"
-              onClick={() => console.info(`[Catalog] Section "${section.key}" open requested`)}
+              variant='secondary'
+              onClick={() =>
+                console.info(
+                  `[Catalog] Section "${section.key}" open requested`
+                )
+              }
             >
               Смотреть все
             </Button>
           </div>
 
           <SkillsList
-            skills={section.skills}
+            skills={section.displaySkills}
             onToggleFavorite={handleToggleFavorite}
             onDetailsClick={handleDetailsClick}
           />
