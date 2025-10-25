@@ -62,6 +62,35 @@ const searchModeValues: SearchMode[] = ['all', 'wantToLearn', 'canTeach'];
 const isValidSearchMode = (value: string | null): value is SearchMode =>
   value !== null && searchModeValues.includes(value as SearchMode);
 
+const limitSkillsByAuthors = (
+  skills: CatalogSkill[],
+  maxAuthors: number
+): CatalogSkill[] => {
+  if (!skills.length || maxAuthors <= 0) {
+    return [];
+  }
+
+  const selectedAuthors = new Set<number>();
+  const limitedSkills: CatalogSkill[] = [];
+
+  skills.forEach((skill) => {
+    if (selectedAuthors.has(skill.authorId)) {
+      limitedSkills.push(skill);
+      return;
+    }
+
+    if (selectedAuthors.size < maxAuthors) {
+      selectedAuthors.add(skill.authorId);
+      limitedSkills.push(skill);
+    }
+  });
+
+  return limitedSkills;
+};
+
+const countAuthors = (skills: CatalogSkill[]) =>
+  new Set(skills.map((skill) => skill.authorId)).size;
+
 const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   const [filters, setFilters] = useState<Filters>({ ...DEFAULT_FILTERS });
   const [searchParams, setSearchParams] = useSearchParams();
@@ -222,14 +251,32 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
     ].filter((section) => section.skills.length);
   }, [authorOrder, buildSectionSkills, filteredSkills.length, variant]);
 
-  const sectionsWithFullSkills = useMemo(
-    () =>
-      sections.map((section) => ({
+  const sectionsWithFullSkills = useMemo(() => {
+    return sections.map((section) => {
+      const displaySkills = getAuthorSkills(section.skills);
+      const previewSkills = limitSkillsByAuthors(displaySkills, SECTION_SIZE);
+      return {
         ...section,
-        displaySkills: getAuthorSkills(section.skills)
-      })),
-    [sections, getAuthorSkills]
-  );
+        displaySkills,
+        previewSkills,
+        totalAuthors: countAuthors(displaySkills),
+        previewAuthors: countAuthors(previewSkills)
+      };
+    });
+  }, [sections, getAuthorSkills]);
+
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    setExpandedSections({});
+  }, [sections]);
+
+  const toggleSectionExpansion = useCallback((key: string) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  }, []);
 
   const skillNameById = useMemo(() => {
     const map = new Map<number, string>();
@@ -370,31 +417,36 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
 
   const renderSections = () => (
     <div className={styles.sections}>
-      {sectionsWithFullSkills.map((section) => (
-        <div key={section.key} className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <Title tag='h2' variant='lg'>
-              {shouldShowHeading ? computedHeading : section.title}
-            </Title>
-            <Button
-              variant='secondary'
-              onClick={() =>
-                console.info(
-                  `[Catalog] Section "${section.key}" open requested`
-                )
-              }
-            >
-              Смотреть все
-            </Button>
-          </div>
+      {sectionsWithFullSkills.map((section) => {
+        const isExpanded = Boolean(expandedSections[section.key]);
+        const hasMore = section.totalAuthors > section.previewAuthors;
+        const sectionSkills =
+          isExpanded || !hasMore ? section.displaySkills : section.previewSkills;
 
-          <SkillsList
-            skills={section.displaySkills}
-            onToggleFavorite={handleToggleFavorite}
-            onDetailsClick={handleDetailsClick}
-          />
-        </div>
-      ))}
+        return (
+          <div key={section.key} className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <Title tag='h2' variant='lg'>
+                {section.title}
+              </Title>
+              {hasMore && (
+                <Button
+                  variant='secondary'
+                  onClick={() => toggleSectionExpansion(section.key)}
+                >
+                  {isExpanded ? 'Скрыть' : 'Смотреть все'}
+                </Button>
+              )}
+            </div>
+
+            <SkillsList
+              skills={sectionSkills}
+              onToggleFavorite={handleToggleFavorite}
+              onDetailsClick={handleDetailsClick}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 
