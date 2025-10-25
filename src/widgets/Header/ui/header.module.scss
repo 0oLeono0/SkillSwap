@@ -36,6 +36,130 @@
   line-height: var(--font-line-md);
 }
 
+.navItem {
+  position: relative;
+}
+
+.skillsNavItem {
+  position: relative;
+}
+
+.skillsToggle {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s ease;
+}
+
+
+
+.skillsToggleOpen {
+  color: var(--font-color-accent);
+}
+
+.skillsChevron {
+  width: 24px;
+  height: 24px;
+  transform: rotate(180deg);
+  transition: transform 0.2s ease;
+}
+
+.skillsToggleOpen .skillsChevron {
+  transform: rotate(0deg);
+}
+
+.skillsDropdown {
+  position: absolute;
+  padding: 60px;
+  gap: 40px;
+  top: 50px;
+  left: -300px;
+  width: min(900px, calc(100vw - 48px));
+  padding: 24px 32px 32px;
+  border-radius: 24px;
+  background: var(--bg-color-primary, #fff);
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.08);
+  z-index: 20;
+  border: 1px solid #69735D;
+  border-radius: 12px;
+}
+
+.skillsDropdownHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--font-color-secondary);
+}
+
+.skillsDropdownAction {
+  color: var(--font-color-accent);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+}
+
+.skillsDropdownContent {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+
+.skillsList {
+  list-style: none;
+  margin: 0;
+  margin-top: 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 50px;
+}
+
+.skillsItem {
+  background: transparent;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  color: var(--font-color-primary);
+  cursor: pointer;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--font-color-accent);
+  }
+}
+
+.skillsGroupHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.skillsGroupIcon {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 100%;
+  background: var(--bg-color-secondary);
+  flex-shrink: 0;
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+}
+
 .link {
   display: inline-flex;
   align-items: center;
