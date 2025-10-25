@@ -1,0 +1,36 @@
+﻿@import '/src/app/styles/_variables.css';
+
+.authLayout {
+  min-height: 100vh;
+  background: var(--bg-color-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 36px;
+}
+
+.logoWrapper {
+  display: flex;
+  align-items: center;
+}
+
+.closeButton {
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  color: var(--font-color-secondary);
+  cursor: pointer;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}

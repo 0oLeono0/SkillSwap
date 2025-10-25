@@ -7,7 +7,9 @@ import { ServerError } from '@/pages/ServerError';
 import { ROUTES } from '@/shared/constants';
 import { ProtectedRoute } from '@/shared/lib/ProtectedRoute/ProtectedRoute';
 import Catalog from '@/pages/Catalog/ui/Catalog';
+import { AuthStepOne, AuthStepTwo } from '@/pages/Auth';
 import SkillDetails from '@/pages/SkillDetails/ui/SkillDetails';
+import AuthLayout from '@/app/layouts/AuthLayout/AuthLayout';
 
 const Stub: FC<{ title: string }> = ({ title }) => {
   const { pathname } = useLocation();
@@ -55,8 +57,6 @@ export const router = createBrowserRouter([
       { index: true, element: <Catalog variant="home" /> },
       { path: ROUTES.CATALOG, element: <Catalog variant="catalog" /> },
       { path: ROUTES.CREATE, element: <Stub title="Create" /> },
-      { path: ROUTES.LOGIN, element: <Stub title="Login" /> },
-      { path: ROUTES.REGISTER, element: <Stub title="Register" /> },
       { path: ROUTES.ABOUT, element: <Stub title="About" /> },
       { path: ROUTES.CONTACTS, element: <Stub title="Contacts" /> },
       { path: ROUTES.BLOG, element: <Stub title="Blog" /> },
@@ -96,6 +96,14 @@ export const router = createBrowserRouter([
           </Suspense>
         ),
       },
+    ],
+  },
+  {
+    element: <AuthLayout />,
+    children: [
+      { path: ROUTES.LOGIN, element: <AuthStepOne isRegistered /> },
+      { path: ROUTES.REGISTER, element: <AuthStepOne /> },
+      { path: ROUTES.REGISTER_STEP_TWO, element: <AuthStepTwo /> },
     ],
   },
 ]);

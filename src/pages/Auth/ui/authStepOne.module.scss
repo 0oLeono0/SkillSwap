@@ -1,0 +1,92 @@
+﻿@import '/src/app/styles/_variables.css';
+
+.auth {
+  min-height: calc(100vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  width: 100%;
+  max-width: 960px;
+  border-radius: 32px;
+  padding: 48px;
+}
+
+.stepIndicator {
+  text-align: center;
+  font-weight: 600;
+  margin-bottom: 32px;
+  color: var(--font-color-primary);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background-color: #fff;
+  padding: 60px;
+  border-radius: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 28px;
+}
+
+.description {
+  margin: 0 0 8px;
+  color: var(--font-color-secondary);
+}
+
+.socialButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    padding: 12px;
+    background: #fff;
+    font-weight: 600;
+  }
+}
+
+.separator {
+  text-align: center;
+  color: var(--font-color-secondary);
+}
+
+.preview {
+  background: #fff;
+  border-radius: 12px;
+  padding: 60px;
+  text-align: center;
+}
+
+.previewIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 960px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 32px;
+  }
+}

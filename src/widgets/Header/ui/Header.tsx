@@ -203,25 +203,7 @@ function Header() {
             </div>
           ) : (
             <div className={styles.buttons}>
-              <NavLink
-                to={ROUTES.LOGIN}
-                onClick={(event) => {
-                  event.preventDefault();
-                  login?.(
-                    {
-                      id: 1,
-                      name: 'Skill Seeker',
-                      avatarUrl: '',
-                      cityId: 0,
-                      birthDate: '',
-                      gender: 'Женский',
-                      teachableSkills: [],
-                      learningSkills: []
-                    },
-                    'demo-token'
-                  );
-                }}
-              >
+              <NavLink to={ROUTES.LOGIN}>
                 <Button variant='secondary'>Войти</Button>
               </NavLink>
               <NavLink to={ROUTES.REGISTER}>
