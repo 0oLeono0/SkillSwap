@@ -17,6 +17,7 @@ export const ROUTES = {
   ABOUT: '/about',
   CONTACTS: '/contacts',
   BLOG: '/blog',
+  SKILL_DETAILS: '/skills/:authorId',
   POLICY: '/policy',
   TERMS: '/terms',
   NOTFOUND: '*',

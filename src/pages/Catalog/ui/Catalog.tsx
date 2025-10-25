@@ -5,7 +5,7 @@ import {
   useState,
   type ReactNode
 } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import styles from './catalog.module.scss';
 import { FilterPanel } from '@/features/Filter/ui/FilterPanel.tsx';
 import type {
@@ -30,6 +30,7 @@ import {
 } from '@/pages/Catalog/model/catalogData';
 import type { User } from '@/entities/User/types';
 import { Button } from '@/shared/ui/button/Button';
+import { ROUTES } from '@/shared/constants';
 
 type CatalogVariant = 'home' | 'catalog';
 
@@ -92,6 +93,7 @@ const countAuthors = (skills: CatalogSkill[]) =>
   new Set(skills.map((skill) => skill.authorId)).size;
 
 const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<Filters>({ ...DEFAULT_FILTERS });
   const [searchParams, setSearchParams] = useSearchParams();
   const [users, setUsers] = useState<User[]>([]);
@@ -387,10 +389,12 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
     });
   }, []);
 
-  const handleDetailsClick = useCallback((authorId: number) => {
-    console.info('[Catalog] Details requested for author', authorId);
-    // TODO: открыть модальное окно с подробностями
-  }, []);
+  const handleDetailsClick = useCallback(
+    (authorId: number) => {
+      navigate(ROUTES.SKILL_DETAILS.replace(':authorId', String(authorId)));
+    },
+    [navigate]
+  );
 
   const renderList = () => (
     <>

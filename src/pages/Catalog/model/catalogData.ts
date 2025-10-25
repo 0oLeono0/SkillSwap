@@ -22,6 +22,7 @@ export interface CatalogSkill extends Skill {
   authorCity: string;
   authorAge: number;
   authorAbout?: string;
+  category: SkillCategory;
 }
 
 export interface CatalogBaseData {

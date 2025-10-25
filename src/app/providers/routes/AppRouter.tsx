@@ -7,6 +7,7 @@ import { ServerError } from '@/pages/ServerError';
 import { ROUTES } from '@/shared/constants';
 import { ProtectedRoute } from '@/shared/lib/ProtectedRoute/ProtectedRoute';
 import Catalog from '@/pages/Catalog/ui/Catalog';
+import SkillDetails from '@/pages/SkillDetails/ui/SkillDetails';
 
 const Stub: FC<{ title: string }> = ({ title }) => {
   const { pathname } = useLocation();
@@ -59,6 +60,7 @@ export const router = createBrowserRouter([
       { path: ROUTES.ABOUT, element: <Stub title="About" /> },
       { path: ROUTES.CONTACTS, element: <Stub title="Contacts" /> },
       { path: ROUTES.BLOG, element: <Stub title="Blog" /> },
+      { path: ROUTES.SKILL_DETAILS, element: <SkillDetails /> },
       { path: ROUTES.POLICY, element: <Stub title="Policy" /> },
       { path: ROUTES.TERMS, element: <Stub title="Terms" /> },
 

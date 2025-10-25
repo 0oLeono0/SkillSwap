@@ -1,4 +1,4 @@
-export const APP_NAME = 'SkillSwap';
+﻿export const APP_NAME = 'SkillSwap';
 
 export const SkillCategories = {
   HEALTH: 'Здоровье и лайфстайл',
