@@ -9,7 +9,7 @@ import { ProtectedRoute } from '@/shared/lib/ProtectedRoute/ProtectedRoute';
 import Catalog from '@/pages/Catalog/ui/Catalog';
 import { AuthStepOne, AuthStepTwo } from '@/pages/Auth';
 import SkillDetails from '@/pages/SkillDetails/ui/SkillDetails';
-import AuthLayout from '@/app/layouts/AuthLayout/AuthLayout';
+import { AuthLayout } from '@/app/layouts/AuthLayout';
 
 const Stub: FC<{ title: string }> = ({ title }) => {
   const { pathname } = useLocation();

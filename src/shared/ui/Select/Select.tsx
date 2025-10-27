@@ -177,7 +177,7 @@ export const Select: FC<SelectProps> = ({
   const isInputReadOnly = isClosed || (!isOpen && hasValue && !isMultiple);
 
   return (
-    <>
+    <div className={'custom-select-container'}>
       {label && (
         <label htmlFor={uniqueId} className="custom-select__label">
           {label}
@@ -236,6 +236,6 @@ export const Select: FC<SelectProps> = ({
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 };

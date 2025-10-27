@@ -1,3 +1,7 @@
+﻿.custom-select-container {
+  width: 100%;
+}
+
 .custom-select-wrapper {
   position: relative;
   width: 100%;
@@ -7,7 +11,6 @@
   font: var(--font-text-sm);
   color: var(--font-color-primary);
   transition: all 0.2s ease-in-out;
-  z-index: 2;
 }
 
 .custom-select-wrapper.custom-select--open {
@@ -31,7 +34,6 @@
   width: 100%;
   border: none;
   background-color: transparent;
-  z-index: 2;
   cursor: pointer;
   outline: none;
   font: var(--font-text-sm);
@@ -200,6 +202,13 @@
 }
 
 .custom-select-wrapper--disabled .custom-select__input {
+  color: var(--font-color-disabled);
+  cursor: not-allowed;
+}
+
+.custom-select-wrapper--disabled .custom-select__input::placeholder {
+  color: var(--font-color-disabled);
+}-disabled .custom-select__input {
   color: var(--font-color-disabled);
   cursor: not-allowed;
 }

@@ -1,2 +1,2 @@
-﻿export { AuthStepOne } from './ui/AuthStepOne';
-export { AuthStepTwo } from './ui/AuthStepTwo';
+export { AuthStepOne } from './ui/AuthStepOne';
+export { default as AuthStepTwo } from './ui/AuthStepTwo';

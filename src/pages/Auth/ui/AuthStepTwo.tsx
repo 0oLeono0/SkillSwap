@@ -1,37 +1,75 @@
-﻿import { useState } from 'react';
+﻿import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styles from './authStepOne.module.scss';
+import styles from './authStepTwo.module.scss';
 import { Button } from '@/shared/ui/button/Button';
 import { Input } from '@/shared/ui/Input';
+import { Select } from '@/shared/ui/Select';
 import { ROUTES } from '@/shared/constants';
 import { useAuth } from '@/app/providers/auth';
+import { getSkillsGroups } from '@/features/Filter/utils';
+import { loadCatalogBaseData } from '@/pages/Catalog/model/catalogData';
 import type { Gender } from '@/entities/User/types';
+import UserInfoIcon from '@/shared/assets/images/user-info.svg?react';
+import { Title } from '@/shared/ui/Title';
+import { DatePicker } from '@/shared/ui/DatePicker/DatePicker';
 
-export const AuthStepTwo = () => {
+const GENDERS: Array<{ value: Gender | ''; label: string }> = [
+  { value: '', label: 'Не указан' },
+  { value: 'Мужской', label: 'Мужской' },
+  { value: 'Женский', label: 'Женский' }
+];
+
+const AuthStepTwo = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [name, setName] = useState('');
-  const [city, setCity] = useState('');
+  const catalogData = useMemo(() => loadCatalogBaseData(), []);
+  const cityOptions = useMemo(() => catalogData.cityOptions, [catalogData]);
+  const skillGroups = useMemo(() => getSkillsGroups(), []);
 
-  const defaultGender = 'Мужской' as Gender;
+  const [avatar, setAvatar] = useState<File | null>(null);
+  const [name, setName] = useState('');
+  const [birthDate, setBirthDate] = useState('');
+  const [gender, setGender] = useState<Gender | ''>('');
+  const [city, setCity] = useState('');
+  const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [subskillId, setSubskillId] = useState<number | null>(null);
+
+  const filteredCities = useMemo(() => {
+    if (!city) return cityOptions;
+    const lower = city.toLowerCase();
+    return cityOptions.filter((option) => option.name.toLowerCase().includes(lower));
+  }, [city, cityOptions]);
+
+  const subskillOptions = useMemo(() => {
+    if (!categoryId) return [];
+    return skillGroups.find((group) => group.id === categoryId)?.skills ?? [];
+  }, [categoryId, skillGroups]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    const selectedCity = cityOptions.find((option) => option.name === city);
 
     login?.(
       {
         id: Date.now(),
         name: name || 'Skill Swapper',
-        avatarUrl: '',
-        cityId: 0,
-        birthDate: '',
-        gender: defaultGender,
+        avatarUrl: avatar ? URL.createObjectURL(avatar) : '',
+        cityId: selectedCity?.id ?? 0,
+        birthDate,
+        gender: (gender || 'Мужской') as Gender,
         teachableSkills: [],
-        learningSkills: []
+        learningSkills: subskillId ? [subskillId] : []
       },
       'demo-token'
     );
-    navigate(ROUTES.HOME);
+
+    navigate(ROUTES.REGISTER_STEP_THREE ?? ROUTES.HOME);
+  };
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    setAvatar(file);
   };
 
   return (
@@ -40,36 +78,85 @@ export const AuthStepTwo = () => {
         <div className={styles.stepIndicator}>Шаг 2 из 3</div>
         <div className={styles.layout}>
           <form className={styles.form} onSubmit={handleSubmit}>
-            <h1 className={styles.title}>Расскажите о себе</h1>
-            <p className={styles.description}>Чтобы продолжить регистрацию, заполните данные профиля.</p>
+            <label className={styles.avatarUpload}>
+              {avatar ? (
+                <img src={URL.createObjectURL(avatar)} alt='Аватар пользователя' />
+              ) : (
+                <span className={styles.avatarPlaceholder}>+</span>
+              )}
+              <input type='file' accept='image/*' onChange={handleAvatarChange} hidden />
+            </label>
 
             <Input
               title='Имя'
-              placeholder='Введите имя'
+              placeholder='Введите ваше имя'
               value={name}
               onChange={(event) => setName(event.target.value)}
               required
             />
-            <Input
-              title='Город'
-              placeholder='Например, Москва'
+
+            <div className={styles.datePicker}>
+              <DatePicker title='Дата рождения' value={birthDate} onChange={setBirthDate} />
+
+              <Select
+                placeholder='Не указан'
+                label='Пол'
+                options={GENDERS.map(({ value, label }) => ({ value, label }))}
+                value={gender}
+                onChange={(value) => setGender(value as Gender | '')}
+              />
+            </div>
+
+            <Select
+              placeholder='Не указан'
+              label='Город'
+              options={filteredCities.map((option) => ({ value: option.name, label: option.name }))}
               value={city}
-              onChange={(event) => setCity(event.target.value)}
-              required
+              onChange={(value) => setCity(value as string)}
+              variant={'search'}
             />
 
-            <Button type='submit' variant='primary'>
-              Готово
-            </Button>
+            <Select
+              placeholder='Выберите категорию'
+              label='Категория навыка, которому хотите научиться'
+              options={skillGroups.map((group) => ({ value: group.id.toString(), label: group.name }))}
+              value={categoryId?.toString() ?? ''}
+              onChange={(value) => {
+                setCategoryId(value ? Number(value) : null);
+                setSubskillId(null);
+              }}
+            />
+
+            <Select
+              placeholder='Выберите подкатегорию'
+              label='Подкатегория навыка, которому хотите научиться'
+              options={subskillOptions.map((skill) => ({ value: skill.id.toString(), label: skill.name }))}
+              value={subskillId?.toString() ?? ''}
+              onChange={(value) => setSubskillId(value ? Number(value) : null)}
+              disabled={!categoryId}
+            />
+
+            <div className={styles.actions}>
+              <Button type='button' variant='secondary' onClick={() => navigate(-1)}>
+                Назад
+              </Button>
+              <Button type='submit' variant='primary'>
+                Продолжить
+              </Button>
+            </div>
           </form>
 
           <div className={styles.preview}>
-            <div className={styles.previewIcon}>🌱</div>
-            <h2>Ещё пару шагов!</h2>
-            <p>Заполните профиль и расскажите, чем хотите поделиться.</p>
+            <UserInfoIcon />
+            <Title tag='h2' variant={'lg'} >Расскажите немного о себе</Title>
+            <p>
+              Это поможет другим людям лучше узнать вас, чтобы быстрее подобрать партнёров для обмена.
+            </p>
           </div>
         </div>
       </div>
     </section>
   );
 };
+
+export default AuthStepTwo;
