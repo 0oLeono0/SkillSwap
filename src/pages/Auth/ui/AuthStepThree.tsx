@@ -10,6 +10,11 @@ import { useAuth } from '@/app/providers/auth';
 import { getSkillsGroups } from '@/features/Filter/utils';
 import type { Gender } from '@/entities/User/types';
 import SchoolBoardIcon from '@/shared/assets/images/school-board.svg?react';
+import stockMain from '@/shared/assets/images/stock/stock.jpg';
+import stockSecond from '@/shared/assets/images/stock/stock2.jpg';
+import stockThird from '@/shared/assets/images/stock/stock3.jpg';
+import stockFourth from '@/shared/assets/images/stock/stock4.jpg';
+import { Modal } from '@/shared/ui/Modal/Modal';
 
 const REGISTRATION_STEP_TWO_STORAGE_KEY = 'registration:step2';
 
@@ -44,6 +49,8 @@ const AuthStepThree = () => {
   const [subskillId, setSubskillId] = useState<number | null>(null);
   const [description, setDescription] = useState('');
   const [images, setImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const skillOptions = useMemo(() => {
     if (!categoryId) return [];
@@ -52,12 +59,29 @@ const AuthStepThree = () => {
 
   const handleImagesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files ? Array.from(event.target.files) : [];
+    imagePreviews.forEach((url) => URL.revokeObjectURL(url));
     setImages(files);
+    setImagePreviews(files.map((file) => URL.createObjectURL(file)));
   };
+
+  useEffect(() => () => {
+    imagePreviews.forEach((url) => URL.revokeObjectURL(url));
+  }, [imagePreviews]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!stepTwoData) {
+      navigate(ROUTES.REGISTER_STEP_TWO);
+      return;
+    }
+    setIsPreviewOpen(true);
+  };
 
+  const handleEdit = () => {
+    setIsPreviewOpen(false);
+  };
+
+  const handleConfirm = () => {
     if (!stepTwoData) {
       navigate(ROUTES.REGISTER_STEP_TWO);
       return;
@@ -78,17 +102,28 @@ const AuthStepThree = () => {
     );
 
     sessionStorage.removeItem(REGISTRATION_STEP_TWO_STORAGE_KEY);
-
-    console.info('[Registration] Step3 payload', {
-      skillTitle,
-      categoryId,
-      subskillId,
-      description,
-      imagesCount: images.length,
-    });
-
+    setIsPreviewOpen(false);
     navigate(ROUTES.HOME);
   };
+
+  const previewCategoryName = categoryId
+    ? skillGroups.find((group) => group.id === categoryId)?.name ?? 'Категория не выбрана'
+    : 'Категория не выбрана';
+
+  const previewSubcategoryName = subskillId
+    ? skillOptions.find((skill) => skill.id === subskillId)?.name ?? ''
+    : '';
+
+  const usingFallbackImages = imagePreviews.length === 0;
+  const gallery = usingFallbackImages
+    ? [stockMain, stockSecond, stockThird, stockFourth]
+    : imagePreviews;
+
+  const mainImage = gallery[0];
+  const secondaryImages = gallery.slice(1, 4);
+  const remainingCount = usingFallbackImages
+    ? 0
+    : Math.max(imagePreviews.length - 4, 0);
 
   return (
     <section className={styles.auth}>
@@ -161,6 +196,44 @@ const AuthStepThree = () => {
           </div>
         </div>
       </div>
+
+      <Modal isOpen={isPreviewOpen} onClose={handleEdit} className={styles.previewModal}>
+        <div className={styles.previewModalHeader}>
+          <Title tag='h2' variant='lg'>Ваше предложение</Title>
+          <p>Пожалуйста, проверьте и подтвердите правильность данных</p>
+        </div>
+        <div className={styles.previewModalBody}>
+          <div className={styles.previewContent}>
+            <Title tag='h3' variant='lg'>{skillTitle || 'Название навыка'}</Title>
+            <span className={styles.previewCategory}>
+              {previewCategoryName}
+              {previewSubcategoryName ? ` / ${previewSubcategoryName}` : ''}
+            </span>
+            <p className={styles.previewDescription}>
+              {description || 'Расскажите о навыке, которым готовы поделиться, чтобы другим было проще выбрать именно вас.'}
+            </p>
+            <div className={styles.previewActions}>
+              <Button type='button' variant='secondary' onClick={handleEdit}>
+                Редактировать
+              </Button>
+              <Button type='button' variant='primary' onClick={handleConfirm}>
+                Готово
+              </Button>
+            </div>
+          </div>
+          <div className={styles.previewGallery}>
+            <img src={mainImage} alt={skillTitle || 'Навык'} className={styles.previewMainImage} />
+            <div className={styles.previewThumbs}>
+              {secondaryImages.map((image) => (
+                <img key={image} src={image} alt='Дополнительное изображение' className={styles.previewThumb} />
+              ))}
+              {!usingFallbackImages && remainingCount > 0 && (
+                <div className={styles.previewThumbMore}>+{remainingCount}</div>
+              )}
+            </div>
+          </div>
+        </div>
+      </Modal>
     </section>
   );
 };

@@ -102,7 +102,85 @@
 }
 
 .previewIcon {
-  font-size: 48px;
+  width: 160px;
+  margin: 0 auto;
+}
+
+.previewModal {
+  max-width: 960px;
+  padding: 48px;
+}
+
+.previewModalHeader {
+  text-align: center;
+  margin-bottom: 32px;
+
+  p {
+    margin-top: 8px;
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+.previewModalBody {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.previewContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.previewCategory {
+  color: var(--font-color-secondary);
+}
+
+.previewDescription {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.previewActions {
+  display: flex;
+  gap: 16px;
+}
+
+.previewGallery {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px;
+  gap: 16px;
+}
+
+.previewMainImage {
+  width: 100%;
+  border-radius: 20px;
+  object-fit: cover;
+}
+
+.previewThumbs {
+  display: grid;
+  gap: 12px;
+}
+
+.previewThumb {
+  width: 100%;
+  height: 96px;
+  border-radius: 16px;
+  object-fit: cover;
+}
+
+.previewThumbMore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 96px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.08);
+  font-weight: 600;
 }
 
 @media (max-width: 960px) {
@@ -112,5 +190,9 @@
 
   .card {
     padding: 32px;
+  }
+
+  .previewModalBody {
+    grid-template-columns: 1fr;
   }
 }

@@ -1,15 +1,15 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './authStepTwo.module.scss';
 import { Button } from '@/shared/ui/button/Button';
 import { Input } from '@/shared/ui/Input';
-import { Select } from '@/shared/ui/Select';
+import { Select, SelectVariant } from '@/shared/ui/Select';
 import { DatePicker } from '@/shared/ui/DatePicker/DatePicker';
+import { Title } from '@/shared/ui/Title';
 import { ROUTES } from '@/shared/constants';
 import { getSkillsGroups } from '@/features/Filter/utils';
 import { loadCatalogBaseData } from '@/pages/Catalog/model/catalogData';
 import type { Gender } from '@/entities/User/types';
-import { Title } from '@/shared/ui/Title';
 import UserInfoIcon from '@/shared/assets/images/user-info.svg?react';
 
 const REGISTRATION_STEP_TWO_STORAGE_KEY = 'registration:step2';
@@ -31,15 +31,9 @@ const AuthStepTwo = () => {
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [gender, setGender] = useState<Gender | ''>('');
-  const [cityQuery, setCityQuery] = useState('');
+  const [cityId, setCityId] = useState<number | null>(null);
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [subskillId, setSubskillId] = useState<number | null>(null);
-
-  const filteredCities = useMemo(() => {
-    if (!cityQuery) return cityOptions;
-    const normalized = cityQuery.toLowerCase();
-    return cityOptions.filter((city) => city.name.toLowerCase().includes(normalized));
-  }, [cityOptions, cityQuery]);
 
   const subskillOptions = useMemo(() => {
     if (!categoryId) return [];
@@ -54,15 +48,13 @@ const AuthStepTwo = () => {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const selectedCity = cityOptions.find((city) => city.name === cityQuery);
-
     sessionStorage.setItem(
       REGISTRATION_STEP_TWO_STORAGE_KEY,
       JSON.stringify({
         name,
         birthDate,
         gender,
-        cityId: selectedCity?.id ?? null,
+        cityId,
         categoryId,
         subskillId,
         avatarUrl: avatarFile ? URL.createObjectURL(avatarFile) : '',
@@ -95,7 +87,7 @@ const AuthStepTwo = () => {
               required
             />
 
-            <div className={styles.datePicker}>
+            <div className={styles.row}>
               <DatePicker
                 title='Дата рождения'
                 value={birthDate}
@@ -112,11 +104,11 @@ const AuthStepTwo = () => {
 
             <Select
               label='Город'
-              options={filteredCities.map((city) => ({ value: city.name, label: city.name }))}
-              value={cityQuery}
-              onChange={(value) => setCityQuery(value as string)}
+              options={cityOptions.map((city) => ({ value: city.id.toString(), label: city.name }))}
+              value={cityId?.toString() ?? ''}
+              onChange={(value) => setCityId(value ? Number(value) : null)}
               placeholder='Не указан'
-              variant='search'
+              variant={SelectVariant.Search}
             />
 
             <Select
@@ -150,9 +142,15 @@ const AuthStepTwo = () => {
           </form>
 
           <div className={styles.preview}>
-            <UserInfoIcon />
-            <Title tag='h2' variant={'lg'} >Расскажите немного о себе</Title>
-            <p>Это поможет другим людям лучше узнать вас и подобрать партнёров для обмена.</p>
+            <UserInfoIcon className={styles.previewIcon} />
+            <Title tag='h2' variant='lg'>Расскажите немного о себе</Title>
+            <p>Это поможет другим людям лучше узнать вас, чтобы быстрее подобрать партнёров для обмена.</p>
+          </div>
+
+          <div className={styles.preview}>
+            <UserInfoIcon className={styles.previewIcon} />
+            <Title tag='h2' variant='lg'>Расскажите немного о себе</Title>
+            <p>Это поможет другим людям лучше узнать вас, чтобы быстрее подобрать партнёров для обмена.</p>
           </div>
         </div>
       </div>
