@@ -7,7 +7,7 @@ import { ServerError } from '@/pages/ServerError';
 import { ROUTES } from '@/shared/constants';
 import { ProtectedRoute } from '@/shared/lib/ProtectedRoute/ProtectedRoute';
 import Catalog from '@/pages/Catalog/ui/Catalog';
-import { AuthStepOne, AuthStepTwo } from '@/pages/Auth';
+import { AuthStepOne, AuthStepTwo, AuthStepThree } from '@/pages/Auth';
 import SkillDetails from '@/pages/SkillDetails/ui/SkillDetails';
 import { AuthLayout } from '@/app/layouts/AuthLayout';
 
@@ -17,7 +17,7 @@ const Stub: FC<{ title: string }> = ({ title }) => {
     <div style={{ padding: 24 }}>
       <h1 style={{ margin: 0 }}>{title}</h1>
       <p style={{ opacity: 0.7, marginTop: 8 }}>
-        Текущий путь: <code>{pathname}</code>
+        Текущий маршрут: <code>{pathname}</code>
       </p>
     </div>
   );
@@ -29,11 +29,11 @@ const LayoutStub: FC<{ title: string }> = ({ title }) => {
     <div style={{ padding: 24 }}>
       <h1 style={{ margin: 0 }}>{title}</h1>
       <p style={{ opacity: 0.7, marginTop: 8 }}>
-        Текущий путь: <code>{pathname}</code>
+        Текущий маршрут: <code>{pathname}</code>
       </p>
 
       <nav style={{ display: 'flex', gap: 12, marginTop: 12 }}>
-        <NavLink to="" end>
+        <NavLink to='' end>
           Overview
         </NavLink>
         <NavLink to={ROUTES.PROFILE.CHILDREN.REQUESTS}>Requests</NavLink>
@@ -51,6 +51,20 @@ const LayoutStub: FC<{ title: string }> = ({ title }) => {
 
 export const router = createBrowserRouter([
   {
+    path: ROUTES.LOGIN,
+    element: <AuthLayout />,
+    children: [{ index: true, element: <AuthStepOne isRegistered /> }],
+  },
+  {
+    path: ROUTES.REGISTER,
+    element: <AuthLayout />,
+    children: [
+      { index: true, element: <AuthStepOne /> },
+      { path: 'step-2', element: <AuthStepTwo /> },
+      { path: 'step-3', element: <AuthStepThree /> },
+    ],
+  },
+  {
     path: ROUTES.HOME,
     element: <BaseLayout />,
     children: [
@@ -63,7 +77,6 @@ export const router = createBrowserRouter([
       { path: ROUTES.SKILL_DETAILS, element: <SkillDetails /> },
       { path: ROUTES.POLICY, element: <Stub title="Policy" /> },
       { path: ROUTES.TERMS, element: <Stub title="Terms" /> },
-
       {
         path: ROUTES.PROFILE.ROOT,
         element: (
@@ -79,31 +92,22 @@ export const router = createBrowserRouter([
           { path: ROUTES.PROFILE.CHILDREN.SKILLS, element: <Stub title="Profile / Skills" /> },
         ],
       },
-
-      {
-        path: ROUTES.SERVER_ERROR,
-        element: (
-          <Suspense fallback={<div>Загрузка…</div>}>
-            <ServerError />
-          </Suspense>
-        ),
-      },
-      {
-        path: ROUTES.NOTFOUND,
-        element: (
-          <Suspense fallback={<div>Загрузка…</div>}>
-            <NotFound />
-          </Suspense>
-        ),
-      },
     ],
   },
   {
-    element: <AuthLayout />,
-    children: [
-      { path: ROUTES.LOGIN, element: <AuthStepOne isRegistered /> },
-      { path: ROUTES.REGISTER, element: <AuthStepOne /> },
-      { path: ROUTES.REGISTER_STEP_TWO, element: <AuthStepTwo /> },
-    ],
+    path: ROUTES.SERVER_ERROR,
+    element: (
+      <Suspense fallback={<div>Загрузка…</div>}>
+        <ServerError />
+      </Suspense>
+    ),
+  },
+  {
+    path: ROUTES.NOTFOUND,
+    element: (
+      <Suspense fallback={<div>Загрузка…</div>}>
+        <NotFound />
+      </Suspense>
+    ),
   },
 ]);

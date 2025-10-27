@@ -15,6 +15,7 @@ export const ROUTES = {
   LOGIN: '/login',
   REGISTER: '/register',
   REGISTER_STEP_TWO: '/register/step-2',
+  REGISTER_STEP_THREE: '/register/step-3',
   ABOUT: '/about',
   CONTACTS: '/contacts',
   BLOG: '/blog',
