@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './authStepTwo.module.scss';
 import { Button } from '@/shared/ui/button/Button';
@@ -13,12 +13,28 @@ import type { Gender } from '@/entities/User/types';
 import UserInfoIcon from '@/shared/assets/images/user-info.svg?react';
 
 const REGISTRATION_STEP_TWO_STORAGE_KEY = 'registration:step2';
+const REGISTRATION_CREDENTIALS_STORAGE_KEY = 'registration:credentials';
 
 const GENDERS: Array<{ value: Gender | ''; label: string }> = [
   { value: '', label: 'Не указан' },
   { value: 'Мужской', label: 'Мужской' },
   { value: 'Женский', label: 'Женский' },
 ];
+
+interface StepOneCredentials {
+  email: string;
+  password: string;
+}
+
+interface StepTwoStorageData {
+  name: string;
+  birthDate: string;
+  gender: Gender | '';
+  cityId: number | null;
+  categoryId: number | null;
+  subskillId: number | null;
+  avatarUrl: string;
+}
 
 const AuthStepTwo = () => {
   const navigate = useNavigate();
@@ -27,13 +43,29 @@ const AuthStepTwo = () => {
   const cityOptions = useMemo(() => catalogData.cityOptions, [catalogData]);
   const skillGroups = useMemo(() => getSkillsGroups(), []);
 
+  const credentials = useMemo<StepOneCredentials | null>(() => {
+    const raw = sessionStorage.getItem(REGISTRATION_CREDENTIALS_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as StepOneCredentials) : null;
+  }, []);
+
+  const storedStepTwo = useMemo<StepTwoStorageData | null>(() => {
+    const raw = sessionStorage.getItem(REGISTRATION_STEP_TWO_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as StepTwoStorageData) : null;
+  }, []);
+
+  useEffect(() => {
+    if (!credentials) {
+      navigate(ROUTES.REGISTER);
+    }
+  }, [credentials, navigate]);
+
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [name, setName] = useState('');
-  const [birthDate, setBirthDate] = useState('');
-  const [gender, setGender] = useState<Gender | ''>('');
-  const [cityId, setCityId] = useState<number | null>(null);
-  const [categoryId, setCategoryId] = useState<number | null>(null);
-  const [subskillId, setSubskillId] = useState<number | null>(null);
+  const [name, setName] = useState(storedStepTwo?.name ?? '');
+  const [birthDate, setBirthDate] = useState(storedStepTwo?.birthDate ?? '');
+  const [gender, setGender] = useState<Gender | ''>(storedStepTwo?.gender ?? '');
+  const [cityId, setCityId] = useState<number | null>(storedStepTwo?.cityId ?? null);
+  const [categoryId, setCategoryId] = useState<number | null>(storedStepTwo?.categoryId ?? null);
+  const [subskillId, setSubskillId] = useState<number | null>(storedStepTwo?.subskillId ?? null);
 
   const subskillOptions = useMemo(() => {
     if (!categoryId) return [];
@@ -140,12 +172,6 @@ const AuthStepTwo = () => {
               </Button>
             </div>
           </form>
-
-          <div className={styles.preview}>
-            <UserInfoIcon className={styles.previewIcon} />
-            <Title tag='h2' variant='lg'>Расскажите немного о себе</Title>
-            <p>Это поможет другим людям лучше узнать вас, чтобы быстрее подобрать партнёров для обмена.</p>
-          </div>
 
           <div className={styles.preview}>
             <UserInfoIcon className={styles.previewIcon} />

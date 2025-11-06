@@ -1,13 +1,22 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { createContext } from 'react';
-import type { User } from '@/entities/User/types';
+import type { LoginPayload, RegisterPayload } from '@/shared/api/auth';
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl?: string | null;
+}
 
 export interface AuthContextType {
-  user: User | null;
-  token: string | null;
+  user: AuthUser | null;
+  accessToken: string | null;
   isAuthenticated: boolean;
-  login: (user: User, token: string) => void;
-  logout: () => void;
+  isInitializing: boolean;
+  login: (credentials: LoginPayload) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
+  logout: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);

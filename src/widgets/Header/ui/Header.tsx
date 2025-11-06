@@ -49,7 +49,7 @@ function HeaderThemeToggle() {
 }
 
 function Header() {
-  const { isAuthenticated, login, user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const skillGroups = useMemo(() => getSkillsGroups(), []);
   const [isSkillsMenuOpen, setIsSkillsMenuOpen] = useState(false);
   const skillsToggleRef = useRef<HTMLButtonElement | null>(null);
