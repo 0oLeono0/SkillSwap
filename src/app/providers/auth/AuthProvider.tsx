@@ -1,71 +1,115 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useState,
   type FC,
   type ReactNode,
 } from 'react';
-import type { User } from '@/entities/User/types';
-import { AuthContext, type AuthContextType } from './context';
+import { authApi, type AuthSuccessResponse, type LoginPayload, type RegisterPayload, ApiError } from '@/shared/api/auth';
+import { AuthContext, type AuthContextType, type AuthUser } from './context';
 
-const AUTH_USER_KEY = 'auth:user';
-const AUTH_TOKEN_KEY = 'auth:token';
-
-function readUserFromStorage(): User | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = localStorage.getItem(AUTH_USER_KEY);
-    return raw ? (JSON.parse(raw) as User) : null;
-  } catch {
-    return null;
-  }
+interface AuthState {
+  user: AuthUser | null;
+  accessToken: string | null;
 }
 
-function readTokenFromStorage(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem(AUTH_TOKEN_KEY);
-}
+const initialState: AuthState = {
+  user: null,
+  accessToken: null,
+};
+
+const mapToAuthUser = (payloadUser: AuthSuccessResponse['user']): AuthUser => ({
+  id: payloadUser.id,
+  email: payloadUser.email,
+  name: payloadUser.name,
+  avatarUrl: payloadUser.avatarUrl,
+});
 
 export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(() => readUserFromStorage());
-  const [token, setToken] = useState<string | null>(() => readTokenFromStorage());
+  const [state, setState] = useState<AuthState>(initialState);
+  const [isInitializing, setIsInitializing] = useState(true);
 
-  const login = (nextUser: User, authToken: string) => {
-    setUser(nextUser);
-    setToken(authToken);
-    try {
-      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(nextUser));
-      localStorage.setItem(AUTH_TOKEN_KEY, authToken);
-    } catch (error) {
-      console.warn('[AuthProvider] Failed to persist auth data', error);
-    }
-  };
-
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    try {
-      localStorage.removeItem(AUTH_USER_KEY);
-      localStorage.removeItem(AUTH_TOKEN_KEY);
-    } catch (error) {
-      console.warn('[AuthProvider] Failed to clear auth data', error);
-    }
-  };
-
-  useEffect(() => {
-    const onStorage = (event: StorageEvent) => {
-      if (event.key === AUTH_USER_KEY || event.key === AUTH_TOKEN_KEY) {
-        setUser(readUserFromStorage());
-        setToken(readTokenFromStorage());
-      }
-    };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+  const applySession = useCallback((session: AuthSuccessResponse) => {
+    setState({
+      user: mapToAuthUser(session.user),
+      accessToken: session.accessToken,
+    });
   }, []);
 
+  const clearSession = useCallback(() => {
+    setState(initialState);
+  }, []);
+
+  const login = useCallback<AuthContextType['login']>(
+    async (credentials: LoginPayload) => {
+      const response = await authApi.login(credentials);
+      applySession(response);
+    },
+    [applySession],
+  );
+
+  const register = useCallback<AuthContextType['register']>(
+    async (payload: RegisterPayload) => {
+      const response = await authApi.register(payload);
+      applySession(response);
+    },
+    [applySession],
+  );
+
+  const refresh = useCallback<AuthContextType['refresh']>(async () => {
+    const response = await authApi.refresh();
+    applySession(response);
+  }, [applySession]);
+
+  const logout = useCallback<AuthContextType['logout']>(async () => {
+    try {
+      await authApi.logout();
+    } catch (error) {
+      if (!(error instanceof ApiError) || error.status !== 401) {
+        throw error;
+      }
+    } finally {
+      clearSession();
+    }
+  }, [clearSession]);
+
+  useEffect(() => {
+    let mounted = true;
+    const initialise = async () => {
+      try {
+        await refresh();
+      } catch (error) {
+        if (error instanceof ApiError && [401, 403].includes(error.status)) {
+          clearSession();
+        } else {
+          console.warn('[AuthProvider] Failed to refresh session', error);
+        }
+      } finally {
+        if (mounted) {
+          setIsInitializing(false);
+        }
+      }
+    };
+
+    initialise();
+    return () => {
+      mounted = false;
+    };
+  }, [refresh, clearSession]);
+
   const value = useMemo<AuthContextType>(
-    () => ({ user, token, login, logout, isAuthenticated: Boolean(user && token) }),
-    [user, token],
+    () => ({
+      user: state.user,
+      accessToken: state.accessToken,
+      isAuthenticated: Boolean(state.user && state.accessToken),
+      isInitializing,
+      login,
+      register,
+      logout,
+      refresh,
+    }),
+    [state, isInitializing, login, register, logout, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

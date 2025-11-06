@@ -38,6 +38,12 @@
   }
 }
 
+.errorMessage {
+  margin: 0;
+  color: #d93025;
+  font-size: 14px;
+}
+
 .textareaLabel {
   display: flex;
   flex-direction: column;
@@ -145,7 +151,9 @@
 
 .previewActions {
   display: flex;
+  align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 .previewGallery {

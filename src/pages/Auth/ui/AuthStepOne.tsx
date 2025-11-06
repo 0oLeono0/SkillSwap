@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './authStepOne.module.scss';
 import { Button } from '@/shared/ui/button/Button';
@@ -8,42 +8,52 @@ import AppleIcon from '@/shared/assets/icons/actions/apple.svg?react';
 import LightBulbIcon from '@/shared/assets/images/light-bulb.svg?react';
 import { ROUTES } from '@/shared/constants';
 import { useAuth } from '@/app/providers/auth';
-import type { Gender } from '@/entities/User/types';
 import { Title } from '@/shared/ui/Title';
+import { ApiError } from '@/shared/api/auth';
 
 interface AuthStepOneProps {
   isRegistered?: boolean;
 }
 
+const REGISTRATION_CREDENTIALS_STORAGE_KEY = 'registration:credentials';
+const REGISTRATION_STEP_TWO_STORAGE_KEY = 'registration:step2';
+
 export const AuthStepOne = ({ isRegistered = false }: AuthStepOneProps) => {
   const navigate = useNavigate();
   const { login } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const defaultGender = 'Мужской' as Gender;
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setError(null);
 
     if (isRegistered) {
-      login?.(
-        {
-          id: 1,
-          name: email || 'Skill Seeker',
-          avatarUrl: '',
-          cityId: 0,
-          birthDate: '',
-          gender: defaultGender,
-          teachableSkills: [],
-          learningSkills: []
-        },
-        'demo-token'
-      );
-      navigate(ROUTES.HOME);
+      try {
+        setIsSubmitting(true);
+        await login({ email, password });
+        sessionStorage.removeItem(REGISTRATION_CREDENTIALS_STORAGE_KEY);
+        sessionStorage.removeItem(REGISTRATION_STEP_TWO_STORAGE_KEY);
+        navigate(ROUTES.HOME);
+      } catch (loginError) {
+        if (loginError instanceof ApiError) {
+          setError(loginError.message);
+        } else {
+          setError('Неизвестная ошибка');
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
       return;
     }
 
+    sessionStorage.setItem(
+      REGISTRATION_CREDENTIALS_STORAGE_KEY,
+      JSON.stringify({ email, password }),
+    );
     navigate(ROUTES.REGISTER_STEP_TWO);
   };
 
@@ -56,11 +66,11 @@ export const AuthStepOne = ({ isRegistered = false }: AuthStepOneProps) => {
             <div className={styles.socialButtons}>
               <button type='button'>
                 <GoogleIcon />
-                Продолжить с Google
+                Войти с Google
               </button>
               <button type='button'>
                 <AppleIcon />
-                Продолжить с Apple
+                Войти с Apple
               </button>
             </div>
 
@@ -76,22 +86,26 @@ export const AuthStepOne = ({ isRegistered = false }: AuthStepOneProps) => {
             <Input
               title='Пароль'
               type='password'
-              placeholder='Придумайте надёжный пароль'
+              placeholder='Введите пароль'
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               hint='Пароль должен содержать не менее 8 символов'
               required
             />
 
-            <Button type='submit' variant='primary'>
-              Далее
+            {error && <p className={styles.errorMessage}>{error}</p>}
+
+            <Button type='submit' variant='primary' disabled={isRegistered && isSubmitting}>
+              Войти
             </Button>
           </form>
 
           <div className={styles.preview}>
             <LightBulbIcon />
-            <Title tag='h2' variant={'lg'} >Добро пожаловать в SkillSwap!</Title>
-            <p>Присоединяйтесь к SkillSwap и обменивайтесь знаниями и навыками с другими людьми.</p>
+            <Title tag='h2' variant='lg'>
+              Советы по регистрации в SkillSwap!
+            </Title>
+            <p>Регистрация в SkillSwap — это быстрый и простой процесс.</p>
           </div>
         </div>
       </div>
