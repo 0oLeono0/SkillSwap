@@ -1,0 +1,17 @@
+@import '/src/app/styles/_variables.css';
+
+.placeholder {
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+}
+
+.placeholder p {
+  margin: 0;
+  color: var(--font-color-secondary);
+  line-height: 1.6;
+}

@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import type { Prisma } from '@prisma/client';
 import { hashPassword, verifyPassword } from '../utils/password.js';
 import { createConflict, createUnauthorized } from '../utils/httpErrors.js';
 import { tokenService } from './tokenService.js';
@@ -22,6 +23,13 @@ interface LoginInput {
   email: string;
   password: string;
 }
+
+type UpdateProfileInput = Partial<
+  Omit<RegisterInput, 'password'> & {
+    avatarUrl?: string | null;
+    cityId?: number | null;
+  }
+>;
 
 const normalizeSkills = (skills?: number[]) =>
   Array.isArray(skills) ? skills.filter((skill) => Number.isInteger(skill)) : [];
@@ -144,5 +152,61 @@ export const authService = {
       user: sanitizeUser(user),
       ...tokens,
     };
+  },
+
+  async updateProfile(userId: string, updates: UpdateProfileInput) {
+    const existingUser = await userRepository.findById(userId);
+    if (!existingUser) {
+      throw createUnauthorized();
+    }
+
+    if (updates.email && updates.email !== existingUser.email) {
+      const conflict = await userRepository.findByEmail(updates.email);
+      if (conflict) {
+        throw createConflict('User with this email already exists');
+      }
+    }
+
+    const data: Prisma.UserUpdateInput = {};
+
+    if (updates.email) {
+      data.email = updates.email;
+    }
+    if (updates.name) {
+      data.name = updates.name;
+    }
+    if ('avatarUrl' in updates) {
+      data.avatarUrl = updates.avatarUrl ?? '';
+    }
+    if ('cityId' in updates) {
+      data.cityId = updates.cityId ?? null;
+    }
+    if ('birthDate' in updates) {
+      if (updates.birthDate) {
+        const parsed = parseBirthDate(updates.birthDate);
+        data.birthDate = parsed ?? null;
+      } else {
+        data.birthDate = null;
+      }
+    }
+    if ('gender' in updates) {
+      data.gender = updates.gender ?? null;
+    }
+    if ('bio' in updates) {
+      data.bio = updates.bio ?? null;
+    }
+    if ('teachableSkills' in updates) {
+      data.teachableSkills = JSON.stringify(normalizeSkills(updates.teachableSkills));
+    }
+    if ('learningSkills' in updates) {
+      data.learningSkills = JSON.stringify(normalizeSkills(updates.learningSkills));
+    }
+
+    if (Object.keys(data).length === 0) {
+      return sanitizeUser(existingUser);
+    }
+
+    const updated = await userRepository.updateById(userId, data);
+    return sanitizeUser(updated);
   },
 };

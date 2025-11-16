@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import type { LoginPayload, RegisterPayload } from '@/shared/api/auth';
+import type { LoginPayload, RegisterPayload, UpdateProfilePayload } from '@/shared/api/auth';
 
 export interface AuthUser {
   id: string;
@@ -23,6 +23,7 @@ export interface AuthContextType {
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
+  updateProfile: (payload: UpdateProfilePayload) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);

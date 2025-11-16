@@ -22,6 +22,18 @@ const loginSchema = z.object({
   password: z.string().min(8),
 });
 
+const profileUpdateSchema = z.object({
+  email: z.string().email().optional(),
+  name: z.string().min(2).optional(),
+  avatarUrl: z.string().url().optional().nullable(),
+  cityId: z.number().int().positive().optional().nullable(),
+  birthDate: z.union([z.string().min(1), z.null()]).optional(),
+  gender: z.string().max(255).optional().nullable(),
+  bio: z.string().max(2000).optional().nullable(),
+  teachableSkills: z.array(z.number().int()).optional(),
+  learningSkills: z.array(z.number().int()).optional(),
+});
+
 const REFRESH_COOKIE_NAME = 'refreshToken';
 
 const baseCookieOptions = {
@@ -122,4 +134,19 @@ export const me = asyncHandler(async (req, res) => {
       name: req.user.name,
     },
   });
+});
+
+export const updateProfile = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    throw createUnauthorized();
+  }
+
+  const parseResult = profileUpdateSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    throw createBadRequest('Invalid payload', parseResult.error.flatten());
+  }
+
+  const user = await authService.updateProfile(req.user.sub, parseResult.data);
+
+  return res.status(200).json({ user });
 });

@@ -34,6 +34,18 @@ export interface RegisterPayload extends LoginPayload {
   learningSkills?: number[];
 }
 
+export interface UpdateProfilePayload {
+  email?: string;
+  name?: string;
+  avatarUrl?: string | null;
+  cityId?: number | null;
+  birthDate?: string | null;
+  gender?: string | null;
+  bio?: string | null;
+  teachableSkills?: number[];
+  learningSkills?: number[];
+}
+
 export const authApi = {
   login(payload: LoginPayload) {
     return request<AuthSuccessResponse>('/api/auth/login', {
@@ -63,6 +75,16 @@ export const authApi = {
 
   me() {
     return request<{ user: ApiAuthUser }>('/api/auth/me');
+  },
+
+  updateProfile(payload: UpdateProfilePayload, accessToken: string) {
+    return request<{ user: ApiAuthUser }>('/api/auth/me', {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(payload),
+    });
   },
 };
 
