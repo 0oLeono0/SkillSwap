@@ -24,6 +24,12 @@ const mapToAuthUser = (payloadUser: AuthSuccessResponse['user']): AuthUser => ({
   email: payloadUser.email,
   name: payloadUser.name,
   avatarUrl: payloadUser.avatarUrl,
+  cityId: payloadUser.cityId ?? null,
+  birthDate: payloadUser.birthDate ?? null,
+  gender: payloadUser.gender ?? null,
+  bio: payloadUser.bio ?? null,
+  teachableSkills: Array.isArray(payloadUser.teachableSkills) ? payloadUser.teachableSkills : [],
+  learningSkills: Array.isArray(payloadUser.learningSkills) ? payloadUser.learningSkills : [],
 });
 
 export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
