@@ -19,6 +19,7 @@ import { useAuth } from '@/app/providers/auth';
 import { useTheme } from '@/app/providers/theme';
 import { getSkillsGroups } from '@/features/Filter/utils';
 import { Title } from '@/shared/ui/Title';
+import fallbackAvatar from '@/shared/assets/images/avatars/avatar.jpg';
 
 const categoryIcons: Record<number, FC | undefined> = {
   1: IconBriefcase,
@@ -103,6 +104,8 @@ function Header() {
     });
     closeSkillsMenu();
   };
+
+  const userAvatar = user?.avatarUrl || fallbackAvatar;
 
   return (
     <header className={styles.header}>
@@ -199,7 +202,12 @@ function Header() {
 
           {isAuthenticated ? (
             <div className={styles.userInfo}>
-              <span>{user?.name ?? 'Пользователь'}</span>
+              <span className={styles.userName}>{user?.name ?? 'Пользователь'}</span>
+              <img
+                src={userAvatar}
+                alt='Аватар пользователя'
+                className={styles.userAvatar}
+              />
             </div>
           ) : (
             <div className={styles.buttons}>

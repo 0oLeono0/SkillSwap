@@ -9,8 +9,8 @@ export interface ApiAuthUser {
   birthDate?: string | null;
   gender?: string | null;
   bio?: string | null;
-  teachableSkills?: unknown;
-  learningSkills?: unknown;
+  teachableSkills?: number[];
+  learningSkills?: number[];
 }
 
 export interface AuthSuccessResponse {
@@ -25,6 +25,13 @@ export interface LoginPayload {
 
 export interface RegisterPayload extends LoginPayload {
   name: string;
+  avatarUrl?: string | null;
+  cityId?: number | null;
+  birthDate?: string | null;
+  gender?: string | null;
+  bio?: string | null;
+  teachableSkills?: number[];
+  learningSkills?: number[];
 }
 
 export const authApi = {

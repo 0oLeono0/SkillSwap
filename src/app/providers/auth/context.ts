@@ -6,6 +6,12 @@ export interface AuthUser {
   email: string;
   name: string;
   avatarUrl?: string | null;
+  cityId?: number | null;
+  birthDate?: string | null;
+  gender?: string | null;
+  bio?: string | null;
+  teachableSkills?: number[];
+  learningSkills?: number[];
 }
 
 export interface AuthContextType {

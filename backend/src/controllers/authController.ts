@@ -8,6 +8,13 @@ const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   name: z.string().min(2),
+  avatarUrl: z.string().url().optional().nullable(),
+  cityId: z.number().int().positive().optional(),
+  birthDate: z.string().min(1).optional(),
+  gender: z.string().optional(),
+  bio: z.string().max(2000).optional(),
+  teachableSkills: z.array(z.number().int()).optional(),
+  learningSkills: z.array(z.number().int()).optional(),
 });
 
 const loginSchema = z.object({
@@ -35,8 +42,20 @@ export const register = asyncHandler(async (req, res) => {
     throw createBadRequest('Invalid payload', parseResult.error.flatten());
   }
 
-  const { email, password, name } = parseResult.data;
-  const { user, accessToken, refreshToken } = await authService.register({ email, password, name });
+  const { email, password, name, avatarUrl, cityId, birthDate, gender, bio, teachableSkills, learningSkills } =
+    parseResult.data;
+  const { user, accessToken, refreshToken } = await authService.register({
+    email,
+    password,
+    name,
+    avatarUrl: avatarUrl ?? undefined,
+    cityId,
+    birthDate,
+    gender,
+    bio,
+    teachableSkills,
+    learningSkills,
+  });
 
   res.cookie(REFRESH_COOKIE_NAME, refreshToken, cookieOptions);
 

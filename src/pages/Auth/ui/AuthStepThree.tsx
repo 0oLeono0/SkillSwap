@@ -106,10 +106,21 @@ const AuthStepThree = () => {
     try {
       setIsSubmitting(true);
       setError(null);
+      const trimmedDescription = description.trim();
+      const learningSkillIds =
+        typeof stepTwoData.subskillId === 'number' ? [stepTwoData.subskillId] : [];
+      const teachableSkillIds = typeof subskillId === 'number' ? [subskillId] : [];
       await register({
         email: stepOneData.email,
         password: stepOneData.password,
         name: stepTwoData.name || 'Skill Swapper',
+        avatarUrl: stepTwoData.avatarUrl || undefined,
+        cityId: stepTwoData.cityId ?? undefined,
+        birthDate: stepTwoData.birthDate || undefined,
+        gender: stepTwoData.gender || undefined,
+        bio: trimmedDescription || undefined,
+        learningSkills: learningSkillIds,
+        teachableSkills: teachableSkillIds,
       });
       sessionStorage.removeItem(REGISTRATION_CREDENTIALS_STORAGE_KEY);
       sessionStorage.removeItem(REGISTRATION_STEP_TWO_STORAGE_KEY);
