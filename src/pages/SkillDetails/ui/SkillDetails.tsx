@@ -26,6 +26,8 @@ import stock1 from '@/shared/assets/images/stock/stock.jpg';
 import stock2 from '@/shared/assets/images/stock/stock2.jpg';
 import stock3 from '@/shared/assets/images/stock/stock3.jpg';
 import stock4 from '@/shared/assets/images/stock/stock4.jpg';
+import OkIcon from '@/shared/assets/icons/status/done.svg?react';
+import NotificationIcon from '@/shared/assets/icons/content/notification.svg?react';
 
 const RELATED_AUTHORS_LIMIT = 4;
 
@@ -48,6 +50,8 @@ const SkillDetails = (): ReactElement => {
   const [error, setError] = useState<string | null>(null);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [isProposalSent, setIsProposalSent] = useState(false);
   useEffect(() => {
     if (!authorId) {
       setError('Не удалось загрузить информацию о навыке');
@@ -85,6 +89,11 @@ const SkillDetails = (): ReactElement => {
   useEffect(() => {
     setSelectedSkillId(null);
   }, [authorId]);
+
+  useEffect(() => {
+    setIsProposalSent(false);
+    setIsSuccessModalOpen(false);
+  }, [selectedSkillId, authorId]);
 
   const author = useMemo(
     () => users.find((user) => user.id === authorId) ?? null,
@@ -181,10 +190,16 @@ const SkillDetails = (): ReactElement => {
     }
 
     console.info('[SkillDetails] Propose exchange', selectedSkill.id);
+    setIsProposalSent(true);
+    setIsSuccessModalOpen(true);
   }, [isAuthenticated, selectedSkill]);
 
   const handleCloseAuthModal = useCallback(() => {
     setIsAuthModalOpen(false);
+  }, []);
+
+  const handleCloseSuccessModal = useCallback(() => {
+    setIsSuccessModalOpen(false);
   }, []);
 
   const handleLoginRedirect = useCallback(() => {
@@ -213,6 +228,14 @@ const SkillDetails = (): ReactElement => {
     'Привет! Я увлекаюсь этим навыком уже больше 10 лет — от первых занятий дома до выступлений на сцене. Научу вас основам, поделюсь любимыми техниками и помогу уверенно чувствовать себя даже без подготовки.';
 
   const galleryImages = GALLERY_IMAGES;
+  const proposeButtonLabel = isProposalSent ? 'Обмен предложен' : 'Предложить обмен';
+  const proposeButtonInlineStyle = isProposalSent
+    ? {
+        backgroundColor: '#fff',
+        color: '#000',
+        borderColor: 'var(--button-color-accent)',
+      }
+    : undefined;
 
   return (
     <section className={styles.skillDetails}>
@@ -286,8 +309,9 @@ const SkillDetails = (): ReactElement => {
               <Button
                 variant='primary'
                 onClick={handleProposeExchange}
+                style={proposeButtonInlineStyle}
               >
-                Предложить обмен
+                {proposeButtonLabel}
               </Button>
             </div>
             <div className={styles.gallery}>
@@ -328,6 +352,9 @@ const SkillDetails = (): ReactElement => {
       </div>
       <Modal isOpen={isAuthModalOpen} onClose={handleCloseAuthModal}>
         <div className={styles.authPrompt}>
+          <div className={styles.modalIcon}>
+            <OkIcon />
+          </div>
           <Title tag='h3' variant='lg'>
             Чтобы предложить обмен, войдите или зарегистрируйтесь
           </Title>
@@ -343,6 +370,20 @@ const SkillDetails = (): ReactElement => {
               Зарегистрироваться
             </Button>
           </div>
+        </div>
+      </Modal>
+      <Modal isOpen={isSuccessModalOpen} onClose={handleCloseSuccessModal}>
+        <div className={styles.exchangeModal}>
+          <div className={styles.modalIcon}>
+            <NotificationIcon />
+          </div>
+          <Title tag='h3' variant='lg'>
+            Обмен предложен
+          </Title>
+          <p>Теперь дождитесь подтверждения. Вам придёт уведомление.</p>
+          <Button variant='primary' onClick={handleCloseSuccessModal}>
+            Готово
+          </Button>
         </div>
       </Modal>
     </section>
