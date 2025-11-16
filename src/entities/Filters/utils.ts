@@ -24,7 +24,10 @@ export const applyFilters = (
       )
     )
       return false;
-    if (filters.cityIds.length && !filters.cityIds.includes(user.cityId))
+    if (
+      filters.cityIds.length &&
+      !(typeof user.cityId === 'number' && filters.cityIds.includes(user.cityId))
+    )
       return false;
     if (filters.gender !== 'any' && user.gender !== filters.gender)
       return false;
@@ -43,7 +46,7 @@ export const applyFilters = (
     name: user.name,
     age: getUserAge(user),
     city: getUserCity(user),
-    avatarUrl: user.avatarUrl,
+    avatarUrl: user.avatarUrl ?? '',
     bio: user.bio,
     teachSkills: user.teachableSkills
       .map((id) => {

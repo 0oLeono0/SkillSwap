@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react-vite';
+﻿import type { Meta, StoryObj } from '@storybook/react-vite';
 import { MemoryRouter } from 'react-router-dom';
 import avatar from '@/shared/assets/images/avatars/avatar.jpg';
 import { SkillCard } from './SkillCard';
@@ -40,28 +40,28 @@ export const InteractiveSkillCard: StoryObj<SkillCardStoryProps> = {
     isDetailsButtonVisible: true,
     isExchangeOffered: false,
     skill: {
-      id: 11,
+      id: '11',
       name: 'Игра на барабанах',
       category: SkillCategories.ART,
     },
     skillsToLearn: [
       {
-        id: 64,
+        id: '64',
         name: 'Английский язык',
         category: SkillCategories.LANGUAGES,
       },
       {
-        id: 36,
+        id: '36',
         name: 'Тайм-менеджмент',
         category: SkillCategories.BUSINESS,
       },
       {
-        id: 24,
+        id: '24',
         name: 'Медитация',
         category: SkillCategories.HEALTH,
       },
       {
-        id: 65,
+        id: '65',
         name: 'Публичные выступления',
         category: SkillCategories.EDUCATION,
       },
@@ -74,11 +74,11 @@ export const InteractiveSkillCard: StoryObj<SkillCardStoryProps> = {
     authorAbout: { control: 'text', name: 'Описание автора' },
   },
   render: ({ authorAbout, containerWidth = 364, ...cardProps }) => {
-    const handleDetailsButton = (skillId: number) => {
+    const handleDetailsButton = (skillId: string) => {
       alert(`Подробнее о навыке c id=${skillId}`);
     };
 
-    const handleLikeButton = (skillId: number) => {
+    const handleLikeButton = (skillId: string) => {
       alert(`Добавлено в избранное, skillId=${skillId}`);
     };
 

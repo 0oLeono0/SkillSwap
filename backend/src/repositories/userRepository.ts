@@ -6,6 +6,14 @@ export const userRepository = {
     return prisma.user.findUnique({ where: { email } });
   },
 
+  findAll() {
+    return prisma.user.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  },
+
   findById(id: string) {
     return prisma.user.findUnique({ where: { id } });
   },

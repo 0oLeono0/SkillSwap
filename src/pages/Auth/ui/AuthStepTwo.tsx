@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './authStepTwo.module.scss';
 import { Button } from '@/shared/ui/button/Button';
@@ -7,8 +7,7 @@ import { Select, SelectVariant } from '@/shared/ui/Select';
 import { DatePicker } from '@/shared/ui/DatePicker/DatePicker';
 import { Title } from '@/shared/ui/Title';
 import { ROUTES } from '@/shared/constants';
-import { getSkillsGroups } from '@/features/Filter/utils';
-import { loadCatalogBaseData } from '@/pages/Catalog/model/catalogData';
+import { getCities, getSkillsGroups } from '@/features/Filter/utils';
 import type { Gender } from '@/entities/User/types';
 import UserInfoIcon from '@/shared/assets/images/user-info.svg?react';
 
@@ -39,8 +38,7 @@ interface StepTwoStorageData {
 const AuthStepTwo = () => {
   const navigate = useNavigate();
 
-  const catalogData = useMemo(() => loadCatalogBaseData(), []);
-  const cityOptions = useMemo(() => catalogData.cityOptions, [catalogData]);
+  const cityOptions = useMemo(() => getCities(), []);
   const skillGroups = useMemo(() => getSkillsGroups(), []);
 
   const credentials = useMemo<StepOneCredentials | null>(() => {
@@ -72,12 +70,12 @@ const AuthStepTwo = () => {
     return skillGroups.find((group) => group.id === categoryId)?.skills ?? [];
   }, [categoryId, skillGroups]);
 
-  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
     setAvatarFile(file);
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     sessionStorage.setItem(

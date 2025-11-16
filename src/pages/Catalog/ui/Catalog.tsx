@@ -1,4 +1,4 @@
-import {
+﻿import {
   useCallback,
   useEffect,
   useMemo,
@@ -31,6 +31,7 @@ import {
 import type { User } from '@/entities/User/types';
 import { Button } from '@/shared/ui/button/Button';
 import { ROUTES } from '@/shared/constants';
+import { useAuth } from '@/app/providers/auth';
 
 type CatalogVariant = 'home' | 'catalog';
 
@@ -50,12 +51,12 @@ const SECTION_SIZE = 3;
 const SECTION_META: Record<string, string> = {
   popular: 'Популярное',
   new: 'Новое',
-  recommended: 'Рекомендуем'
+  recommended: 'Рекомендуем',
 };
 
 const MODE_LABELS: Record<Exclude<SearchMode, 'all'>, string> = {
   wantToLearn: 'Хочу учить',
-  canTeach: 'Могу научить'
+  canTeach: 'Могу научить',
 };
 
 const searchModeValues: SearchMode[] = ['all', 'wantToLearn', 'canTeach'];
@@ -71,7 +72,7 @@ const limitSkillsByAuthors = (
     return [];
   }
 
-  const selectedAuthors = new Set<number>();
+  const selectedAuthors = new Set<string>();
   const limitedSkills: CatalogSkill[] = [];
 
   skills.forEach((skill) => {
@@ -102,20 +103,44 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   const [skillGroups, setSkillGroups] = useState<SkillGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user: authUser } = useAuth();
+  const currentUserId = authUser?.id ?? null;
+  const visibleSkills = useMemo(
+    () =>
+      currentUserId
+        ? skills.filter((skill) => skill.authorId !== currentUserId)
+        : skills,
+    [skills, currentUserId],
+  );
 
   useEffect(() => {
-    try {
-      const data = loadCatalogBaseData();
-      setUsers(data.users);
-      setSkills(data.skills);
-      setCityOptions(data.cityOptions);
-      setSkillGroups(data.skillGroups);
-    } catch (err) {
-      console.error('[Catalog] Failed to load catalog data', err);
-      setError('Не удалось загрузить данные каталога');
-    } finally {
-      setIsLoading(false);
-    }
+    let isMounted = true;
+
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const data = await loadCatalogBaseData();
+        if (!isMounted) return;
+        setUsers(data.users);
+        setSkills(data.skills);
+        setCityOptions(data.cityOptions);
+        setSkillGroups(data.skillGroups);
+        setError(null);
+      } catch (err) {
+        if (!isMounted) return;
+        console.error('[Catalog] Failed to load catalog data', err);
+        setError('Не удалось загрузить данные каталога');
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -171,23 +196,23 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   const filteredSkills = useMemo(
     () =>
       filterCatalogSkills({
-        skills,
+        skills: visibleSkills,
         filters,
         cityOptions,
         usersById
       }),
-    [skills, filters, cityOptions, usersById]
+    [visibleSkills, filters, cityOptions, usersById]
   );
 
   const skillsByAuthor = useMemo(() => {
-    const map = new Map<number, CatalogSkill[]>();
-    skills.forEach((skill) => {
+    const map = new Map<string, CatalogSkill[]>();
+    visibleSkills.forEach((skill) => {
       const list = map.get(skill.authorId) ?? [];
       list.push(skill);
       map.set(skill.authorId, list);
     });
     return map;
-  }, [skills]);
+  }, [visibleSkills]);
 
   const getAuthorSkills = useCallback(
     (subset: CatalogSkill[]) => {
@@ -219,7 +244,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   );
 
   const buildSectionSkills = useCallback(
-    (authorIds: number[]) =>
+    (authorIds: string[]) =>
       filteredSkills.filter((skill) => authorIds.includes(skill.authorId)),
     [filteredSkills]
   );
@@ -229,10 +254,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
 
     const popularIds = authorOrder.slice(0, SECTION_SIZE);
     const newIds = authorOrder.slice(SECTION_SIZE, SECTION_SIZE * 2);
-    const recommendedIds = authorOrder.slice(
-      SECTION_SIZE * 2,
-      SECTION_SIZE * 5
-    );
+      const recommendedIds = authorOrder.slice(SECTION_SIZE * 2);
 
     return [
       {
@@ -375,7 +397,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
     setFilters({ ...DEFAULT_FILTERS });
   }, []);
 
-  const handleToggleFavorite = useCallback((authorId: number) => {
+  const handleToggleFavorite = useCallback((authorId: string) => {
     setSkills((prevSkills) => {
       const isFavorite = prevSkills.some(
         (skill) => skill.authorId === authorId && skill.isFavorite
@@ -390,8 +412,8 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   }, []);
 
   const handleDetailsClick = useCallback(
-    (authorId: number) => {
-      navigate(ROUTES.SKILL_DETAILS.replace(':authorId', String(authorId)));
+    (authorId: string) => {
+      navigate(ROUTES.SKILL_DETAILS.replace(':authorId', authorId));
     },
     [navigate]
   );
@@ -438,7 +460,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
                   variant='secondary'
                   onClick={() => toggleSectionExpansion(section.key)}
                 >
-                  {isExpanded ? 'Скрыть' : 'Смотреть все'}
+                  {isExpanded ? 'Скрыть' : 'Показать все'}
                 </Button>
               )}
             </div>
@@ -496,3 +518,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
 };
 
 export default Catalog;
+
+
+
+

@@ -29,14 +29,14 @@ const RELATED_AUTHORS_LIMIT = 4;
 
 const collectAuthorSkills = (
   source: CatalogSkill[],
-  authorIds: Set<number>,
+  authorIds: Set<string>,
 ) => source.filter((skill) => authorIds.has(skill.authorId));
 
 const GALLERY_IMAGES = [stock1, stock2, stock3, stock4];
 
 const SkillDetails = (): ReactElement => {
   const { authorId: authorIdParam } = useParams();
-  const authorId = Number(authorIdParam);
+  const authorId = authorIdParam ?? '';
   const navigate = useNavigate();
 
   const [skills, setSkills] = useState<CatalogSkill[]>([]);
@@ -44,19 +44,39 @@ const SkillDetails = (): ReactElement => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
-
   useEffect(() => {
-    try {
-      const data = loadCatalogBaseData();
-      setSkills(data.skills);
-      setUsers(data.users);
-    } catch (err) {
-      console.error('[SkillDetails] Failed to load data', err);
-      setError('Не удалось загрузить данные навыка');
-    } finally {
+    if (!authorId) {
+      setError('Не удалось загрузить информацию о навыке');
       setIsLoading(false);
+      return;
     }
-  }, []);
+
+    let isMounted = true;
+
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const data = await loadCatalogBaseData();
+        if (!isMounted) return;
+        setSkills(data.skills);
+        setUsers(data.users);
+        setError(null);
+      } catch (err) {
+        if (!isMounted) return;
+        console.error('[SkillDetails] Failed to load data', err);
+        setError('Не удалось загрузить информацию о навыке');
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+    return () => {
+      isMounted = false;
+    };
+  }, [authorId]);
 
   useEffect(() => {
     setSelectedSkillId(null);
@@ -99,7 +119,7 @@ const SkillDetails = (): ReactElement => {
   const relatedSkills = useMemo(() => {
     if (!selectedSkill) return [];
 
-    const selectedAuthors = new Set<number>();
+    const selectedAuthors = new Set<string>();
     for (const skill of skills) {
       if (
         skill.category !== selectedSkill.category ||
@@ -125,10 +145,7 @@ const SkillDetails = (): ReactElement => {
 
     return collectAuthorSkills(skills, selectedAuthors);
   }, [skills, selectedSkill, authorId]);
-
-  console.log(relatedSkills);
-
-  const handleToggleFavorite = useCallback((targetAuthorId: number) => {
+  const handleToggleFavorite = useCallback((targetAuthorId: string) => {
     setSkills((prevSkills) => {
       const isFavorite = prevSkills.some(
         (skill) => skill.authorId === targetAuthorId && skill.isFavorite
@@ -143,10 +160,8 @@ const SkillDetails = (): ReactElement => {
   }, []);
 
   const handleDetailsClick = useCallback(
-    (targetAuthorId: number) => {
-      navigate(
-        ROUTES.SKILL_DETAILS.replace(':authorId', String(targetAuthorId))
-      );
+    (targetAuthorId: string) => {
+      navigate(ROUTES.SKILL_DETAILS.replace(':authorId', targetAuthorId));
     },
     [navigate]
   );
@@ -290,3 +305,8 @@ const SkillDetails = (): ReactElement => {
 };
 
 export default SkillDetails;
+
+
+
+
+

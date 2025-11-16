@@ -1,4 +1,4 @@
-import { db } from '@/api/mockData';
+﻿import { db } from '@/api/mockData';
 import { mapApiToUser } from '@/entities/User/mappers';
 import type { User } from '@/entities/User/types';
 import type { Skill } from '@/entities/Skill/types';
@@ -11,10 +11,12 @@ import type {
   SkillCategories as SkillGroup,
 } from '@/features/Filter/types';
 import {
-    getCities,
-    getSkillsGroups,
-    mapCityNamesToCityIds,
+  getCities,
+  getSkillsGroups,
+  mapCityNamesToCityIds,
 } from '@/features/Filter/utils';
+import { usersApi } from '@/shared/api/users';
+import type { ApiAuthUser } from '@/shared/api/auth';
 
 export interface CatalogSkill extends Skill {
   originalSkillId: number;
@@ -61,8 +63,8 @@ const buildCategoryLookup = (): Map<number, SkillCategory> => {
 const subskillNameById = getSubskillNameMap(db.skills);
 const categoryBySubskillId = buildCategoryLookup();
 
-export const buildCatalogSkills = (users: User[]): CatalogSkill[] => {
-  return users.flatMap((user) => {
+export const buildCatalogSkills = (users: User[]): CatalogSkill[] =>
+  users.flatMap((user) => {
     const authorCity = getUserCity(user);
     const authorAge = getUserAge(user);
     const authorAbout = user.bio;
@@ -71,7 +73,7 @@ export const buildCatalogSkills = (users: User[]): CatalogSkill[] => {
       subskillId: number,
       type: CatalogSkill['type'],
     ): CatalogSkill => {
-      const title = subskillNameById.get(subskillId) ?? 'Неизвестный навык';
+      const title = subskillNameById.get(subskillId) ?? 'Unknown skill';
       const category =
         categoryBySubskillId.get(subskillId) ?? SkillCategories.EDUCATION;
 
@@ -81,7 +83,7 @@ export const buildCatalogSkills = (users: User[]): CatalogSkill[] => {
         description: authorAbout ?? '',
         type,
         category,
-        imageUrl: user.avatarUrl,
+        imageUrl: user.avatarUrl ?? undefined,
         tags: [],
         authorId: user.id,
         isFavorite: false,
@@ -93,19 +95,20 @@ export const buildCatalogSkills = (users: User[]): CatalogSkill[] => {
       };
     };
 
-    const teachableSkills = user.teachableSkills.map((skillId) =>
+    const teachableSkills = (user.teachableSkills ?? []).map((skillId) =>
       convertSkill(skillId, 'teach'),
     );
-    const learningSkills = user.learningSkills.map((skillId) =>
+    const learningSkills = (user.learningSkills ?? []).map((skillId) =>
       convertSkill(skillId, 'learn'),
     );
 
     return [...teachableSkills, ...learningSkills];
   });
-};
 
-export const loadCatalogBaseData = (): CatalogBaseData => {
-  const users = db.users.map(mapApiToUser);
+export const loadCatalogBaseData = async (): Promise<CatalogBaseData> => {
+  const response = await usersApi.fetchAll();
+  const users = response.users.map((user: ApiAuthUser) => mapApiToUser(user));
+
   return {
     users,
     skills: buildCatalogSkills(users),
@@ -121,7 +124,7 @@ interface FilterSkillsArgs {
   skills: CatalogSkill[];
   filters: Filters;
   cityOptions: CityOption[];
-  usersById: Map<number, User>;
+  usersById: Map<string, User>;
 }
 
 export const filterCatalogSkills = ({
@@ -146,7 +149,7 @@ export const filterCatalogSkills = ({
 
     if (
       selectedCityIds.length &&
-      !selectedCityIds.includes(author.cityId)
+      !(typeof author.cityId === 'number' && selectedCityIds.includes(author.cityId))
     ) {
       return false;
     }
