@@ -17,6 +17,7 @@ import IconGlobal from '@/shared/assets/icons/categories/global.svg?react';
 import IconBook from '@/shared/assets/icons/categories/book.svg?react';
 import IconHome from '@/shared/assets/icons/categories/home.svg?react';
 import IconLifestyle from '@/shared/assets/icons/categories/lifestyle.svg?react';
+import IconLogOut from '@/shared/assets/icons/actions/logout.svg?react';
 import { Button } from '@/shared/ui/button/Button';
 import { ROUTES } from '@/shared/constants';
 import { Logo } from '@/shared/ui/Logo/Logo';
@@ -56,11 +57,14 @@ function HeaderThemeToggle() {
 }
 
 function Header() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const skillGroups = useMemo(() => getSkillsGroups(), []);
   const [isSkillsMenuOpen, setIsSkillsMenuOpen] = useState(false);
   const skillsToggleRef = useRef<HTMLButtonElement | null>(null);
   const skillsMenuRef = useRef<HTMLDivElement | null>(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
+  const userMenuToggleRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     if (!isSkillsMenuOpen) return;
@@ -97,6 +101,8 @@ function Header() {
   };
 
   const closeSkillsMenu = () => setIsSkillsMenuOpen(false);
+  const toggleUserMenu = () => setIsUserMenuOpen((prev) => !prev);
+  const closeUserMenu = () => setIsUserMenuOpen(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -114,6 +120,40 @@ function Header() {
     });
   }, [headerSearch, location.pathname, navigate]);
 
+  useEffect(() => {
+    if (!isUserMenuOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(target) &&
+        userMenuToggleRef.current &&
+        !userMenuToggleRef.current.contains(target)
+      ) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isUserMenuOpen]);
+
+  useEffect(() => {
+    setIsUserMenuOpen(false);
+  }, [location.pathname]);
+
   const handleSkillShortcut = (skillId: number) => {
     navigate({
       pathname: ROUTES.HOME,
@@ -123,6 +163,22 @@ function Header() {
       }).toString()
     });
     closeSkillsMenu();
+  };
+
+  const handleProfileClick = () => {
+    navigate(ROUTES.PROFILE.ROOT);
+    closeUserMenu();
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.warn('[Header] Failed to logout', error);
+    } finally {
+      closeUserMenu();
+      navigate(ROUTES.HOME);
+    }
   };
 
   const userAvatar = user?.avatarUrl || fallbackAvatar;
@@ -221,13 +277,36 @@ function Header() {
           <HeaderThemeToggle />
 
           {isAuthenticated ? (
-            <div className={styles.userInfo}>
-              <span className={styles.userName}>{user?.name ?? 'Пользователь'}</span>
-              <img
-                src={userAvatar}
-                alt='Аватар пользователя'
-                className={styles.userAvatar}
-              />
+            <div className={styles.userMenu}>
+              <button
+                type='button'
+                className={styles.userInfoButton}
+                onClick={toggleUserMenu}
+                ref={userMenuToggleRef}
+                aria-haspopup='true'
+                aria-expanded={isUserMenuOpen}
+              >
+                <span className={styles.userName}>{user?.name ?? 'Пользователь'}</span>
+                <img
+                  src={userAvatar}
+                  alt='Аватар пользователя'
+                  className={styles.userAvatar}
+                />
+              </button>
+              {isUserMenuOpen && (
+                <div className={styles.userMenuDropdown} ref={userMenuRef}>
+                  <button
+                    type='button'
+                    className={styles.userMenuItem}
+                    onClick={handleProfileClick}
+                  >
+                    Личный кабинет
+                  </button>
+                  <button type='button' className={styles.userMenuItem} onClick={handleLogout}>
+                    Выйти из аккаунта <IconLogOut aria-hidden />
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className={styles.buttons}>
