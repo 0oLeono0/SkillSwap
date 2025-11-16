@@ -25,6 +25,8 @@ model User {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   refreshTokens   RefreshToken[]
+  outgoingRequests Request[] @relation("RequestFrom")
+  incomingRequests Request[] @relation("RequestTo")
 }
 
 model RefreshToken {
@@ -37,4 +39,19 @@ model RefreshToken {
 
   @@index([userId])
   @@index([token])
+}
+
+model Request {
+  id         String        @id @default(cuid())
+  skillId    String
+  status     String        @default("pending")
+  fromUserId String
+  toUserId   String
+  fromUser   User          @relation("RequestFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser     User          @relation("RequestTo", fields: [toUserId], references: [id], onDelete: Cascade)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([fromUserId])
+  @@index([toUserId])
 }

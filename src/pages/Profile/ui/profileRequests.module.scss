@@ -1,0 +1,195 @@
+@import '/src/app/styles/_variables.css';
+
+.requests {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  color: var(--font-color-secondary);
+  line-height: 1.5;
+  max-width: 560px;
+}
+
+.error {
+  margin: 0;
+  color: var(--error-color);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.columnHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.counter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f3f7eb;
+  color: var(--font-color-primary);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  border: 1px solid #e4e8df;
+  border-radius: 18px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--bg-color-secondary);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.skillGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.skillType {
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--font-color-secondary);
+}
+
+.skillTitle {
+  margin: 0;
+  color: var(--font-color-primary);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-pending {
+  background: #fff6e7;
+  color: #b15e09;
+}
+
+.status-accepted {
+  background: #e9f7e7;
+  color: #2a6d2a;
+}
+
+.status-rejected {
+  background: #feecec;
+  color: #c43737;
+}
+
+.status-inProgress {
+  background: #e6f0ff;
+  color: #3158b7;
+}
+
+.status-done {
+  background: #f0f2f5;
+  color: #3f4a52;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  font-size: 14px;
+  color: var(--font-color-secondary);
+}
+
+.meta strong {
+  color: var(--font-color-primary);
+  font-weight: 600;
+}
+
+.note {
+  margin: 0;
+  font-size: 14px;
+  color: var(--font-color-secondary);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pendingHint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--font-color-secondary);
+  background: #f7faf1;
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+
+.empty {
+  margin: 0;
+  padding: 24px;
+  text-align: center;
+  border-radius: 16px;
+  border: 1px dashed #dfe5d8;
+  color: var(--font-color-secondary);
+  background: rgba(80, 136, 38, 0.04);
+}
+
+@media (max-width: 640px) {
+  .card {
+    padding: 16px;
+  }
+
+  .skillTitle {
+    font-size: 18px;
+  }
+}

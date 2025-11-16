@@ -14,6 +14,7 @@ import {
   ProfileLayout,
   ProfilePersonalData,
   ProfileSectionPlaceholder,
+  ProfileRequests,
 } from '@/pages/Profile';
 
 const Stub: FC<{ title: string }> = ({ title }) => {
@@ -22,7 +23,7 @@ const Stub: FC<{ title: string }> = ({ title }) => {
     <div style={{ padding: 24 }}>
       <h1 style={{ margin: 0 }}>{title}</h1>
       <p style={{ opacity: 0.7, marginTop: 8 }}>
-        Текущий путь: <code>{pathname}</code>
+        Current path: <code>{pathname}</code>
       </p>
     </div>
   );
@@ -67,19 +68,14 @@ export const router = createBrowserRouter([
           { index: true, element: <ProfilePersonalData /> },
           {
             path: ROUTES.PROFILE.CHILDREN.REQUESTS,
-            element: (
-              <ProfileSectionPlaceholder
-                title="Заявки"
-                description="Здесь будут собраны входящие и исходящие заявки на обмен навыками."
-              />
-            ),
+            element: <ProfileRequests />,
           },
           {
             path: ROUTES.PROFILE.CHILDREN.EXCHANGES,
             element: (
               <ProfileSectionPlaceholder
                 title="Мои обмены"
-                description="Следите за прогрессом и статусами ваших активных обменов."
+                description="Подтвержденные обмены и история сессий появятся здесь."
               />
             ),
           },
@@ -87,8 +83,8 @@ export const router = createBrowserRouter([
             path: ROUTES.PROFILE.CHILDREN.FAVORITES,
             element: (
               <ProfileSectionPlaceholder
-                title="Избранное"
-                description="Сохраняйте понравившиеся профили, чтобы быстро вернуться к ним позже."
+                title="Favorites"
+                description="Save interesting skills and revisit them later in one click."
               />
             ),
           },
@@ -96,8 +92,8 @@ export const router = createBrowserRouter([
             path: ROUTES.PROFILE.CHILDREN.SKILLS,
             element: (
               <ProfileSectionPlaceholder
-                title="Мои навыки"
-                description="Управляйте списком навыков, которыми готовы делиться или которые хотите освоить."
+                title="My skills"
+                description="Manage the skills you can teach or plan to learn."
               />
             ),
           },
@@ -108,7 +104,7 @@ export const router = createBrowserRouter([
   {
     path: ROUTES.SERVER_ERROR,
     element: (
-      <Suspense fallback={<div>Загрузка...</div>}>
+      <Suspense fallback={<div>Loading...</div>}>
         <ServerError />
       </Suspense>
     ),
@@ -116,7 +112,7 @@ export const router = createBrowserRouter([
   {
     path: ROUTES.NOTFOUND,
     element: (
-      <Suspense fallback={<div>Загрузка...</div>}>
+      <Suspense fallback={<div>Loading...</div>}>
         <NotFound />
       </Suspense>
     ),

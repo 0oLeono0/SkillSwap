@@ -12,6 +12,7 @@ import {
   type CatalogSkill
 } from '@/pages/Catalog/model/catalogData';
 import { useAuth } from '@/app/providers/auth';
+import { createRequest } from '@/features/requests/model/actions';
 import type { User } from '@/entities/User/types';
 import { Button } from '@/shared/ui/button/Button';
 import { Tag } from '@/shared/ui/Tag/Tag';
@@ -42,7 +43,7 @@ const SkillDetails = (): ReactElement => {
   const { authorId: authorIdParam } = useParams();
   const authorId = authorIdParam ?? '';
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, accessToken } = useAuth();
 
   const [skills, setSkills] = useState<CatalogSkill[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -179,20 +180,27 @@ const SkillDetails = (): ReactElement => {
     [navigate]
   );
 
-  const handleProposeExchange = useCallback(() => {
+  const handleProposeExchange = useCallback(async () => {
     if (!selectedSkill) {
       return;
     }
 
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user || !accessToken) {
       setIsAuthModalOpen(true);
       return;
     }
 
-    console.info('[SkillDetails] Propose exchange', selectedSkill.id);
-    setIsProposalSent(true);
-    setIsSuccessModalOpen(true);
-  }, [isAuthenticated, selectedSkill]);
+    try {
+      await createRequest(accessToken, {
+        toUserId: selectedSkill.authorId,
+        skillId: selectedSkill.id,
+      });
+      setIsProposalSent(true);
+      setIsSuccessModalOpen(true);
+    } catch (err) {
+      console.error('[SkillDetails] Failed to create request', err);
+    }
+  }, [accessToken, isAuthenticated, selectedSkill, user]);
 
   const handleCloseAuthModal = useCallback(() => {
     setIsAuthModalOpen(false);
