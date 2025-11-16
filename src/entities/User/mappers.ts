@@ -1,20 +1,17 @@
-import type { ApiUser } from '@/api/types';
+import type { ApiAuthUser } from '@/shared/api/auth';
 import type { User } from './types';
-import { db } from '@/api/mockData';
 
-export const mapApiToUser = (apiUser: ApiUser): User => {
-  const city = db.cities.find((c) => c.name === apiUser.city);
-  const cityId = city ? city.id : 0;
+const normalizeSkills = (skills?: number[] | null) =>
+  Array.isArray(skills) ? skills.filter((id): id is number => Number.isFinite(id)) : [];
 
-  return {
-    id: apiUser.id,
-    name: apiUser.name,
-    avatarUrl: apiUser.avatarUrl,
-    cityId,
-    birthDate: apiUser.birthDate,
-    gender: apiUser.gender,
-    bio: apiUser.bio,
-    teachableSkills: apiUser.teachableSkills,
-    learningSkills: apiUser.learningSkills
-  };
-};
+export const mapApiToUser = (apiUser: ApiAuthUser): User => ({
+  id: apiUser.id,
+  name: apiUser.name,
+  avatarUrl: apiUser.avatarUrl ?? null,
+  cityId: typeof apiUser.cityId === 'number' ? apiUser.cityId : null,
+  birthDate: apiUser.birthDate ?? null,
+  gender: apiUser.gender ?? null,
+  bio: apiUser.bio ?? null,
+  teachableSkills: normalizeSkills(apiUser.teachableSkills),
+  learningSkills: normalizeSkills(apiUser.learningSkills),
+});

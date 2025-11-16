@@ -3,6 +3,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { config } from './config/env.js';
 import { authRouter } from './routes/auth.js';
+import { usersRouter } from './routes/users.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 export const app = express();
@@ -31,5 +32,6 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api/auth', authRouter);
+app.use('/api/users', usersRouter);
 
 app.use(errorHandler);

@@ -9,6 +9,8 @@ export class ApiError extends Error {
   }
 }
 
+type FetchRequestInit = Parameters<typeof fetch>[1];
+
 const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:4000';
 
 const buildUrl = (path: string) => {
@@ -17,14 +19,14 @@ const buildUrl = (path: string) => {
   return `${API_BASE_URL}/${path}`;
 };
 
-const shouldAttachJsonHeader = (body: RequestInit['body'], headers: Headers) => {
+const shouldAttachJsonHeader = (body: FetchRequestInit['body'], headers: Headers) => {
   if (!body) return false;
   if (body instanceof FormData) return false;
   if (headers.has('Content-Type')) return false;
   return true;
 };
 
-export async function request<TResponse>(path: string, options: RequestInit = {}): Promise<TResponse> {
+export async function request<TResponse>(path: string, options: FetchRequestInit = {}): Promise<TResponse> {
   const headers = new Headers(options.headers);
   const body = options.body;
 

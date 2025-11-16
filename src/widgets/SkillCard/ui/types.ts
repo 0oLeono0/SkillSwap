@@ -9,7 +9,7 @@ interface AuthorProps {
 }
 
 export interface SkillProps {
-  id: number;
+  id: string;
   name: string;
   category: SkillCategory;
 }
@@ -20,7 +20,7 @@ export interface SkillCardProps {
   isDetailsButtonVisible: boolean;
   skill: SkillProps;
   skillsToLearn: SkillProps[];
-  onDetailsButtonClick: (skillId: number) => void;
-  onLikeButtonClick: (skillId: number) => void;
+  onDetailsButtonClick: (skillId: string) => void;
+  onLikeButtonClick: (skillId: string) => void;
   isExchangeOffered: boolean;
 }

@@ -1,8 +1,9 @@
 import crypto from 'node:crypto';
-import { userRepository } from '../repositories/userRepository.js';
 import { hashPassword, verifyPassword } from '../utils/password.js';
 import { createConflict, createUnauthorized } from '../utils/httpErrors.js';
 import { tokenService } from './tokenService.js';
+import { userRepository } from '../repositories/userRepository.js';
+import { sanitizeUser } from './userService.js';
 
 interface RegisterInput {
   email: string;
@@ -21,33 +22,6 @@ interface LoginInput {
   email: string;
   password: string;
 }
-
-const parseSkillList = (value?: string | null): number[] => {
-  if (!value) {
-    return [];
-  }
-  try {
-    const parsed = JSON.parse(value);
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-    return parsed
-      .map((item) => Number(item))
-      .filter((item): item is number => Number.isFinite(item));
-  } catch {
-    return [];
-  }
-};
-
-const sanitizeUser = (user: Awaited<ReturnType<typeof userRepository.findById>>) => {
-  if (!user) return null;
-  const { passwordHash, teachableSkills, learningSkills, ...rest } = user;
-  return {
-    ...rest,
-    teachableSkills: parseSkillList(teachableSkills),
-    learningSkills: parseSkillList(learningSkills),
-  };
-};
 
 const normalizeSkills = (skills?: number[]) =>
   Array.isArray(skills) ? skills.filter((skill) => Number.isInteger(skill)) : [];

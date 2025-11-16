@@ -23,7 +23,7 @@ export const SkillsList: FC<SkillsListProps> = ({
     return <p className={styles.emptyMessage}>Ничего не найдено</p>;
   }
 
-  const groupedByAuthor = skills.reduce<Record<number, GroupedSkills>>(
+  const groupedByAuthor = skills.reduce<Record<string, GroupedSkills>>(
     (acc, rawSkill) => {
       const skill = rawSkill as SkillWithAuthor;
 
@@ -71,16 +71,16 @@ export const SkillsList: FC<SkillsListProps> = ({
 
   const authorCards = Object.values(groupedByAuthor);
 
-  const handleDetailsClick = (authorId: number) => {
+  const handleDetailsClick = (authorId: string) => {
     onDetailsClick?.(authorId);
   };
 
-  const handleLikeClick = (authorId: number) => {
+  const handleLikeClick = (authorId: string) => {
     onToggleFavorite(authorId);
   };
 
   const mapSkillToSkillProps = (skill: Skill): SkillProps => ({
-    id: parseInt(skill.id, 10),
+    id: skill.id,
     name: skill.title,
     category: skill.category as SkillCategory,
   });

@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react-vite';
+﻿import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { Skill } from '@/entities/Skill/types';
 import { SkillsList } from '@/widgets/SkillsList';
 import { SkillCategories } from '@/shared/lib/constants';
@@ -23,7 +23,7 @@ const mockSkills: Skill[] = [
     type: 'teach',
     category: SkillCategories.ART,
     tags: ['music'],
-    authorId: 1,
+    authorId: '1',
     isFavorite: false,
   },
   {
@@ -33,7 +33,7 @@ const mockSkills: Skill[] = [
     type: 'learn',
     category: SkillCategories.LANGUAGES,
     tags: ['language'],
-    authorId: 1,
+    authorId: '1',
     isFavorite: true,
   },
   {
@@ -43,7 +43,7 @@ const mockSkills: Skill[] = [
     type: 'learn',
     category: SkillCategories.BUSINESS,
     tags: ['business'],
-    authorId: 2,
+    authorId: '2',
     isFavorite: false,
   },
   {
@@ -53,7 +53,7 @@ const mockSkills: Skill[] = [
     type: 'teach',
     category: SkillCategories.ART,
     tags: ['art'],
-    authorId: 2,
+    authorId: '2',
     isFavorite: false,
   },
 ];
@@ -61,10 +61,10 @@ const mockSkills: Skill[] = [
 export const Default: Story = {
   args: {
     skills: mockSkills,
-    onToggleFavorite: (authorId: number) => {
+    onToggleFavorite: (authorId: string) => {
       alert(`Избранное: authorId=${authorId}`);
     },
-    onDetailsClick: (authorId: number) => {
+    onDetailsClick: (authorId: string) => {
       alert(`Подробнее: authorId=${authorId}`);
     },
   },
@@ -73,10 +73,10 @@ export const Default: Story = {
 export const Empty: Story = {
   args: {
     skills: [],
-    onToggleFavorite: (authorId: number) => {
+    onToggleFavorite: (authorId: string) => {
       alert(`Избранное: authorId=${authorId}`);
     },
-    onDetailsClick: (authorId: number) => {
+    onDetailsClick: (authorId: string) => {
       alert(`Подробнее: authorId=${authorId}`);
     },
   },

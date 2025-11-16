@@ -6,6 +6,6 @@ export interface Skill {
   category: string;
   imageUrl?: string;
   tags: string[];
-  authorId: number;
+  authorId: string;
   isFavorite?: boolean;
 }
