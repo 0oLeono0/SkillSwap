@@ -27,6 +27,8 @@ model User {
   refreshTokens   RefreshToken[]
   outgoingRequests Request[] @relation("RequestFrom")
   incomingRequests Request[] @relation("RequestTo")
+  favorites       Favorite[] @relation("FavoriteOwner")
+  favoritedBy     Favorite[] @relation("FavoriteTarget")
 }
 
 model RefreshToken {
@@ -54,4 +56,17 @@ model Request {
 
   @@index([fromUserId])
   @@index([toUserId])
+}
+
+model Favorite {
+  id           String   @id @default(cuid())
+  userId       String
+  targetUserId String
+  user         User     @relation("FavoriteOwner", fields: [userId], references: [id], onDelete: Cascade)
+  targetUser   User     @relation("FavoriteTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@unique([userId, targetUserId])
+  @@index([userId])
+  @@index([targetUserId])
 }

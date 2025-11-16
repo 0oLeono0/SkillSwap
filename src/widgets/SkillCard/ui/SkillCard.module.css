@@ -60,6 +60,19 @@
     top: 0;
     background: transparent;
     border: none;
+    color: var(--bg-color-primary);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.like-button svg path {
+    fill: currentColor;
+    stroke: var(--font-color-secondary);
+    transition: fill 0.2s ease;
+}
+
+.like-button-active {
+    color: var(--button-color-accent);
 }
 
 .skills {

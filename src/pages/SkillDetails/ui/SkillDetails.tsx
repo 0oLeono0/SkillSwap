@@ -12,6 +12,8 @@ import {
   type CatalogSkill
 } from '@/pages/Catalog/model/catalogData';
 import { useAuth } from '@/app/providers/auth';
+
+import { useFavorites } from '@/app/providers/favorites';
 import { createRequest } from '@/features/requests/model/actions';
 import type { User } from '@/entities/User/types';
 import { Button } from '@/shared/ui/button/Button';
@@ -44,6 +46,8 @@ const SkillDetails = (): ReactElement => {
   const authorId = authorIdParam ?? '';
   const navigate = useNavigate();
   const { isAuthenticated, user, accessToken } = useAuth();
+
+  const { toggleFavorite, isFavorite } = useFavorites();
 
   const [skills, setSkills] = useState<CatalogSkill[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -159,19 +163,42 @@ const SkillDetails = (): ReactElement => {
 
     return collectAuthorSkills(skills, selectedAuthors);
   }, [skills, selectedSkill, authorId]);
-  const handleToggleFavorite = useCallback((targetAuthorId: string) => {
-    setSkills((prevSkills) => {
-      const isFavorite = prevSkills.some(
-        (skill) => skill.authorId === targetAuthorId && skill.isFavorite
-      );
 
-      return prevSkills.map((skill) =>
-        skill.authorId === targetAuthorId
-          ? { ...skill, isFavorite: !isFavorite }
-          : skill
-      );
-    });
-  }, []);
+  const relatedSkillsWithFavorites = useMemo(
+    () =>
+      relatedSkills.map((skill) => {
+        const shouldBeFavorite = isFavorite(skill.authorId);
+        if (skill.isFavorite === shouldBeFavorite) {
+          return skill;
+        }
+        return { ...skill, isFavorite: shouldBeFavorite };
+      }),
+    [relatedSkills, isFavorite],
+  );
+  const handleToggleFavorite = useCallback(
+    (targetAuthorId: string) => {
+      toggleFavorite(targetAuthorId);
+    },
+    [toggleFavorite],
+  );
+
+  const handleAuthorFavoriteClick = useCallback(() => {
+    if (authorId) {
+      handleToggleFavorite(authorId);
+    }
+  }, [authorId, handleToggleFavorite]);
+
+  const isCurrentAuthorFavorite = useMemo(
+    () => (authorId ? isFavorite(authorId) : false),
+    [authorId, isFavorite],
+  );
+
+  const favoriteButtonLabel = isCurrentAuthorFavorite
+    ? 'Убрать из избранного'
+    : 'Добавить в избранное';
+  const favoriteButtonClassName = isCurrentAuthorFavorite
+    ? `${styles.actionButton} ${styles.actionButtonActive}`
+    : styles.actionButton;
 
   const handleDetailsClick = useCallback(
     (targetAuthorId: string) => {
@@ -294,13 +321,20 @@ const SkillDetails = (): ReactElement => {
         <article className={styles.skillCard}>
           <div className={styles.skillHeader}>
             <div className={styles.actions}>
-              <button type='button' aria-label='Добавить в избранное'>
+              <button
+                type='button'
+                className={favoriteButtonClassName}
+                onClick={handleAuthorFavoriteClick}
+                aria-label={favoriteButtonLabel}
+                aria-pressed={isCurrentAuthorFavorite}
+                disabled={!authorId}
+              >
                 <GalleryIcon />
               </button>
-              <button type='button' aria-label='Поделиться'>
+              <button type='button' aria-label='??????????'>
                 <ShareIcon />
               </button>
-              <button type='button' aria-label='Дополнительные действия'>
+              <button type='button' aria-label='?????????? ??????'>
                 <MoreIcon />
               </button>
             </div>
@@ -350,7 +384,7 @@ const SkillDetails = (): ReactElement => {
         </div>
         {relatedSkills.length ? (
           <SkillsList
-            skills={relatedSkills}
+            skills={relatedSkillsWithFavorites}
             onToggleFavorite={handleToggleFavorite}
             onDetailsClick={handleDetailsClick}
           />

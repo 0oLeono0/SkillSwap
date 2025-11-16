@@ -32,6 +32,7 @@ import type { User } from '@/entities/User/types';
 import { Button } from '@/shared/ui/button/Button';
 import { ROUTES } from '@/shared/constants';
 import { useAuth } from '@/app/providers/auth';
+import { useFavorites } from '@/app/providers/favorites';
 
 type CatalogVariant = 'home' | 'catalog';
 
@@ -105,6 +106,23 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user: authUser } = useAuth();
+  const { toggleFavorite, favoriteAuthorIds } = useFavorites();
+  const favoriteAuthorSet = useMemo(
+    () => new Set(favoriteAuthorIds),
+    [favoriteAuthorIds],
+  );
+
+  const mapSkillsWithFavorites = useCallback(
+    (skillList: CatalogSkill[]) =>
+      skillList.map((skill) => {
+        const shouldBeFavorite = favoriteAuthorSet.has(skill.authorId);
+        if (skill.isFavorite === shouldBeFavorite) {
+          return skill;
+        }
+        return { ...skill, isFavorite: shouldBeFavorite };
+      }),
+    [favoriteAuthorSet],
+  );
   const currentUserId = authUser?.id ?? null;
   const visibleSkills = useMemo(
     () =>
@@ -404,19 +422,12 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
     setFilters({ ...DEFAULT_FILTERS });
   }, []);
 
-  const handleToggleFavorite = useCallback((authorId: string) => {
-    setSkills((prevSkills) => {
-      const isFavorite = prevSkills.some(
-        (skill) => skill.authorId === authorId && skill.isFavorite
-      );
-
-      return prevSkills.map((skill) =>
-        skill.authorId === authorId
-          ? { ...skill, isFavorite: !isFavorite }
-          : skill
-      );
-    });
-  }, []);
+  const handleToggleFavorite = useCallback(
+    (authorId: string) => {
+      toggleFavorite(authorId);
+    },
+    [toggleFavorite]
+  );
 
   const handleDetailsClick = useCallback(
     (authorId: string) => {
@@ -441,7 +452,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
       )}
 
       <SkillsList
-        skills={listSkills}
+        skills={mapSkillsWithFavorites(listSkills)}
         onToggleFavorite={handleToggleFavorite}
         onDetailsClick={handleDetailsClick}
       />
@@ -473,7 +484,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
             </div>
 
             <SkillsList
-              skills={sectionSkills}
+              skills={mapSkillsWithFavorites(sectionSkills)}
               onToggleFavorite={handleToggleFavorite}
               onDetailsClick={handleDetailsClick}
             />

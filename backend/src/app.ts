@@ -5,6 +5,7 @@ import { config } from './config/env.js';
 import { authRouter } from './routes/auth.js';
 import { usersRouter } from './routes/users.js';
 import { requestsRouter } from './routes/requests.js';
+import { favoritesRouter } from './routes/favorites.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 export const app = express();
@@ -35,5 +36,6 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/requests', requestsRouter);
+app.use('/api/favorites', favoritesRouter);
 
 app.use(errorHandler);
