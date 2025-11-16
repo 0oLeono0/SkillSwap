@@ -36,17 +36,38 @@ const SearchInput: FC<SearchInputProps> = ({
   };
 
   const handleReset = () => {
+    if (!value) {
+      return;
+    }
+
     setValue('');
-    setSearchParams({});
-  }
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete(paramKey);
+    setSearchParams(nextParams, { replace: true });
+  };
 
   useEffect(() => {
+    const externalValue = searchParams.get(paramKey) ?? '';
+    setValue((prev) => (prev === externalValue ? prev : externalValue));
+  }, [paramKey, searchParams]);
+
+  useEffect(() => {
+    const nextParams = new URLSearchParams(searchParams);
+    const currentValue = nextParams.get(paramKey) ?? '';
+
     if (debouncedValue) {
-      setSearchParams({ [paramKey]: debouncedValue });
+      if (currentValue === debouncedValue) {
+        return;
+      }
+      nextParams.set(paramKey, debouncedValue);
+    } else if (currentValue) {
+      nextParams.delete(paramKey);
     } else {
-      setSearchParams({});
+      return;
     }
-  }, [debouncedValue, paramKey, setSearchParams]);
+
+    setSearchParams(nextParams, { replace: true });
+  }, [debouncedValue, paramKey, searchParams, setSearchParams]);
 
   return (
     <Input

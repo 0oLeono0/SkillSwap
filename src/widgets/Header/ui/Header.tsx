@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type FC } from 'react';
-import { NavLink, createSearchParams, useNavigate } from 'react-router-dom';
+import {
+  NavLink,
+  createSearchParams,
+  useLocation,
+  useNavigate,
+  useSearchParams
+} from 'react-router-dom';
 import styles from './header.module.scss';
 import IcMoon from '@/shared/assets/icons/status/moon.svg?react';
 import IcSun from '@/shared/assets/icons/status/sun.svg?react';
@@ -93,6 +99,20 @@ function Header() {
   const closeSkillsMenu = () => setIsSkillsMenuOpen(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const headerSearch = searchParams.get('search');
+
+  useEffect(() => {
+    if (!headerSearch || location.pathname === ROUTES.CATALOG) {
+      return;
+    }
+
+    navigate({
+      pathname: ROUTES.CATALOG,
+      search: createSearchParams({ search: headerSearch }).toString()
+    });
+  }, [headerSearch, location.pathname, navigate]);
 
   const handleSkillShortcut = (skillId: number) => {
     navigate({

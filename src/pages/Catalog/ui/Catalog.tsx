@@ -97,6 +97,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   const navigate = useNavigate();
   const [filters, setFilters] = useState<Filters>({ ...DEFAULT_FILTERS });
   const [searchParams, setSearchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState('');
   const [users, setUsers] = useState<User[]>([]);
   const [skills, setSkills] = useState<CatalogSkill[]>([]);
   const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
@@ -189,6 +190,11 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
     setSearchParams(nextParams, { replace: true });
   }, [searchParams, setSearchParams]);
 
+  useEffect(() => {
+    const nextSearch = (searchParams.get('search') ?? '').trim();
+    setSearchQuery((prev) => (prev === nextSearch ? prev : nextSearch));
+  }, [searchParams]);
+
   const usersById = useMemo(() => createUsersMap(users), [users]);
 
   const filtersCount = useMemo(() => countActiveFilters(filters), [filters]);
@@ -199,9 +205,10 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
         skills: visibleSkills,
         filters,
         cityOptions,
-        usersById
+        usersById,
+        searchQuery
       }),
-    [visibleSkills, filters, cityOptions, usersById]
+    [visibleSkills, filters, cityOptions, usersById, searchQuery]
   );
 
   const skillsByAuthor = useMemo(() => {

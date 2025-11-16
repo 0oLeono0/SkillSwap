@@ -125,6 +125,7 @@ interface FilterSkillsArgs {
   filters: Filters;
   cityOptions: CityOption[];
   usersById: Map<string, User>;
+  searchQuery?: string;
 }
 
 export const filterCatalogSkills = ({
@@ -132,11 +133,13 @@ export const filterCatalogSkills = ({
   filters,
   cityOptions,
   usersById,
+  searchQuery = '',
 }: FilterSkillsArgs): CatalogSkill[] => {
   if (!skills.length) return [];
 
   const selectedCityIds = mapCityNamesToCityIds(cityOptions, filters.cities);
   const selectedSkillIds = new Set(filters.skillIds);
+  const normalizedSearch = searchQuery.trim().toLowerCase();
 
   return skills.filter((skill) => {
     const author = usersById.get(skill.authorId);
@@ -159,6 +162,24 @@ export const filterCatalogSkills = ({
       !selectedSkillIds.has(skill.originalSkillId)
     ) {
       return false;
+    }
+
+    if (normalizedSearch) {
+      const searchableText = [
+        skill.title,
+        skill.description,
+        skill.authorName,
+        skill.authorCity,
+        author.bio ?? '',
+        skill.tags?.join(' ')
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      if (!searchableText.includes(normalizedSearch)) {
+        return false;
+      }
     }
 
     return true;
