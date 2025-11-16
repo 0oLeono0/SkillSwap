@@ -11,10 +11,12 @@ import {
   loadCatalogBaseData,
   type CatalogSkill
 } from '@/pages/Catalog/model/catalogData';
+import { useAuth } from '@/app/providers/auth';
 import type { User } from '@/entities/User/types';
 import { Button } from '@/shared/ui/button/Button';
 import { Tag } from '@/shared/ui/Tag/Tag';
 import { Title } from '@/shared/ui/Title';
+import { Modal } from '@/shared/ui/Modal/Modal';
 import { ROUTES } from '@/shared/constants';
 import { SkillsList } from '@/widgets/SkillsList';
 import GalleryIcon from '@/shared/assets/icons/actions/like.svg?react';
@@ -38,12 +40,14 @@ const SkillDetails = (): ReactElement => {
   const { authorId: authorIdParam } = useParams();
   const authorId = authorIdParam ?? '';
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   const [skills, setSkills] = useState<CatalogSkill[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   useEffect(() => {
     if (!authorId) {
       setError('Не удалось загрузить информацию о навыке');
@@ -166,6 +170,33 @@ const SkillDetails = (): ReactElement => {
     [navigate]
   );
 
+  const handleProposeExchange = useCallback(() => {
+    if (!selectedSkill) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+
+    console.info('[SkillDetails] Propose exchange', selectedSkill.id);
+  }, [isAuthenticated, selectedSkill]);
+
+  const handleCloseAuthModal = useCallback(() => {
+    setIsAuthModalOpen(false);
+  }, []);
+
+  const handleLoginRedirect = useCallback(() => {
+    setIsAuthModalOpen(false);
+    navigate(ROUTES.LOGIN);
+  }, [navigate]);
+
+  const handleRegisterRedirect = useCallback(() => {
+    setIsAuthModalOpen(false);
+    navigate(ROUTES.REGISTER);
+  }, [navigate]);
+
   if (isLoading) {
     return <div className={styles.state}>Загрузка данных…</div>;
   }
@@ -254,12 +285,7 @@ const SkillDetails = (): ReactElement => {
               </p>
               <Button
                 variant='primary'
-                onClick={() =>
-                  console.info(
-                    '[SkillDetails] Propose exchange',
-                    selectedSkill.id
-                  )
-                }
+                onClick={handleProposeExchange}
               >
                 Предложить обмен
               </Button>
@@ -300,6 +326,25 @@ const SkillDetails = (): ReactElement => {
           <div className={styles.state}>Пока нет похожих предложений</div>
         )}
       </div>
+      <Modal isOpen={isAuthModalOpen} onClose={handleCloseAuthModal}>
+        <div className={styles.authPrompt}>
+          <Title tag='h3' variant='lg'>
+            Чтобы предложить обмен, войдите или зарегистрируйтесь
+          </Title>
+          <p>
+            После авторизации вы сможете отправлять запросы авторам и следить за
+            статусом обменов в личном кабинете.
+          </p>
+          <div className={styles.authPromptActions}>
+            <Button variant='secondary' onClick={handleLoginRedirect}>
+              Войти
+            </Button>
+            <Button variant='primary' onClick={handleRegisterRedirect}>
+              Зарегистрироваться
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </section>
   );
 };

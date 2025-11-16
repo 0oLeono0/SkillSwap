@@ -10,12 +10,12 @@
 }
 
 .modal {
+  box-sizing: border-box;
   position: relative;
   background: #fff;
   border-radius: 32px;
   padding: 32px;
   max-width: 960px;
-  width: 100%;
   box-shadow: 0 40px 80px rgba(0, 0, 0, 0.12);
 }
 
