@@ -6,7 +6,15 @@ import {
   type FC,
   type ReactNode,
 } from 'react';
-import { authApi, type AuthSuccessResponse, type LoginPayload, type RegisterPayload, ApiError } from '@/shared/api/auth';
+import {
+  authApi,
+  type ApiAuthUser,
+  type AuthSuccessResponse,
+  type LoginPayload,
+  type RegisterPayload,
+  type UpdateProfilePayload,
+  ApiError,
+} from '@/shared/api/auth';
 import { AuthContext, type AuthContextType, type AuthUser } from './context';
 
 interface AuthState {
@@ -19,7 +27,7 @@ const initialState: AuthState = {
   accessToken: null,
 };
 
-const mapToAuthUser = (payloadUser: AuthSuccessResponse['user']): AuthUser => ({
+const mapToAuthUser = (payloadUser: ApiAuthUser): AuthUser => ({
   id: payloadUser.id,
   email: payloadUser.email,
   name: payloadUser.name,
@@ -80,6 +88,21 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     }
   }, [clearSession]);
 
+  const updateProfile = useCallback<AuthContextType['updateProfile']>(
+    async (payload: UpdateProfilePayload) => {
+      if (!state.accessToken) {
+        throw new Error('Access token is missing');
+      }
+
+      const response = await authApi.updateProfile(payload, state.accessToken);
+      setState((prev) => ({
+        ...prev,
+        user: mapToAuthUser(response.user),
+      }));
+    },
+    [state.accessToken],
+  );
+
   useEffect(() => {
     let mounted = true;
     const initialise = async () => {
@@ -114,8 +137,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       register,
       logout,
       refresh,
+      updateProfile,
     }),
-    [state, isInitializing, login, register, logout, refresh],
+    [state, isInitializing, login, register, logout, refresh, updateProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

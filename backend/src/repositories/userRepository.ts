@@ -22,6 +22,13 @@ export const userRepository = {
     return prisma.user.create({ data });
   },
 
+  updateById(id: string, data: Prisma.UserUpdateInput) {
+    return prisma.user.update({
+      where: { id },
+      data,
+    });
+  },
+
   saveRefreshToken(id: string, userId: string, token: string, expiresAt: Date) {
     return prisma.refreshToken.create({
       data: {

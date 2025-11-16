@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Suspense, type FC } from 'react';
-import { createBrowserRouter, useLocation, Outlet, NavLink } from 'react-router-dom';
+import { createBrowserRouter, useLocation } from 'react-router-dom';
 import BaseLayout from '@/app/layouts/BaseLayout';
 import { NotFound } from '@/pages/NotFound';
 import { ServerError } from '@/pages/ServerError';
@@ -10,6 +10,11 @@ import Catalog from '@/pages/Catalog/ui/Catalog';
 import { AuthStepOne, AuthStepTwo, AuthStepThree } from '@/pages/Auth';
 import SkillDetails from '@/pages/SkillDetails/ui/SkillDetails';
 import { AuthLayout } from '@/app/layouts/AuthLayout';
+import {
+  ProfileLayout,
+  ProfilePersonalData,
+  ProfileSectionPlaceholder,
+} from '@/pages/Profile';
 
 const Stub: FC<{ title: string }> = ({ title }) => {
   const { pathname } = useLocation();
@@ -17,34 +22,8 @@ const Stub: FC<{ title: string }> = ({ title }) => {
     <div style={{ padding: 24 }}>
       <h1 style={{ margin: 0 }}>{title}</h1>
       <p style={{ opacity: 0.7, marginTop: 8 }}>
-        Текущий маршрут: <code>{pathname}</code>
+        Текущий путь: <code>{pathname}</code>
       </p>
-    </div>
-  );
-};
-
-const LayoutStub: FC<{ title: string }> = ({ title }) => {
-  const { pathname } = useLocation();
-  return (
-    <div style={{ padding: 24 }}>
-      <h1 style={{ margin: 0 }}>{title}</h1>
-      <p style={{ opacity: 0.7, marginTop: 8 }}>
-        Текущий маршрут: <code>{pathname}</code>
-      </p>
-
-      <nav style={{ display: 'flex', gap: 12, marginTop: 12 }}>
-        <NavLink to='' end>
-          Overview
-        </NavLink>
-        <NavLink to={ROUTES.PROFILE.CHILDREN.REQUESTS}>Requests</NavLink>
-        <NavLink to={ROUTES.PROFILE.CHILDREN.EXCHANGES}>Exchanges</NavLink>
-        <NavLink to={ROUTES.PROFILE.CHILDREN.FAVORITES}>Favorites</NavLink>
-        <NavLink to={ROUTES.PROFILE.CHILDREN.SKILLS}>Skills</NavLink>
-      </nav>
-
-      <div style={{ borderTop: '1px solid #eee', marginTop: 16, paddingTop: 16 }}>
-        <Outlet />
-      </div>
     </div>
   );
 };
@@ -81,15 +60,47 @@ export const router = createBrowserRouter([
         path: ROUTES.PROFILE.ROOT,
         element: (
           <ProtectedRoute>
-            <LayoutStub title="Profile" />
+            <ProfileLayout />
           </ProtectedRoute>
         ),
         children: [
-          { index: true, element: <Stub title="Profile / Overview" /> },
-          { path: ROUTES.PROFILE.CHILDREN.REQUESTS, element: <Stub title="Profile / Requests" /> },
-          { path: ROUTES.PROFILE.CHILDREN.EXCHANGES, element: <Stub title="Profile / Exchanges" /> },
-          { path: ROUTES.PROFILE.CHILDREN.FAVORITES, element: <Stub title="Profile / Favorites" /> },
-          { path: ROUTES.PROFILE.CHILDREN.SKILLS, element: <Stub title="Profile / Skills" /> },
+          { index: true, element: <ProfilePersonalData /> },
+          {
+            path: ROUTES.PROFILE.CHILDREN.REQUESTS,
+            element: (
+              <ProfileSectionPlaceholder
+                title="Заявки"
+                description="Здесь будут собраны входящие и исходящие заявки на обмен навыками."
+              />
+            ),
+          },
+          {
+            path: ROUTES.PROFILE.CHILDREN.EXCHANGES,
+            element: (
+              <ProfileSectionPlaceholder
+                title="Мои обмены"
+                description="Следите за прогрессом и статусами ваших активных обменов."
+              />
+            ),
+          },
+          {
+            path: ROUTES.PROFILE.CHILDREN.FAVORITES,
+            element: (
+              <ProfileSectionPlaceholder
+                title="Избранное"
+                description="Сохраняйте понравившиеся профили, чтобы быстро вернуться к ним позже."
+              />
+            ),
+          },
+          {
+            path: ROUTES.PROFILE.CHILDREN.SKILLS,
+            element: (
+              <ProfileSectionPlaceholder
+                title="Мои навыки"
+                description="Управляйте списком навыков, которыми готовы делиться или которые хотите освоить."
+              />
+            ),
+          },
         ],
       },
     ],
@@ -97,7 +108,7 @@ export const router = createBrowserRouter([
   {
     path: ROUTES.SERVER_ERROR,
     element: (
-      <Suspense fallback={<div>Загрузка…</div>}>
+      <Suspense fallback={<div>Загрузка...</div>}>
         <ServerError />
       </Suspense>
     ),
@@ -105,7 +116,7 @@ export const router = createBrowserRouter([
   {
     path: ROUTES.NOTFOUND,
     element: (
-      <Suspense fallback={<div>Загрузка…</div>}>
+      <Suspense fallback={<div>Загрузка...</div>}>
         <NotFound />
       </Suspense>
     ),
