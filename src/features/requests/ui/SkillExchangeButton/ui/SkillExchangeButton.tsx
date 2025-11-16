@@ -4,23 +4,30 @@ import { createRequest } from '@/features/requests/model/actions';
 import { Button } from '@/shared/ui/button/Button';
 
 interface SkillExchangeButtonProps {
-  fromUserId: number;
-  toUserId: number;
+  accessToken: string;
+  toUserId: string;
   skillId: string;
+  onSuccess?: () => void;
 }
 
 export const SkillExchangeButton = ({
-  fromUserId,
+  accessToken,
   toUserId,
   skillId,
+  onSuccess,
 }: SkillExchangeButtonProps) => {
   const [isShow, setIsShow] = useState(false);
   const [isHide, setIsHide] = useState(false);
 
-  const handleClick = () => {
-    createRequest(fromUserId, toUserId, skillId);
-    setIsShow(true);
-    setIsHide(false);
+  const handleClick = async () => {
+    try {
+      await createRequest(accessToken, { toUserId, skillId });
+      setIsShow(true);
+      setIsHide(false);
+      onSuccess?.();
+    } catch (error) {
+      console.error('[SkillExchangeButton] Failed to create request', error);
+    }
   };
 
   const handleClose = () => {
@@ -30,13 +37,13 @@ export const SkillExchangeButton = ({
 
   return (
     <>
-      <Button variant="primary" onClick={handleClick}>
+      <Button variant='primary' onClick={handleClick}>
         Предложить обмен
       </Button>
 
       {isShow && (
         <Toast
-          message="Вы предложили обмен!"
+          message='Заявка отправлена!'
           isShow={isShow}
           isHide={isHide}
           onClose={handleClose}

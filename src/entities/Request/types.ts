@@ -5,12 +5,20 @@ export type RequestStatus =
   | 'inProgress'
   | 'done';
 
+export interface RequestParticipant {
+  id: string;
+  name: string;
+  avatarUrl?: string | null;
+}
+
 export interface Request {
   id: string;
   skillId: string;
-  fromUserId: number;
-  toUserId: number;
+  fromUserId: string;
+  toUserId: string;
   status: RequestStatus;
   createdAt: string;
   updatedAt?: string;
+  fromUser?: RequestParticipant;
+  toUser?: RequestParticipant;
 }

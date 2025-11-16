@@ -1,44 +1,16 @@
-import type { Request } from '@/entities/Request/types';
-import { getRequests, addRequest, updateRequestStatus } from '@/entities/Request/model';
+import type { RequestStatus } from '@/entities/Request/types';
+import { requestsApi, type CreateRequestPayload } from '@/shared/api/requests';
 
-/**
- * Создание новой заявки
- */
-export function createRequest(fromUserId: number, toUserId: number, skillId: string): Request {
-  const existing = getRequests().find(r => 
-    r.fromUserId === fromUserId &&
-    r.toUserId === toUserId &&
-    r.skillId === skillId &&
-    r.status === 'pending'
-  );
+export const createRequest = (accessToken: string, payload: CreateRequestPayload) => {
+  return requestsApi.create(accessToken, payload).then(response => response.request);
+};
 
-  if (existing) {
-    return existing;
-  }
+export const updateRequestStatus = (accessToken: string, requestId: string, status: RequestStatus) => {
+  return requestsApi.updateStatus(accessToken, requestId, status).then(response => response.request);
+};
 
-  const request: Request = {
-    id: crypto.randomUUID(),
-    skillId,
-    fromUserId,
-    toUserId,
-    status: 'pending',
-    createdAt: new Date().toISOString(),
-  };
+export const acceptRequest = (accessToken: string, requestId: string) =>
+  updateRequestStatus(accessToken, requestId, 'accepted');
 
-  addRequest(request);
-  return request;
-}
-
-/**
- * Принятие заявки
- */
-export function acceptRequest(requestId: string) {
-  updateRequestStatus(requestId, 'accepted');
-}
-
-/**
- * Отклонение заявки
- */
-export function rejectRequest(requestId: string) {
-  updateRequestStatus(requestId, 'rejected');
-}
+export const rejectRequest = (accessToken: string, requestId: string) =>
+  updateRequestStatus(accessToken, requestId, 'rejected');

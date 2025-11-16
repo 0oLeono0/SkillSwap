@@ -10,13 +10,13 @@ interface RegisterInput {
   email: string;
   password: string;
   name: string;
-  avatarUrl?: string;
-  cityId?: number;
-  birthDate?: string;
-  gender?: string;
-  bio?: string;
-  teachableSkills?: number[];
-  learningSkills?: number[];
+  avatarUrl?: string | undefined;
+  cityId?: number | undefined;
+  birthDate?: string | undefined;
+  gender?: string | undefined;
+  bio?: string | undefined;
+  teachableSkills?: number[] | undefined;
+  learningSkills?: number[] | undefined;
 }
 
 interface LoginInput {
@@ -24,12 +24,17 @@ interface LoginInput {
   password: string;
 }
 
-type UpdateProfileInput = Partial<
-  Omit<RegisterInput, 'password'> & {
-    avatarUrl?: string | null;
-    cityId?: number | null;
-  }
->;
+type UpdateProfileInput = {
+  email?: string | undefined;
+  name?: string | undefined;
+  avatarUrl?: string | null | undefined;
+  cityId?: number | null | undefined;
+  birthDate?: string | null | undefined;
+  gender?: string | null | undefined;
+  bio?: string | null | undefined;
+  teachableSkills?: number[] | undefined;
+  learningSkills?: number[] | undefined;
+};
 
 const normalizeSkills = (skills?: number[]) =>
   Array.isArray(skills) ? skills.filter((skill) => Number.isInteger(skill)) : [];
@@ -71,18 +76,31 @@ export const authService = {
     const parsedBirthDate = parseBirthDate(birthDate ?? undefined);
     const normalizedTeachableSkills = normalizeSkills(teachableSkills);
     const normalizedLearningSkills = normalizeSkills(learningSkills);
-    const user = await userRepository.create({
+    const userData: Prisma.UserCreateInput = {
       email,
       passwordHash,
       name,
-      avatarUrl,
-      cityId,
-      birthDate: parsedBirthDate ?? undefined,
-      gender,
-      bio,
       teachableSkills: JSON.stringify(normalizedTeachableSkills),
       learningSkills: JSON.stringify(normalizedLearningSkills),
-    });
+    };
+
+    if (typeof avatarUrl === 'string') {
+      userData.avatarUrl = avatarUrl;
+    }
+    if (typeof cityId === 'number') {
+      userData.cityId = cityId;
+    }
+    if (parsedBirthDate) {
+      userData.birthDate = parsedBirthDate;
+    }
+    if (typeof gender === 'string') {
+      userData.gender = gender;
+    }
+    if (typeof bio === 'string') {
+      userData.bio = bio;
+    }
+
+    const user = await userRepository.create(userData);
 
     const tokens = await authService.issueTokens(user.id, user.email, user.name);
 
