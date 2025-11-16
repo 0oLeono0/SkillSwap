@@ -37,6 +37,7 @@ export const SkillsList: FC<SkillsListProps> = ({
           about: skill.authorAbout ?? skill.description,
           canTeach: [],
           wantsToLearn: [],
+          isFavorite: Boolean(skill.isFavorite),
         };
       }
 
@@ -56,6 +57,9 @@ export const SkillsList: FC<SkillsListProps> = ({
       }
       if (skill.authorAbout || skill.description) {
         group.about = skill.authorAbout ?? skill.description;
+      }
+      if (skill.isFavorite) {
+        group.isFavorite = true;
       }
 
       if (skill.type === 'teach') {
@@ -109,6 +113,7 @@ export const SkillsList: FC<SkillsListProps> = ({
             onDetailsButtonClick={() => handleDetailsClick(author.authorId)}
             onLikeButtonClick={() => handleLikeClick(author.authorId)}
             isExchangeOffered={false}
+            isFavorite={Boolean(author.isFavorite)}
           />
         );
       })}

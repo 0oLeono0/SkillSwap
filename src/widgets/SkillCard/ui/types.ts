@@ -23,4 +23,5 @@ export interface SkillCardProps {
   onDetailsButtonClick: (skillId: string) => void;
   onLikeButtonClick: (skillId: string) => void;
   isExchangeOffered: boolean;
+  isFavorite?: boolean;
 }

@@ -16,6 +16,7 @@ const SkillCard: FC<SkillCardProps> = ({
   onDetailsButtonClick,
   onLikeButtonClick,
   isExchangeOffered,
+  isFavorite = false,
 }) => {
   const exchangeOfferedIcon = {
     icon: <ClockIcon />,
@@ -23,6 +24,10 @@ const SkillCard: FC<SkillCardProps> = ({
   };
 
   const buttonText = isExchangeOffered ? 'Обмен предложен' : 'Подробнее';
+
+  const likeButtonClassName = isFavorite
+    ? `${styles.likeButton} ${styles.likeButtonActive}`
+    : styles.likeButton;
 
   const handleLikeClick = () => {
     if (isLikeButtonVisible) {
@@ -42,9 +47,10 @@ const SkillCard: FC<SkillCardProps> = ({
           {isLikeButtonVisible && (
             <button
               type="button"
-              className={styles.likeButton}
+              className={likeButtonClassName}
               onClick={handleLikeClick}
               aria-label="Добавить в избранное"
+              aria-pressed={isFavorite}
             >
               <LikeIcon />
             </button>

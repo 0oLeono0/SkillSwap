@@ -15,4 +15,5 @@ export interface GroupedSkills {
   about?: string;
   canTeach: Skill[];
   wantsToLearn: Skill[];
+  isFavorite?: boolean;
 }

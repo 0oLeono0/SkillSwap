@@ -11,6 +11,7 @@ import { AuthStepOne, AuthStepTwo, AuthStepThree } from '@/pages/Auth';
 import SkillDetails from '@/pages/SkillDetails/ui/SkillDetails';
 import { AuthLayout } from '@/app/layouts/AuthLayout';
 import {
+  ProfileFavorites,
   ProfileLayout,
   ProfilePersonalData,
   ProfileSectionPlaceholder,
@@ -81,12 +82,7 @@ export const router = createBrowserRouter([
           },
           {
             path: ROUTES.PROFILE.CHILDREN.FAVORITES,
-            element: (
-              <ProfileSectionPlaceholder
-                title="Favorites"
-                description="Save interesting skills and revisit them later in one click."
-              />
-            ),
+            element: <ProfileFavorites />,
           },
           {
             path: ROUTES.PROFILE.CHILDREN.SKILLS,

@@ -39,6 +39,7 @@ export const InteractiveSkillCard: StoryObj<SkillCardStoryProps> = {
     isLikeButtonVisible: true,
     isDetailsButtonVisible: true,
     isExchangeOffered: false,
+    isFavorite: false,
     skill: {
       id: '11',
       name: 'Игра на барабанах',
