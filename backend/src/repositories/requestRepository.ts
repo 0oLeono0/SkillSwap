@@ -19,6 +19,9 @@ export const requestRepository = {
     return prisma.request.findMany({
       where: {
         OR: [{ fromUserId: userId }, { toUserId: userId }],
+        status: {
+          in: ['pending', 'rejected'],
+        },
       },
       include: defaultInclude,
       orderBy: {

@@ -11,11 +11,11 @@ import { AuthStepOne, AuthStepTwo, AuthStepThree } from '@/pages/Auth';
 import SkillDetails from '@/pages/SkillDetails/ui/SkillDetails';
 import { AuthLayout } from '@/app/layouts/AuthLayout';
 import {
+  ProfileExchanges,
   ProfileFavorites,
   ProfileLayout,
   ProfilePersonalData,
   ProfileRequests,
-  ProfileSectionPlaceholder,
   ProfileSkills,
 } from '@/pages/Profile';
 
@@ -74,12 +74,7 @@ export const router = createBrowserRouter([
           },
           {
             path: ROUTES.PROFILE.CHILDREN.EXCHANGES,
-            element: (
-              <ProfileSectionPlaceholder
-                title="Мои обмены"
-                description="Подтвержденные обмены и история сессий появятся здесь."
-              />
-            ),
+            element: <ProfileExchanges />,
           },
           {
             path: ROUTES.PROFILE.CHILDREN.FAVORITES,
@@ -110,3 +105,4 @@ export const router = createBrowserRouter([
     ),
   },
 ]);
+

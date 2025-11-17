@@ -1,8 +1,9 @@
 import { requestRepository } from '../repositories/requestRepository.js';
 import { userRepository } from '../repositories/userRepository.js';
+import { exchangeService } from './exchangeService.js';
 import { createBadRequest, createForbidden, createNotFound } from '../utils/httpErrors.js';
 
-const allowedStatuses = new Set(['pending', 'accepted', 'rejected', 'inProgress', 'done']);
+const allowedStatuses = new Set(['pending', 'accepted', 'rejected']);
 
 export const requestService = {
   async listForUser(userId: string) {
@@ -24,7 +25,7 @@ export const requestService = {
 
   async createRequest(fromUserId: string, toUserId: string, skillId: string) {
     if (fromUserId === toUserId) {
-      throw createBadRequest('Нельзя отправить заявку самому себе');
+      throw createBadRequest('Нельзя отправлять заявку самому себе');
     }
 
     const targetUser = await userRepository.findById(toUserId);
@@ -46,7 +47,7 @@ export const requestService = {
 
   async updateStatus(requestId: string, userId: string, status: string) {
     if (!allowedStatuses.has(status)) {
-      throw createBadRequest('Недопустимый статус заявки');
+      throw createBadRequest('Неверный статус заявки');
     }
 
     const request = await requestRepository.findById(requestId);
@@ -55,13 +56,23 @@ export const requestService = {
     }
 
     if (request.fromUserId !== userId && request.toUserId !== userId) {
-      throw createForbidden('Нет доступа к этой заявке');
+      throw createForbidden('Недостаточно прав для изменения статуса заявки');
+    }
+
+    if (status === 'accepted' && request.toUserId !== userId) {
+      throw createForbidden('Только получатель может подтвердить обмен');
     }
 
     if (request.status === status) {
       return request;
     }
 
-    return requestRepository.updateStatus(requestId, status);
+    const updatedRequest = await requestRepository.updateStatus(requestId, status);
+
+    if (status === 'accepted') {
+      await exchangeService.ensureCreatedFromRequest(updatedRequest);
+    }
+
+    return updatedRequest;
   },
 };

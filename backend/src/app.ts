@@ -6,6 +6,7 @@ import { authRouter } from './routes/auth.js';
 import { usersRouter } from './routes/users.js';
 import { requestsRouter } from './routes/requests.js';
 import { favoritesRouter } from './routes/favorites.js';
+import { exchangesRouter } from './routes/exchanges.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 export const app = express();
@@ -27,7 +28,7 @@ app.use(
   }),
 );
 app.use(cookieParser());
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '100mb' }));
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
@@ -37,5 +38,6 @@ app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/requests', requestsRouter);
 app.use('/api/favorites', favoritesRouter);
+app.use('/api/exchanges', exchangesRouter);
 
 app.use(errorHandler);

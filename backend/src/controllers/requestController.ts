@@ -9,7 +9,7 @@ const createRequestSchema = z.object({
 });
 
 const updateStatusSchema = z.object({
-  status: z.enum(['pending', 'accepted', 'rejected', 'inProgress', 'done']),
+  status: z.enum(['pending', 'accepted', 'rejected']),
 });
 
 export const getRequests = asyncHandler(async (req, res) => {
