@@ -29,6 +29,9 @@ model User {
   incomingRequests Request[] @relation("RequestTo")
   favorites       Favorite[] @relation("FavoriteOwner")
   favoritedBy     Favorite[] @relation("FavoriteTarget")
+  exchangesInitiated Exchange[] @relation("ExchangeInitiator")
+  exchangesReceived  Exchange[] @relation("ExchangeRecipient")
+  exchangeMessages   ExchangeMessage[]
 }
 
 model RefreshToken {
@@ -53,6 +56,7 @@ model Request {
   toUser     User          @relation("RequestTo", fields: [toUserId], references: [id], onDelete: Cascade)
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
+  exchange   Exchange?
 
   @@index([fromUserId])
   @@index([toUserId])
@@ -69,4 +73,40 @@ model Favorite {
   @@unique([userId, targetUserId])
   @@index([userId])
   @@index([targetUserId])
+}
+
+model Exchange {
+  id           String         @id @default(cuid())
+  requestId    String         @unique
+  initiatorId  String
+  recipientId  String
+  status       String         @default("active")
+  confirmedAt  DateTime       @default(now())
+  completedAt  DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  request      Request        @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  initiator    User           @relation("ExchangeInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
+  recipient    User           @relation("ExchangeRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  messages     ExchangeMessage[]
+
+  @@index([initiatorId])
+  @@index([recipientId])
+  @@index([status])
+  @@index([confirmedAt])
+}
+
+model ExchangeMessage {
+  id         String   @id @default(cuid())
+  exchangeId String
+  senderId   String
+  content    String
+  createdAt  DateTime @default(now())
+
+  exchange Exchange @relation(fields: [exchangeId], references: [id], onDelete: Cascade)
+  sender   User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([exchangeId])
+  @@index([senderId])
+  @@index([createdAt])
 }
