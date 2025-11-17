@@ -14,8 +14,9 @@ import {
   ProfileFavorites,
   ProfileLayout,
   ProfilePersonalData,
-  ProfileSectionPlaceholder,
   ProfileRequests,
+  ProfileSectionPlaceholder,
+  ProfileSkills,
 } from '@/pages/Profile';
 
 const Stub: FC<{ title: string }> = ({ title }) => {
@@ -86,12 +87,7 @@ export const router = createBrowserRouter([
           },
           {
             path: ROUTES.PROFILE.CHILDREN.SKILLS,
-            element: (
-              <ProfileSectionPlaceholder
-                title="My skills"
-                description="Manage the skills you can teach or plan to learn."
-              />
-            ),
+            element: <ProfileSkills />,
           },
         ],
       },

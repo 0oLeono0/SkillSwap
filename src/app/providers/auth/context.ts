@@ -1,5 +1,10 @@
 import { createContext } from 'react';
-import type { LoginPayload, RegisterPayload, UpdateProfilePayload } from '@/shared/api/auth';
+import type {
+  LoginPayload,
+  RegisterPayload,
+  UpdateProfilePayload,
+} from '@/shared/api/auth';
+import type { UserSkill } from '@/entities/User/types';
 
 export interface AuthUser {
   id: string;
@@ -10,8 +15,8 @@ export interface AuthUser {
   birthDate?: string | null;
   gender?: string | null;
   bio?: string | null;
-  teachableSkills?: number[];
-  learningSkills?: number[];
+  teachableSkills?: UserSkill[];
+  learningSkills?: UserSkill[];
 }
 
 export interface AuthContextType {

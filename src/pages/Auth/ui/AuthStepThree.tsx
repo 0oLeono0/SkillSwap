@@ -15,10 +15,29 @@ import stockSecond from '@/shared/assets/images/stock/stock2.jpg';
 import stockThird from '@/shared/assets/images/stock/stock3.jpg';
 import stockFourth from '@/shared/assets/images/stock/stock4.jpg';
 import { Modal } from '@/shared/ui/Modal/Modal';
-import { ApiError } from '@/shared/api/auth';
+import { ApiError, type ApiUserSkill } from '@/shared/api/auth';
 
 const REGISTRATION_STEP_TWO_STORAGE_KEY = 'registration:step2';
 const REGISTRATION_CREDENTIALS_STORAGE_KEY = 'registration:credentials';
+const STOCK_IMAGES = [stockMain, stockSecond, stockThird, stockFourth];
+
+const generateSkillId = () => {
+  const cryptoApi = globalThis?.crypto;
+  if (cryptoApi?.randomUUID) {
+    return cryptoApi.randomUUID();
+  }
+  return `skill-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+};
+
+const fileToDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      resolve(typeof reader.result === 'string' ? reader.result : '');
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
 
 interface StepTwoData {
   name: string;
@@ -97,30 +116,94 @@ const AuthStepThree = () => {
     setError(null);
   };
 
+  const findGroupById = (id: number | null | undefined) =>
+    typeof id === 'number' ? skillGroups.find((group) => group.id === id) : undefined;
+
+  const findSkillName = (category: number | null | undefined, subskill: number | null | undefined) => {
+    const group = findGroupById(category ?? null);
+    if (!group) return null;
+    return group.skills.find((skill) => skill.id === subskill)?.name ?? null;
+  };
+
+  const buildLearningSkillPayload = (): ApiUserSkill | null => {
+    if (!stepTwoData || typeof stepTwoData.subskillId !== 'number') {
+      return null;
+    }
+
+    const groupId = typeof stepTwoData.categoryId === 'number' ? stepTwoData.categoryId : null;
+    const title =
+      findSkillName(groupId, stepTwoData.subskillId) ?? 'Навык для изучения';
+
+    return {
+      id: generateSkillId(),
+      title,
+      categoryId: groupId,
+      subcategoryId: stepTwoData.subskillId,
+      description: 'Хочу изучить этот навык',
+      imageUrls: STOCK_IMAGES.slice(1),
+    };
+  };
+
+  const buildTeachableSkillPayload = async (): Promise<ApiUserSkill | null> => {
+    if (typeof subskillId !== 'number' || typeof categoryId !== 'number') {
+      setError('Выберите категорию и подкатегорию для навыка');
+      return null;
+    }
+
+    const subskillName = findSkillName(categoryId, subskillId);
+    const trimmedTitle = skillTitle.trim() || subskillName || 'Мой навык';
+    const trimmedDescription = description.trim();
+
+    const uploadedImages = images.length
+      ? await Promise.all(images.map((file) => fileToDataUrl(file)))
+      : [];
+
+    const imageUrls = uploadedImages
+      .map((url) => url.trim())
+      .filter((url) => url.length > 0);
+
+    return {
+      id: generateSkillId(),
+      title: trimmedTitle,
+      categoryId,
+      subcategoryId: subskillId,
+      description:
+        trimmedDescription || 'Я поделюсь подробностями об этом навыке позже',
+      imageUrls: imageUrls.length ? imageUrls : STOCK_IMAGES,
+    };
+  };
+
   const handleConfirm = async () => {
     if (!stepTwoData || !stepOneData) {
       navigate(ROUTES.REGISTER_STEP_TWO);
       return;
     }
+    const avatarUrlPayload =
+      stepTwoData.avatarUrl && !stepTwoData.avatarUrl.startsWith('blob:')
+        ? stepTwoData.avatarUrl
+        : undefined;
 
     try {
       setIsSubmitting(true);
       setError(null);
       const trimmedDescription = description.trim();
-      const learningSkillIds =
-        typeof stepTwoData.subskillId === 'number' ? [stepTwoData.subskillId] : [];
-      const teachableSkillIds = typeof subskillId === 'number' ? [subskillId] : [];
+      const teachableSkill = await buildTeachableSkillPayload();
+      if (!teachableSkill) {
+        setIsSubmitting(false);
+        return;
+      }
+      const learningSkill = buildLearningSkillPayload();
       await register({
         email: stepOneData.email,
         password: stepOneData.password,
         name: stepTwoData.name || 'Skill Swapper',
-        avatarUrl: stepTwoData.avatarUrl || undefined,
+        avatarUrl: avatarUrlPayload,
         cityId: stepTwoData.cityId ?? undefined,
         birthDate: stepTwoData.birthDate || undefined,
         gender: stepTwoData.gender || undefined,
         bio: trimmedDescription || undefined,
-        learningSkills: learningSkillIds,
-        teachableSkills: teachableSkillIds,
+        learningSkills: learningSkill ? [learningSkill] : undefined,
+        teachableSkills: [teachableSkill],
       });
       sessionStorage.removeItem(REGISTRATION_CREDENTIALS_STORAGE_KEY);
       sessionStorage.removeItem(REGISTRATION_STEP_TWO_STORAGE_KEY);
@@ -145,9 +228,7 @@ const previewCategoryName = categoryId
     : '';
 
   const usingFallbackImages = imagePreviews.length === 0;
-  const gallery = usingFallbackImages
-    ? [stockMain, stockSecond, stockThird, stockFourth]
-    : imagePreviews;
+  const gallery = usingFallbackImages ? STOCK_IMAGES : imagePreviews;
 
   const mainImage = gallery[0];
   const secondaryImages = gallery.slice(1, 4);

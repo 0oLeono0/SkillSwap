@@ -1,28 +1,29 @@
 import type { User as PrismaUser } from '@prisma/client';
 import { userRepository } from '../repositories/userRepository.js';
+import {
+  normalizeUserSkillList,
+  type UserSkill,
+} from '../types/userSkill.js';
 
-const parseSkillList = (value?: string | null): number[] => {
+const parseSkillList = (value?: string | null): UserSkill[] => {
   if (!value) {
     return [];
   }
 
   try {
     const parsed = JSON.parse(value);
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    return parsed
-      .map((item) => Number(item))
-      .filter((item): item is number => Number.isFinite(item));
+    return normalizeUserSkillList(parsed);
   } catch {
     return [];
   }
 };
 
-export type SanitizedUser = Omit<PrismaUser, 'passwordHash' | 'teachableSkills' | 'learningSkills'> & {
-  teachableSkills: number[];
-  learningSkills: number[];
+export type SanitizedUser = Omit<
+  PrismaUser,
+  'passwordHash' | 'teachableSkills' | 'learningSkills'
+> & {
+  teachableSkills: UserSkill[];
+  learningSkills: UserSkill[];
 };
 
 export const sanitizeUser = (user: PrismaUser | null): SanitizedUser | null => {

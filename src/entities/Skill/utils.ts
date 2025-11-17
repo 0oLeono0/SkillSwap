@@ -22,7 +22,14 @@ export const mapSkillToCard = (
   const otherSkills = (
     primaryType === 'teach' ? user.learningSkills : user.teachableSkills
   )
-    .map(getSubskillName)
+    .map((skill) => {
+      if (typeof skill.subcategoryId === 'number') {
+        const resolved = getSubskillName(skill.subcategoryId);
+        return resolved || skill.title;
+      }
+      return skill.title;
+    })
+    .map((name) => name.trim())
     .filter(Boolean);
 
   return {

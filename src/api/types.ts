@@ -18,8 +18,17 @@ export interface City {
 
 export type ApiCity = City;
 
-export type ApiGender = 'Женский' | 'Мужской';
+export type ApiGender = '�-��?�?����' | '�?�?��?��?��';
 export type Gender = ApiGender;
+
+export interface ApiUserSkillEntry {
+  id?: string;
+  title?: string;
+  categoryId?: number | null;
+  subcategoryId?: number | null;
+  description?: string;
+  imageUrls?: string[];
+}
 
 export interface User {
   id: number;
@@ -31,8 +40,8 @@ export interface User {
   birthDate: string;
   gender: ApiGender;
   bio: string;
-  teachableSkills: number[];
-  learningSkills: number[];
+  teachableSkills: (number | ApiUserSkillEntry)[];
+  learningSkills: (number | ApiUserSkillEntry)[];
 }
 
 export type ApiUser = User;
