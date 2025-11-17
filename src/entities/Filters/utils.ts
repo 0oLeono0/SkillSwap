@@ -1,8 +1,30 @@
 import { db } from '@/api/mockData';
 import type { Skill } from '../Skill/types';
-import type { User, UserCard } from '../User/types';
+import type { User, UserCard, UserSkill } from '../User/types';
 import { getUserAge, getUserCity } from '../User/utils';
 import type { FiltersState } from './types';
+
+const getSkillNameById = (id: number): string => {
+  const category = db.skills.find((cat) =>
+    cat.subskills.some((sub) => sub.id === id),
+  );
+  if (!category) {
+    return '';
+  }
+  return category.subskills.find((sub) => sub.id === id)?.name ?? '';
+};
+
+const mapUserSkillsToNames = (skills: UserSkill[]): string[] =>
+  skills
+    .map((skill) => {
+      if (typeof skill.subcategoryId === 'number') {
+        const name = getSkillNameById(skill.subcategoryId);
+        return name || skill.title;
+      }
+      return skill.title;
+    })
+    .map((name) => name.trim())
+    .filter((name) => name.length > 0);
 
 export const applyFilters = (
   skills: Skill[],
@@ -48,25 +70,7 @@ export const applyFilters = (
     city: getUserCity(user),
     avatarUrl: user.avatarUrl ?? '',
     bio: user.bio,
-    teachSkills: user.teachableSkills
-      .map((id) => {
-        const category = db.skills.find((cat) =>
-          cat.subskills.some((sub) => sub.id === id)
-        );
-        return category
-          ? category.subskills.find((sub) => sub.id === id)?.name ?? ''
-          : '';
-      })
-      .filter(Boolean),
-    learnSkills: user.learningSkills
-      .map((id) => {
-        const category = db.skills.find((cat) =>
-          cat.subskills.some((sub) => sub.id === id)
-        );
-        return category
-          ? category.subskills.find((sub) => sub.id === id)?.name ?? ''
-          : '';
-      })
-      .filter(Boolean)
+    teachSkills: mapUserSkillsToNames(user.teachableSkills),
+    learnSkills: mapUserSkillsToNames(user.learningSkills),
   }));
 };

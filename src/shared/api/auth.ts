@@ -1,5 +1,16 @@
 import { request, ApiError } from './request';
 
+export interface ApiUserSkill {
+  id: string;
+  title: string;
+  categoryId: number | null;
+  subcategoryId: number | null;
+  description: string;
+  imageUrls: string[];
+}
+
+export type ApiUserSkillResponse = ApiUserSkill | number;
+
 export interface ApiAuthUser {
   id: string;
   email: string;
@@ -9,8 +20,8 @@ export interface ApiAuthUser {
   birthDate?: string | null;
   gender?: string | null;
   bio?: string | null;
-  teachableSkills?: number[];
-  learningSkills?: number[];
+  teachableSkills?: ApiUserSkillResponse[];
+  learningSkills?: ApiUserSkillResponse[];
 }
 
 export interface AuthSuccessResponse {
@@ -30,8 +41,8 @@ export interface RegisterPayload extends LoginPayload {
   birthDate?: string | null;
   gender?: string | null;
   bio?: string | null;
-  teachableSkills?: number[];
-  learningSkills?: number[];
+  teachableSkills?: ApiUserSkill[];
+  learningSkills?: ApiUserSkill[];
 }
 
 export interface UpdateProfilePayload {
@@ -42,8 +53,8 @@ export interface UpdateProfilePayload {
   birthDate?: string | null;
   gender?: string | null;
   bio?: string | null;
-  teachableSkills?: number[];
-  learningSkills?: number[];
+  teachableSkills?: ApiUserSkill[];
+  learningSkills?: ApiUserSkill[];
 }
 
 export const authApi = {

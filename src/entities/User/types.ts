@@ -1,4 +1,13 @@
-export type Gender = 'Мужской' | 'Женский';
+export type Gender = '�?�?��?��?��' | '�-��?�?����';
+
+export interface UserSkill {
+  id: string;
+  title: string;
+  categoryId: number | null;
+  subcategoryId: number | null;
+  description: string;
+  imageUrls: string[];
+}
 
 export interface User {
   id: string;
@@ -8,8 +17,8 @@ export interface User {
   birthDate?: string | null;
   gender?: Gender | null;
   bio?: string | null;
-  teachableSkills: number[];
-  learningSkills: number[];
+  teachableSkills: UserSkill[];
+  learningSkills: UserSkill[];
 }
 
 export interface UserCard {

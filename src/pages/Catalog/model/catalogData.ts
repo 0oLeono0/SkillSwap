@@ -1,6 +1,6 @@
-﻿import { db } from '@/api/mockData';
+import { db } from '@/api/mockData';
 import { mapApiToUser } from '@/entities/User/mappers';
-import type { User } from '@/entities/User/types';
+import type { User, UserSkill } from '@/entities/User/types';
 import type { Skill } from '@/entities/Skill/types';
 import { getUserAge, getUserCity } from '@/entities/User/utils';
 import { getSubskillNameMap } from '@/entities/Skill/mappers';
@@ -62,6 +62,61 @@ const buildCategoryLookup = (): Map<number, SkillCategory> => {
 
 const subskillNameById = getSubskillNameMap(db.skills);
 const categoryBySubskillId = buildCategoryLookup();
+const groupNameById = new Map(db.skills.map((group) => [group.id, group.name]));
+
+const resolveSkillTitle = (skill: UserSkill, subskillId: number): string => {
+  const trimmed = skill.title.trim();
+  if (trimmed.length > 0) {
+    return trimmed;
+  }
+  return subskillNameById.get(subskillId) ?? 'Unknown skill';
+};
+
+const resolveSkillCategory = (
+  skill: UserSkill,
+  subskillId: number,
+): SkillCategory => {
+  if (typeof skill.categoryId === 'number') {
+    const groupName = groupNameById.get(skill.categoryId);
+    if (groupName) {
+      const mapped = categoryNameToConstant.get(groupName);
+      if (mapped) {
+        return mapped;
+      }
+    }
+  }
+  return categoryBySubskillId.get(subskillId) ?? SkillCategories.EDUCATION;
+};
+
+const resolveSkillImage = (
+  skill: UserSkill,
+  fallback?: string | null,
+): string | undefined => {
+  const primaryImage = skill.imageUrls.find((url) => url.trim().length > 0);
+  if (primaryImage) {
+    return primaryImage;
+  }
+  return fallback ?? undefined;
+};
+
+const resolveSkillGallery = (
+  skill: UserSkill,
+  fallback?: string | null,
+): string[] => {
+  const images = skill.imageUrls
+    .map((url) => url.trim())
+    .filter((url): url is string => url.length > 0);
+
+  if (images.length) {
+    return images;
+  }
+
+  if (fallback && fallback.trim().length > 0) {
+    return [fallback];
+  }
+
+  return [];
+};
 
 export const buildCatalogSkills = (users: User[]): CatalogSkill[] =>
   users.flatMap((user) => {
@@ -70,24 +125,32 @@ export const buildCatalogSkills = (users: User[]): CatalogSkill[] =>
     const authorAbout = user.bio;
 
     const convertSkill = (
-      subskillId: number,
+      skill: UserSkill,
       type: CatalogSkill['type'],
-    ): CatalogSkill => {
-      const title = subskillNameById.get(subskillId) ?? 'Unknown skill';
-      const category =
-        categoryBySubskillId.get(subskillId) ?? SkillCategories.EDUCATION;
+    ): CatalogSkill | null => {
+      if (typeof skill.subcategoryId !== 'number') {
+        return null;
+      }
+
+      const title = resolveSkillTitle(skill, skill.subcategoryId);
+      const category = resolveSkillCategory(skill, skill.subcategoryId);
+      const description = skill.description.trim() || authorAbout || '';
+      const imageUrl = resolveSkillImage(skill, user.avatarUrl);
+      const imageUrls = resolveSkillGallery(skill, user.avatarUrl);
 
       return {
-        id: `${user.id}-${type}-${subskillId}`,
+        id: `${user.id}-${type}-${skill.subcategoryId}-${skill.id}`,
         title,
-        description: authorAbout ?? '',
+        description,
         type,
         category,
-        imageUrl: user.avatarUrl ?? undefined,
+        imageUrl,
+        authorAvatarUrl: user.avatarUrl ?? undefined,
         tags: [],
+        imageUrls,
         authorId: user.id,
         isFavorite: false,
-        originalSkillId: subskillId,
+        originalSkillId: skill.subcategoryId,
         authorName: user.name,
         authorCity,
         authorAge,
@@ -95,12 +158,13 @@ export const buildCatalogSkills = (users: User[]): CatalogSkill[] =>
       };
     };
 
-    const teachableSkills = (user.teachableSkills ?? []).map((skillId) =>
-      convertSkill(skillId, 'teach'),
-    );
-    const learningSkills = (user.learningSkills ?? []).map((skillId) =>
-      convertSkill(skillId, 'learn'),
-    );
+    const teachableSkills = (user.teachableSkills ?? [])
+      .map((skill) => convertSkill(skill, 'teach'))
+      .filter((skill): skill is CatalogSkill => Boolean(skill));
+
+    const learningSkills = (user.learningSkills ?? [])
+      .map((skill) => convertSkill(skill, 'learn'))
+      .filter((skill): skill is CatalogSkill => Boolean(skill));
 
     return [...teachableSkills, ...learningSkills];
   });
@@ -152,7 +216,10 @@ export const filterCatalogSkills = ({
 
     if (
       selectedCityIds.length &&
-      !(typeof author.cityId === 'number' && selectedCityIds.includes(author.cityId))
+      !(
+        typeof author.cityId === 'number' &&
+        selectedCityIds.includes(author.cityId)
+      )
     ) {
       return false;
     }
@@ -171,7 +238,7 @@ export const filterCatalogSkills = ({
         skill.authorName,
         skill.authorCity,
         author.bio ?? '',
-        skill.tags?.join(' ')
+        skill.tags?.join(' '),
       ]
         .filter(Boolean)
         .join(' ')

@@ -15,6 +15,7 @@ import {
   type UpdateProfilePayload,
   ApiError,
 } from '@/shared/api/auth';
+import { normalizeApiSkillList } from '@/entities/User/mappers';
 import { AuthContext, type AuthContextType, type AuthUser } from './context';
 
 interface AuthState {
@@ -36,8 +37,8 @@ const mapToAuthUser = (payloadUser: ApiAuthUser): AuthUser => ({
   birthDate: payloadUser.birthDate ?? null,
   gender: payloadUser.gender ?? null,
   bio: payloadUser.bio ?? null,
-  teachableSkills: Array.isArray(payloadUser.teachableSkills) ? payloadUser.teachableSkills : [],
-  learningSkills: Array.isArray(payloadUser.learningSkills) ? payloadUser.learningSkills : [],
+  teachableSkills: normalizeApiSkillList(payloadUser.teachableSkills),
+  learningSkills: normalizeApiSkillList(payloadUser.learningSkills),
 });
 
 export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {

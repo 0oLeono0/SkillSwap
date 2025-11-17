@@ -4,6 +4,18 @@ import { asyncHandler } from '../middleware/asyncHandler.js';
 import { refreshTtlMs } from '../services/tokenService.js';
 import { createBadRequest, createUnauthorized } from '../utils/httpErrors.js';
 
+const skillSchema = z.union([
+  z.object({
+    id: z.string().min(1).optional(),
+    title: z.string().min(2),
+    categoryId: z.number().int().positive().nullable(),
+    subcategoryId: z.number().int().positive().nullable(),
+    description: z.string().min(1),
+    imageUrls: z.array(z.string().min(1)).optional(),
+  }),
+  z.number().int(),
+]);
+
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
@@ -13,8 +25,8 @@ const registerSchema = z.object({
   birthDate: z.string().min(1).optional(),
   gender: z.string().optional(),
   bio: z.string().max(2000).optional(),
-  teachableSkills: z.array(z.number().int()).optional(),
-  learningSkills: z.array(z.number().int()).optional(),
+  teachableSkills: z.array(skillSchema).optional(),
+  learningSkills: z.array(skillSchema).optional(),
 });
 
 const loginSchema = z.object({
@@ -30,8 +42,8 @@ const profileUpdateSchema = z.object({
   birthDate: z.union([z.string().min(1), z.null()]).optional(),
   gender: z.string().max(255).optional().nullable(),
   bio: z.string().max(2000).optional().nullable(),
-  teachableSkills: z.array(z.number().int()).optional(),
-  learningSkills: z.array(z.number().int()).optional(),
+  teachableSkills: z.array(skillSchema).optional(),
+  learningSkills: z.array(skillSchema).optional(),
 });
 
 const REFRESH_COOKIE_NAME = 'refreshToken';

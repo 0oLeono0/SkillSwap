@@ -12,6 +12,7 @@ type SkillWithAuthor = Skill & {
   authorCity?: string;
   authorAge?: number;
   authorAbout?: string;
+  authorAvatarUrl?: string;
 };
 
 export const SkillsList: FC<SkillsListProps> = ({
@@ -23,6 +24,9 @@ export const SkillsList: FC<SkillsListProps> = ({
     return <p className={styles.emptyMessage}>Ничего не найдено</p>;
   }
 
+  const resolveAvatar = (skill: SkillWithAuthor) =>
+    skill.authorAvatarUrl || skill.imageUrl || fallbackAvatar;
+
   const groupedByAuthor = skills.reduce<Record<string, GroupedSkills>>(
     (acc, rawSkill) => {
       const skill = rawSkill as SkillWithAuthor;
@@ -30,7 +34,7 @@ export const SkillsList: FC<SkillsListProps> = ({
       if (!acc[skill.authorId]) {
         acc[skill.authorId] = {
           authorId: skill.authorId,
-          avatar: skill.imageUrl || fallbackAvatar,
+          avatar: resolveAvatar(skill),
           name: skill.authorName || 'Имя не указано',
           city: skill.authorCity || 'Город не указан',
           age: typeof skill.authorAge === 'number' ? skill.authorAge : 0,
@@ -43,8 +47,10 @@ export const SkillsList: FC<SkillsListProps> = ({
 
       const group = acc[skill.authorId];
 
-      if (skill.imageUrl) {
-        group.avatar = skill.imageUrl;
+      if (skill.authorAvatarUrl) {
+        group.avatar = skill.authorAvatarUrl;
+      } else if (!group.avatar || group.avatar === fallbackAvatar) {
+        group.avatar = skill.imageUrl || group.avatar;
       }
       if (skill.authorName) {
         group.name = skill.authorName;

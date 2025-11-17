@@ -20,6 +20,14 @@ const GENDERS: Array<{ value: Gender | ''; label: string }> = [
   { value: 'Женский', label: 'Женский' },
 ];
 
+const readFileAsDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+
 interface StepOneCredentials {
   email: string;
   password: string;
@@ -57,7 +65,7 @@ const AuthStepTwo = () => {
     }
   }, [credentials, navigate]);
 
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState(storedStepTwo?.avatarUrl ?? '');
   const [name, setName] = useState(storedStepTwo?.name ?? '');
   const [birthDate, setBirthDate] = useState(storedStepTwo?.birthDate ?? '');
   const [gender, setGender] = useState<Gender | ''>(storedStepTwo?.gender ?? '');
@@ -70,9 +78,20 @@ const AuthStepTwo = () => {
     return skillGroups.find((group) => group.id === categoryId)?.skills ?? [];
   }, [categoryId, skillGroups]);
 
-  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
-    setAvatarFile(file);
+    if (!file) {
+      setAvatarPreview('');
+      return;
+    }
+
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      setAvatarPreview(dataUrl);
+    } catch (error) {
+      console.error('[AuthStepTwo] Failed to read avatar file', error);
+      setAvatarPreview('');
+    }
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -87,7 +106,7 @@ const AuthStepTwo = () => {
         cityId,
         categoryId,
         subskillId,
-        avatarUrl: avatarFile ? URL.createObjectURL(avatarFile) : '',
+        avatarUrl: avatarPreview || '',
       }),
     );
 
@@ -101,8 +120,8 @@ const AuthStepTwo = () => {
         <div className={styles.layout}>
           <form className={styles.form} onSubmit={handleSubmit}>
             <label className={styles.avatarUpload}>
-              {avatarFile ? (
-                <img src={URL.createObjectURL(avatarFile)} alt='Аватар пользователя' />
+              {avatarPreview ? (
+                <img src={avatarPreview} alt='Аватар пользователя' />
               ) : (
                 <span className={styles.avatarPlaceholder}>+</span>
               )}

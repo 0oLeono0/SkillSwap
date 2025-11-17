@@ -134,6 +134,22 @@ const SkillDetails = (): ReactElement => {
     [teachSkills, selectedSkillId]
   );
 
+  const galleryImages = useMemo(() => {
+    if (selectedSkill?.imageUrls && selectedSkill.imageUrls.length > 0) {
+      return selectedSkill.imageUrls;
+    }
+
+    if (selectedSkill?.imageUrl) {
+      return [selectedSkill.imageUrl];
+    }
+
+    if (author?.avatarUrl) {
+      return [author.avatarUrl];
+    }
+
+    return GALLERY_IMAGES;
+  }, [author, selectedSkill]);
+
   const relatedSkills = useMemo(() => {
     if (!selectedSkill) return [];
 
@@ -262,7 +278,6 @@ const SkillDetails = (): ReactElement => {
   const placeholderDescription =
     'Привет! Я увлекаюсь этим навыком уже больше 10 лет — от первых занятий дома до выступлений на сцене. Научу вас основам, поделюсь любимыми техниками и помогу уверенно чувствовать себя даже без подготовки.';
 
-  const galleryImages = GALLERY_IMAGES;
   const proposeButtonLabel = isProposalSent ? 'Обмен предложен' : 'Предложить обмен';
   const proposeButtonInlineStyle = isProposalSent
     ? {
@@ -279,7 +294,7 @@ const SkillDetails = (): ReactElement => {
           <div className={styles.authorInfo}>
             <img
               className={styles.authorAvatar}
-              src={selectedSkill.imageUrl || author.avatarUrl}
+              src={author.avatarUrl || selectedSkill.imageUrl || galleryImages[0]}
               alt={author.name}
             />
             <div>

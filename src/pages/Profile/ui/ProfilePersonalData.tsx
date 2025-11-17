@@ -43,6 +43,16 @@ const toISODate = (value: string) => {
   return Number.isNaN(parsed.getTime()) ? value : parsed.toISOString();
 };
 
+const readFileAsDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      resolve(typeof reader.result === 'string' ? reader.result : '');
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+
 export function ProfilePersonalData() {
   const { user, updateProfile } = useAuth();
   const cities = useMemo(() => getCities(), []);
@@ -165,6 +175,18 @@ export function ProfilePersonalData() {
       }
     }
 
+    let avatarUrlPayload: string | undefined;
+    if (avatarFile) {
+      try {
+        avatarUrlPayload = await readFileAsDataUrl(avatarFile);
+      } catch (error) {
+        console.error('[ProfilePersonalData] Failed to read avatar file', error);
+        setSubmitError('Не удалось прочитать выбранный файл. Попробуйте другой файл.');
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     try {
       await updateProfile({
         email: formState.email.trim(),
@@ -173,6 +195,7 @@ export function ProfilePersonalData() {
         gender: formState.gender.trim() || null,
         bio: formState.bio.trim() || null,
         ...(cityIdPayload !== undefined ? { cityId: cityIdPayload } : {}),
+        ...(avatarUrlPayload ? { avatarUrl: avatarUrlPayload } : {}),
       });
       setSavedState({ ...formState });
       setAvatarFile(null);

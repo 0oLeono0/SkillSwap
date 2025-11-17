@@ -5,6 +5,11 @@ import { createConflict, createUnauthorized } from '../utils/httpErrors.js';
 import { tokenService } from './tokenService.js';
 import { userRepository } from '../repositories/userRepository.js';
 import { sanitizeUser } from './userService.js';
+import {
+  normalizeUserSkillList,
+  type UserSkillInput,
+  type UserSkill,
+} from '../types/userSkill.js';
 
 interface RegisterInput {
   email: string;
@@ -15,8 +20,8 @@ interface RegisterInput {
   birthDate?: string | undefined;
   gender?: string | undefined;
   bio?: string | undefined;
-  teachableSkills?: number[] | undefined;
-  learningSkills?: number[] | undefined;
+  teachableSkills?: UserSkillInput[] | undefined;
+  learningSkills?: UserSkillInput[] | undefined;
 }
 
 interface LoginInput {
@@ -32,12 +37,18 @@ type UpdateProfileInput = {
   birthDate?: string | null | undefined;
   gender?: string | null | undefined;
   bio?: string | null | undefined;
-  teachableSkills?: number[] | undefined;
-  learningSkills?: number[] | undefined;
+  teachableSkills?: UserSkillInput[] | undefined;
+  learningSkills?: UserSkillInput[] | undefined;
 };
 
-const normalizeSkills = (skills?: number[]) =>
-  Array.isArray(skills) ? skills.filter((skill) => Number.isInteger(skill)) : [];
+const normalizeSkills = (skills?: UserSkillInput[]): UserSkill[] => {
+  const list = normalizeUserSkillList(skills);
+  return list.map((skill) => ({
+    ...skill,
+    title: skill.title.trim(),
+    description: skill.description.trim(),
+  }));
+};
 
 const parseBirthDate = (value?: string) => {
   if (!value) {
