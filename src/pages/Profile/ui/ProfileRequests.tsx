@@ -26,16 +26,12 @@ const STATUS_LABELS: Record<RequestStatus, string> = {
   pending: 'В ожидании',
   accepted: 'Одобрена',
   rejected: 'Отклонена',
-  inProgress: 'В работе',
-  done: 'Завершена',
 };
 
 const STATUS_HINTS: Record<RequestStatus, string> = {
   pending: 'Ждёт решения другой стороны.',
   accepted: 'Можно переходить к деталям обмена.',
   rejected: 'Эта заявка закрыта.',
-  inProgress: 'Обмен уже запущен.',
-  done: 'Обмен завершён.',
 };
 
 const SKILL_TYPE_LABEL: Record<SkillMeta['type'], string> = {
