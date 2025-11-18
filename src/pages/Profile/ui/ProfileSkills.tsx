@@ -10,7 +10,7 @@ import { Title } from '@/shared/ui/Title';
 import { Button } from '@/shared/ui/button/Button';
 import { Input } from '@/shared/ui/Input';
 import { useAuth } from '@/app/providers/auth';
-import { getSkillsGroups } from '@/features/Filter/utils';
+import { useFiltersBaseData } from '@/features/Filter/model/useFiltersBaseData';
 import type { UserSkill } from '@/entities/User/types';
 import type { ApiUserSkill } from '@/shared/api/auth';
 import { Modal } from '@/shared/ui/Modal/Modal';
@@ -126,7 +126,7 @@ export const serializeSkills = (
 type SkillType = 'teach' | 'learn';
 export function ProfileSkills(): ReactElement {
   const { user, updateProfile } = useAuth();
-  const skillGroups = useMemo(() => getSkillsGroups(), []);
+  const { skillGroups } = useFiltersBaseData();
   const subskillNameMap = useMemo(() => {
     const map = new Map<number, string>();
     skillGroups.forEach((group) =>

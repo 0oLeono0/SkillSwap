@@ -7,7 +7,7 @@ import { Select } from '@/shared/ui/Select';
 import { Title } from '@/shared/ui/Title';
 import { ROUTES } from '@/shared/constants';
 import { useAuth } from '@/app/providers/auth';
-import { getSkillsGroups } from '@/features/Filter/utils';
+import { useFiltersBaseData } from '@/features/Filter/model/useFiltersBaseData';
 import type { Gender } from '@/entities/User/types';
 import SchoolBoardIcon from '@/shared/assets/images/school-board.svg?react';
 import stockMain from '@/shared/assets/images/stock/stock.jpg';
@@ -57,7 +57,7 @@ interface StepOneCredentials {
 const AuthStepThree = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
-  const skillGroups = useMemo(() => getSkillsGroups(), []);
+  const { skillGroups } = useFiltersBaseData();
 
   const stepOneData = useMemo<StepOneCredentials | null>(() => {
     const raw = sessionStorage.getItem(REGISTRATION_CREDENTIALS_STORAGE_KEY);

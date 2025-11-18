@@ -13,7 +13,7 @@ import { DatePicker } from '@/shared/ui/DatePicker/DatePicker';
 import { Button } from '@/shared/ui/button/Button';
 import { Title } from '@/shared/ui/Title';
 import { useAuth } from '@/app/providers/auth';
-import { getCities } from '@/features/Filter/utils';
+import { useFiltersBaseData } from '@/features/Filter/model/useFiltersBaseData';
 import {
   formatBirthDate,
   normalizeGenderInput,
@@ -41,7 +41,7 @@ const readFileAsDataUrl = (file: File) =>
 
 export function ProfilePersonalData() {
   const { user, updateProfile } = useAuth();
-  const cities = useMemo(() => getCities(), []);
+  const { cities } = useFiltersBaseData();
   const cityName = useMemo(() => {
     if (!user?.cityId) return '';
     const city = cities.find((option) => option.id === user.cityId);
@@ -291,4 +291,3 @@ export function ProfilePersonalData() {
     </div>
   );
 }
-

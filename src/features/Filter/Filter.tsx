@@ -1,7 +1,8 @@
 import { FilterPanel } from './ui/FilterPanel.tsx';
-import { type FC, useEffect, useState } from 'react';
-import type { CityOption, Filters, SearchMode, SkillCategories } from './types.ts';
-import { collectSkillIds, countActiveFilters, getCities, getSkillsGroups, mapCityIdsToCityNames } from './utils.ts';
+import { type FC, useState } from 'react';
+import type { Filters, SearchMode } from './types.ts';
+import { collectSkillIds, countActiveFilters, mapCityIdsToCityNames } from './utils.ts';
+import { useFiltersBaseData } from './model/useFiltersBaseData';
 
 export const Filter: FC = () => {
   const initialFilters: Filters = {
@@ -12,13 +13,7 @@ export const Filter: FC = () => {
   };
 
   const [filters, setFilters] = useState<Filters>(initialFilters);
-  const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
-  const [skillCategories, setSkillCategories] = useState<SkillCategories[]>([]);
-
-  useEffect(() => {
-    setCityOptions(getCities());
-    setSkillCategories(getSkillsGroups());
-  }, []);
+  const { cities: cityOptions, skillGroups: skillCategories } = useFiltersBaseData();
 
   const handleModeChange = (mode: SearchMode) => {
     setFilters(prev => ({ ...prev, mode: mode }));

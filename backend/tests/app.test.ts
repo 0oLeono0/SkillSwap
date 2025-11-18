@@ -6,6 +6,9 @@ const mockUserService = {
   listPublicUsers: jest.fn(),
 };
 const mockSanitizeUser = jest.fn();
+const mockCatalogService = {
+  getFiltersBaseData: jest.fn(),
+};
 
 const mockTokenService = {
   verifyAccessToken: jest.fn(),
@@ -22,6 +25,10 @@ jest.unstable_mockModule('../src/services/userService.js', () => ({
 jest.unstable_mockModule('../src/services/tokenService.js', () => ({
   tokenService: mockTokenService,
   refreshTtlMs: 0,
+}));
+
+jest.unstable_mockModule('../src/services/catalogService.js', () => ({
+  catalogService: mockCatalogService,
 }));
 
 const { app } = await import('../src/app.js');
@@ -130,6 +137,26 @@ describe('Users routes', () => {
           },
         ],
       });
+    });
+  });
+});
+
+describe('Catalog routes', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('returns filter base data from catalog service', async () => {
+    mockCatalogService.getFiltersBaseData.mockReturnValue({
+      cities: [{ id: 1, name: 'City' }],
+      skillGroups: [{ id: 10, name: 'Group', skills: [{ id: 11, name: 'Skill' }] }],
+    });
+
+    const response = await request(app).get('/api/catalog/filters');
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      cities: [{ id: 1, name: 'City' }],
+      skillGroups: [{ id: 10, name: 'Group', skills: [{ id: 11, name: 'Skill' }] }],
     });
   });
 });

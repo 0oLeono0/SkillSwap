@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FC } from 'react';
+import { useEffect, useRef, useState, type FC } from 'react';
 import {
   NavLink,
   createSearchParams,
@@ -24,7 +24,7 @@ import { Logo } from '@/shared/ui/Logo/Logo';
 import { SearchInput } from '@/features/SearchInput';
 import { useAuth } from '@/app/providers/auth';
 import { useTheme } from '@/app/providers/theme';
-import { getSkillsGroups } from '@/features/Filter/utils';
+import { useFiltersBaseData } from '@/features/Filter/model/useFiltersBaseData';
 import { Title } from '@/shared/ui/Title';
 import fallbackAvatar from '@/shared/assets/images/avatars/avatar.jpg';
 
@@ -58,7 +58,7 @@ function HeaderThemeToggle() {
 
 function Header() {
   const { isAuthenticated, user, logout } = useAuth();
-  const skillGroups = useMemo(() => getSkillsGroups(), []);
+  const { skillGroups } = useFiltersBaseData();
   const [isSkillsMenuOpen, setIsSkillsMenuOpen] = useState(false);
   const skillsToggleRef = useRef<HTMLButtonElement | null>(null);
   const skillsMenuRef = useRef<HTMLDivElement | null>(null);
