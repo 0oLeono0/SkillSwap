@@ -16,7 +16,7 @@ import {
   mapCityNamesToCityIds,
 } from '@/features/Filter/utils';
 import { usersApi } from '@/shared/api/users';
-import type { ApiAuthUser } from '@/shared/api/auth';
+import type { ApiCatalogUser } from '@/shared/api/users';
 
 export interface CatalogSkill extends Skill {
   originalSkillId: number;
@@ -173,7 +173,7 @@ export const buildCatalogSkills = (users: User[]): CatalogSkill[] =>
 
 export const loadCatalogBaseData = async (): Promise<CatalogBaseData> => {
   const response = await usersApi.fetchAll();
-  const users = response.users.map((user: ApiAuthUser) => mapApiToUser(user));
+  const users = response.users.map((user: ApiCatalogUser) => mapApiToUser(user));
 
   return {
     users,
