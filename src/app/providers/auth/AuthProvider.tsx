@@ -28,6 +28,55 @@ const initialState: AuthState = {
   accessToken: null,
 };
 
+const SESSION_STORAGE_KEY = 'auth:session';
+
+const getStorage = (): Storage | null => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+};
+
+const readStoredSession = (): AuthState | null => {
+  const storage = getStorage();
+  if (!storage) {
+    return null;
+  }
+  try {
+    const raw = storage.getItem(SESSION_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+    const parsed = JSON.parse(raw) as AuthState;
+    if (parsed?.user && parsed?.accessToken) {
+      return parsed;
+    }
+  } catch (error) {
+    console.warn('[AuthProvider] Failed to read stored session', error);
+  }
+  return null;
+};
+
+const persistSession = (state: AuthState | null) => {
+  const storage = getStorage();
+  if (!storage) {
+    return;
+  }
+  try {
+    if (!state?.user || !state?.accessToken) {
+      storage.removeItem(SESSION_STORAGE_KEY);
+    } else {
+      storage.setItem(SESSION_STORAGE_KEY, JSON.stringify(state));
+    }
+  } catch (error) {
+    console.warn('[AuthProvider] Failed to persist session', error);
+  }
+};
+
 const mapToAuthUser = (payloadUser: ApiAuthUser): AuthUser => ({
   id: payloadUser.id,
   email: payloadUser.email,
@@ -47,14 +96,17 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [isInitializing, setIsInitializing] = useState(true);
 
   const applySession = useCallback((session: AuthSuccessResponse) => {
-    setState({
+    const nextState: AuthState = {
       user: mapToAuthUser(session.user),
       accessToken: session.accessToken,
-    });
+    };
+    setState(nextState);
+    persistSession(nextState);
   }, []);
 
   const clearSession = useCallback(() => {
     setState(initialState);
+    persistSession(null);
   }, []);
 
   const login = useCallback<AuthContextType['login']>(
@@ -97,16 +149,25 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       }
 
       const response = await authApi.updateProfile(payload, state.accessToken);
-      setState((prev) => ({
-        ...prev,
-        user: mapToAuthUser(response.user),
-      }));
+      setState((prev) => {
+        const next: AuthState = {
+          ...prev,
+          user: mapToAuthUser(response.user),
+        };
+        persistSession(next);
+        return next;
+      });
     },
     [state.accessToken],
   );
 
   useEffect(() => {
     let mounted = true;
+    const stored = readStoredSession();
+    if (stored) {
+      setState(stored);
+      setIsInitializing(false);
+    }
     const initialise = async () => {
       try {
         await refresh();
