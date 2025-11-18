@@ -2,6 +2,7 @@ import type {
   ApiAuthUser,
   ApiUserSkillResponse,
 } from '@/shared/api/auth';
+import type { ApiCatalogUser } from '@/shared/api/users';
 import type { User, UserSkill } from './types';
 
 const generateSkillId = () => {
@@ -64,7 +65,9 @@ export const normalizeApiSkillList = (
   return skills.map(normalizeApiSkill);
 };
 
-export const mapApiToUser = (apiUser: ApiAuthUser): User => ({
+type ApiUserSource = ApiAuthUser | ApiCatalogUser;
+
+export const mapApiToUser = (apiUser: ApiUserSource): User => ({
   id: apiUser.id,
   name: apiUser.name,
   role: apiUser.role,
