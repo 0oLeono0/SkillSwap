@@ -10,13 +10,10 @@ import type {
   Filters,
   SkillCategories as SkillGroup,
 } from '@/features/Filter/types';
-import {
-  getCities,
-  getSkillsGroups,
-  mapCityNamesToCityIds,
-} from '@/features/Filter/utils';
+import { mapCityNamesToCityIds } from '@/features/Filter/utils';
 import { usersApi } from '@/shared/api/users';
 import type { ApiCatalogUser } from '@/shared/api/users';
+import { loadFiltersBaseData } from '@/features/Filter/model/filterBaseDataStore';
 
 export interface CatalogSkill extends Skill {
   originalSkillId: number;
@@ -174,12 +171,13 @@ export const buildCatalogSkills = (users: User[]): CatalogSkill[] =>
 export const loadCatalogBaseData = async (): Promise<CatalogBaseData> => {
   const response = await usersApi.fetchAll();
   const users = response.users.map((user: ApiCatalogUser) => mapApiToUser(user));
+  const filtersBaseData = await loadFiltersBaseData();
 
   return {
     users,
     skills: buildCatalogSkills(users),
-    cityOptions: getCities(),
-    skillGroups: getSkillsGroups(),
+    cityOptions: filtersBaseData.cities,
+    skillGroups: filtersBaseData.skillGroups,
   };
 };
 

@@ -7,7 +7,7 @@ import { Select, SelectVariant } from '@/shared/ui/Select';
 import { DatePicker } from '@/shared/ui/DatePicker/DatePicker';
 import { Title } from '@/shared/ui/Title';
 import { ROUTES } from '@/shared/constants';
-import { getCities, getSkillsGroups } from '@/features/Filter/utils';
+import { useFiltersBaseData } from '@/features/Filter/model/useFiltersBaseData';
 import type { Gender } from '@/entities/User/types';
 import UserInfoIcon from '@/shared/assets/images/user-info.svg?react';
 
@@ -46,8 +46,7 @@ interface StepTwoStorageData {
 const AuthStepTwo = () => {
   const navigate = useNavigate();
 
-  const cityOptions = useMemo(() => getCities(), []);
-  const skillGroups = useMemo(() => getSkillsGroups(), []);
+  const { cities: cityOptions, skillGroups } = useFiltersBaseData();
 
   const credentials = useMemo<StepOneCredentials | null>(() => {
     const raw = sessionStorage.getItem(REGISTRATION_CREDENTIALS_STORAGE_KEY);
