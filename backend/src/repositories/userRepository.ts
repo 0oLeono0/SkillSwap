@@ -29,6 +29,12 @@ export const userRepository = {
     });
   },
 
+  deleteById(id: string) {
+    return prisma.user.delete({
+      where: { id },
+    });
+  },
+
   saveRefreshToken(id: string, userId: string, token: string, expiresAt: Date) {
     return prisma.refreshToken.create({
       data: {

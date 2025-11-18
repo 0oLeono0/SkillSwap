@@ -2,11 +2,13 @@ import jwt, { type SignOptions } from 'jsonwebtoken';
 import ms from 'ms';
 import { config } from '../config/env.js';
 import type { RefreshToken } from '@prisma/client';
+import type { UserRole } from '../types/userRole.js';
 
 export interface AccessTokenPayload {
   sub: string;
   email: string;
   name: string;
+  role: UserRole;
 }
 
 export interface RefreshTokenPayload {

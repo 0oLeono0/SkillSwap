@@ -144,6 +144,7 @@ export const me = asyncHandler(async (req, res) => {
       id: req.user.sub,
       email: req.user.email,
       name: req.user.name,
+      role: req.user.role,
     },
   });
 });

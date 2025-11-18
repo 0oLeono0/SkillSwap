@@ -5,11 +5,13 @@ import type {
   UpdateProfilePayload,
 } from '@/shared/api/auth';
 import type { UserSkill } from '@/entities/User/types';
+import type { UserRole } from '@/shared/types/userRole';
 
 export interface AuthUser {
   id: string;
   email: string;
   name: string;
+  role: UserRole;
   avatarUrl?: string | null;
   cityId?: number | null;
   birthDate?: string | null;

@@ -20,6 +20,7 @@ import type { ApiAuthUser } from '@/shared/api/auth';
 
 export interface CatalogSkill extends Skill {
   originalSkillId: number;
+  userSkillId: string;
   authorName: string;
   authorCity: string;
   authorAge: number;
@@ -151,6 +152,7 @@ export const buildCatalogSkills = (users: User[]): CatalogSkill[] =>
         authorId: user.id,
         isFavorite: false,
         originalSkillId: skill.subcategoryId,
+        userSkillId: skill.id,
         authorName: user.name,
         authorCity,
         authorAge,

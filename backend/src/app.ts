@@ -7,6 +7,7 @@ import { usersRouter } from './routes/users.js';
 import { requestsRouter } from './routes/requests.js';
 import { favoritesRouter } from './routes/favorites.js';
 import { exchangesRouter } from './routes/exchanges.js';
+import { adminRouter } from './routes/admin.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 export const app = express();
@@ -39,5 +40,6 @@ app.use('/api/users', usersRouter);
 app.use('/api/requests', requestsRouter);
 app.use('/api/favorites', favoritesRouter);
 app.use('/api/exchanges', exchangesRouter);
+app.use('/api/admin', adminRouter);
 
 app.use(errorHandler);

@@ -9,9 +9,12 @@ export interface UserSkill {
   imageUrls: string[];
 }
 
+import type { UserRole } from '@/shared/types/userRole';
+
 export interface User {
   id: string;
   name: string;
+  role: UserRole;
   avatarUrl?: string | null;
   cityId: number | null;
   birthDate?: string | null;
