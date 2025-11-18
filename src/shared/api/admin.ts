@@ -1,10 +1,10 @@
 import { request } from '@/shared/api/request';
 import type { ApiAuthUser } from './auth';
-import type { UsersListResponse } from './users';
+import type { AdminUsersListResponse } from './users';
 
 export const adminApi = {
   fetchUsers(accessToken: string) {
-    return request<UsersListResponse>('/api/admin/users', {
+    return request<AdminUsersListResponse>('/api/admin/users', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },

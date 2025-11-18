@@ -28,6 +28,8 @@ export type SanitizedUser = Omit<
   learningSkills: UserSkill[];
 };
 
+export type PublicUser = Omit<SanitizedUser, 'email'>;
+
 export const sanitizeUser = (user: PrismaUser | null): SanitizedUser | null => {
   if (!user) {
     return null;
@@ -43,11 +45,24 @@ export const sanitizeUser = (user: PrismaUser | null): SanitizedUser | null => {
   };
 };
 
+const toPublicUser = (user: SanitizedUser): PublicUser => {
+  const { email: _email, ...rest } = user;
+  return rest;
+};
+
 export const userService = {
   async listUsers(): Promise<SanitizedUser[]> {
     const users = await userRepository.findAll();
     return users
       .map((user) => sanitizeUser(user))
       .filter((user): user is SanitizedUser => Boolean(user));
+  },
+
+  async listPublicUsers(): Promise<PublicUser[]> {
+    const users = await userRepository.findAll();
+    return users
+      .map((user) => sanitizeUser(user))
+      .filter((user): user is SanitizedUser => Boolean(user))
+      .map(toPublicUser);
   },
 };
