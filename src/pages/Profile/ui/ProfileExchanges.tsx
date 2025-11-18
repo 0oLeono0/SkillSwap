@@ -1,4 +1,4 @@
-import {
+﻿import {
   useCallback,
   useEffect,
   useMemo,
@@ -24,24 +24,27 @@ interface SkillMeta {
   title: string;
 }
 
+const EMPTY_PLACEHOLDER = '—';
+const UNKNOWN_SKILL_TITLE = 'Неизвестный навык';
+
 const STATUS_LABELS: Record<ExchangeStatus, string> = {
-  active: 'Активен',
-  completed: 'Завершён',
+  active: 'Активный обмен',
+  completed: 'Обмен завершён',
 };
 
 const STATUS_HINTS: Record<ExchangeStatus, string> = {
-  active: 'Обмен подтверждён обеими сторонами, можно общаться и назначать созвон.',
-  completed: 'Сессия завершена. История переписки сохранена и доступна для просмотра.',
+  active: 'Вы можете общаться и обмениваться навыками, пока обмен в статусе “Активный”.',
+  completed: 'Обмен завершён. Подтвердите результат и договоритесь, если хотите продолжить.',
 };
 
-const formatDateTime = (value?: string | null): string => {
+export const formatDateTime = (value?: string | null): string => {
   if (!value) {
-    return '—';
+    return EMPTY_PLACEHOLDER;
   }
 
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return '—';
+    return EMPTY_PLACEHOLDER;
   }
 
   return date.toLocaleString('ru-RU', {
@@ -52,24 +55,26 @@ const formatDateTime = (value?: string | null): string => {
   });
 };
 
-const parseSkillMeta = (skillId: string, titleById: Map<number, string>): SkillMeta => {
+export const parseSkillMeta = (skillId: string, titleById: Map<number, string>): SkillMeta => {
   const parts = skillId.split('-');
   if (parts.length < 3) {
-    return { title: 'Навык' };
+    return { title: UNKNOWN_SKILL_TITLE };
   }
 
   parts.shift(); // remove user id
   parts.shift(); // remove skill direction
   const subskillIdRaw = parts.shift();
   const subskillId = Number(subskillIdRaw);
-  const fallbackTitle = Number.isFinite(subskillId) ? `Навык #${subskillId}` : 'Навык';
+  const fallbackTitle = Number.isFinite(subskillId)
+    ? `${UNKNOWN_SKILL_TITLE} #${subskillId}`
+    : UNKNOWN_SKILL_TITLE;
   const title = Number.isFinite(subskillId) ? titleById.get(subskillId) ?? fallbackTitle : fallbackTitle;
 
   return { title };
 };
 
-const getRoleLabel = (isInitiator: boolean) =>
-  isInitiator ? 'Вы прокачиваете навык' : 'Вы делитесь опытом';
+export const getRoleLabel = (isInitiator: boolean) =>
+  isInitiator ? 'Вы инициировали обмен' : 'Вы присоединились к обмену';
 
 export function ProfileExchanges(): ReactElement {
   const { isAuthenticated, accessToken, isInitializing, user } = useAuth();
@@ -451,3 +456,4 @@ export function ProfileExchanges(): ReactElement {
     </section>
   );
 }
+
