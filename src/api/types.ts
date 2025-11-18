@@ -18,7 +18,7 @@ export interface City {
 
 export type ApiCity = City;
 
-export type ApiGender = '�-��?�?����' | '�?�?��?��?��';
+export type ApiGender = 'Мужской' | 'Женский';
 export type Gender = ApiGender;
 
 export interface ApiUserSkillEntry {
@@ -51,3 +51,4 @@ export interface ApiMockData {
   skills: ApiSkillCategory[];
   cities: ApiCity[];
 }
+
