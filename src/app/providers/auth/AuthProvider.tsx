@@ -32,6 +32,7 @@ const mapToAuthUser = (payloadUser: ApiAuthUser): AuthUser => ({
   id: payloadUser.id,
   email: payloadUser.email,
   name: payloadUser.name,
+  role: payloadUser.role,
   avatarUrl: payloadUser.avatarUrl,
   cityId: payloadUser.cityId ?? null,
   birthDate: payloadUser.birthDate ?? null,

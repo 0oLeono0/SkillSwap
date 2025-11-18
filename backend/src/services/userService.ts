@@ -4,6 +4,7 @@ import {
   normalizeUserSkillList,
   type UserSkill,
 } from '../types/userSkill.js';
+import { isUserRole, type UserRole } from '../types/userRole.js';
 
 const parseSkillList = (value?: string | null): UserSkill[] => {
   if (!value) {
@@ -20,8 +21,9 @@ const parseSkillList = (value?: string | null): UserSkill[] => {
 
 export type SanitizedUser = Omit<
   PrismaUser,
-  'passwordHash' | 'teachableSkills' | 'learningSkills'
+  'passwordHash' | 'teachableSkills' | 'learningSkills' | 'role'
 > & {
+  role: UserRole;
   teachableSkills: UserSkill[];
   learningSkills: UserSkill[];
 };
@@ -35,6 +37,7 @@ export const sanitizeUser = (user: PrismaUser | null): SanitizedUser | null => {
 
   return {
     ...rest,
+    role: isUserRole(user.role) ? user.role : 'user',
     teachableSkills: parseSkillList(teachableSkills),
     learningSkills: parseSkillList(learningSkills),
   };

@@ -17,6 +17,7 @@ import {
   ProfilePersonalData,
   ProfileRequests,
   ProfileSkills,
+  ProfileAdminPanel,
 } from '@/pages/Profile';
 
 const Stub: FC<{ title: string }> = ({ title }) => {
@@ -68,6 +69,14 @@ export const router = createBrowserRouter([
         ),
         children: [
           { index: true, element: <ProfilePersonalData /> },
+          {
+            path: ROUTES.PROFILE.CHILDREN.ADMIN,
+            element: (
+              <ProtectedRoute allowedRoles={['owner']}>
+                <ProfileAdminPanel />
+              </ProtectedRoute>
+            ),
+          },
           {
             path: ROUTES.PROFILE.CHILDREN.REQUESTS,
             element: <ProfileRequests />,

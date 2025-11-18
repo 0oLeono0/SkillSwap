@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+﻿import { useMemo, type FC } from 'react';
 import { SkillCard } from '../SkillCard/ui/SkillCard';
 import type { GroupedSkills, SkillsListProps } from './types';
 import styles from './SkillsList.module.css';
@@ -6,6 +6,7 @@ import fallbackAvatar from '../../shared/assets/images/avatars/avatar.jpg';
 import type { Skill } from '@/entities/Skill/types';
 import type { SkillProps } from '../SkillCard/ui/types';
 import type { SkillCategory } from '@/shared/lib/constants';
+import { Button } from '@/shared/ui/button/Button';
 
 type SkillWithAuthor = Skill & {
   authorName?: string;
@@ -13,20 +14,27 @@ type SkillWithAuthor = Skill & {
   authorAge?: number;
   authorAbout?: string;
   authorAvatarUrl?: string;
+  userSkillId?: string;
 };
 
 export const SkillsList: FC<SkillsListProps> = ({
   skills,
   onToggleFavorite,
   onDetailsClick,
+  moderation,
 }) => {
+  const deletingSet = useMemo(
+    () => new Set(moderation?.deletingAuthorIds ?? []),
+    [moderation?.deletingAuthorIds],
+  );
+
   if (!skills.length) {
-    return <p className={styles.emptyMessage}>Ничего не найдено</p>;
+    return <p className={styles.emptyMessage}>Нет подходящих карточек</p>;
   }
 
-  const resolveAvatar = (skill: SkillWithAuthor) =>
-    skill.authorAvatarUrl || skill.imageUrl || fallbackAvatar;
-
+  const resolveAvatar = (skill: SkillWithAuthor) =>
+    skill.authorAvatarUrl || skill.imageUrl || fallbackAvatar;
+
   const groupedByAuthor = skills.reduce<Record<string, GroupedSkills>>(
     (acc, rawSkill) => {
       const skill = rawSkill as SkillWithAuthor;
@@ -102,25 +110,41 @@ export const SkillsList: FC<SkillsListProps> = ({
 
         if (!mainSkill) return null;
 
+        const showModeration = Boolean(moderation?.enabled);
+        const isDeleting = deletingSet.has(author.authorId);
+
         return (
-          <SkillCard
-            key={author.authorId}
-            author={{
-              avatar: author.avatar,
-              name: author.name,
-              city: author.city,
-              age: author.age,
-              about: author.about,
-            }}
-            isLikeButtonVisible
-            isDetailsButtonVisible
-            skill={mapSkillToSkillProps(mainSkill)}
-            skillsToLearn={author.wantsToLearn.map(mapSkillToSkillProps)}
-            onDetailsButtonClick={() => handleDetailsClick(author.authorId)}
-            onLikeButtonClick={() => handleLikeClick(author.authorId)}
-            isExchangeOffered={false}
-            isFavorite={Boolean(author.isFavorite)}
-          />
+          <div key={author.authorId} className={styles.cardWrapper}>
+            <SkillCard
+              author={{
+                avatar: author.avatar,
+                name: author.name,
+                city: author.city,
+                age: author.age,
+                about: author.about,
+              }}
+              isLikeButtonVisible
+              isDetailsButtonVisible
+              skill={mapSkillToSkillProps(mainSkill)}
+              skillsToLearn={author.wantsToLearn.map(mapSkillToSkillProps)}
+              onDetailsButtonClick={() => handleDetailsClick(author.authorId)}
+              onLikeButtonClick={() => handleLikeClick(author.authorId)}
+              isExchangeOffered={false}
+              isFavorite={Boolean(author.isFavorite)}
+            />
+            {showModeration && (
+              <div className={styles.moderation}>
+                <Button
+                  variant='secondary'
+                  className={styles.moderationButton}
+                  onClick={() => moderation?.onDelete(author.authorId)}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? 'Удаляем…' : 'Удалить пользователя'}
+                </Button>
+              </div>
+            )}
+          </div>
         );
       })}
     </div>

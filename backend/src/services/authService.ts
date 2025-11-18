@@ -10,6 +10,7 @@ import {
   type UserSkillInput,
   type UserSkill,
 } from '../types/userSkill.js';
+import { isUserRole, type UserRole } from '../types/userRole.js';
 
 interface RegisterInput {
   email: string;
@@ -65,6 +66,13 @@ const parseBirthDate = (value?: string) => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
+const resolveUserRole = (value: unknown): UserRole => {
+  if (isUserRole(value)) {
+    return value;
+  }
+  return 'user';
+};
+
 export const authService = {
   async register({
     email,
@@ -113,7 +121,12 @@ export const authService = {
 
     const user = await userRepository.create(userData);
 
-    const tokens = await authService.issueTokens(user.id, user.email, user.name);
+    const tokens = await authService.issueTokens({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: resolveUserRole(user.role),
+    });
 
     return {
       user: sanitizeUser(user),
@@ -132,7 +145,12 @@ export const authService = {
       throw createUnauthorized('Invalid email or password');
     }
 
-    const tokens = await authService.issueTokens(user.id, user.email, user.name);
+    const tokens = await authService.issueTokens({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: resolveUserRole(user.role),
+    });
 
     return {
       user: sanitizeUser(user),
@@ -140,12 +158,12 @@ export const authService = {
     };
   },
 
-  async issueTokens(userId: string, email: string, name: string) {
+  async issueTokens({ id, email, name, role }: { id: string; email: string; name: string; role: UserRole }) {
     const jti = crypto.randomUUID();
-    const accessToken = tokenService.createAccessToken({ sub: userId, email, name });
-    const { token: refreshToken, expiresAt } = tokenService.createRefreshToken({ sub: userId, tokenId: jti });
+    const accessToken = tokenService.createAccessToken({ sub: id, email, name, role });
+    const { token: refreshToken, expiresAt } = tokenService.createRefreshToken({ sub: id, tokenId: jti });
 
-    await userRepository.saveRefreshToken(jti, userId, refreshToken, expiresAt);
+    await userRepository.saveRefreshToken(jti, id, refreshToken, expiresAt);
 
     return {
       accessToken,
@@ -175,7 +193,12 @@ export const authService = {
     // Remove used refresh token to prevent reuse
     await userRepository.deleteRefreshTokenById(payload.tokenId);
 
-    const tokens = await authService.issueTokens(user.id, user.email, user.name);
+    const tokens = await authService.issueTokens({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: resolveUserRole(user.role),
+    });
 
     return {
       user: sanitizeUser(user),

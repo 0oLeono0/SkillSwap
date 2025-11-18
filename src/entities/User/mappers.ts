@@ -67,6 +67,7 @@ export const normalizeApiSkillList = (
 export const mapApiToUser = (apiUser: ApiAuthUser): User => ({
   id: apiUser.id,
   name: apiUser.name,
+  role: apiUser.role,
   avatarUrl: apiUser.avatarUrl ?? null,
   cityId: typeof apiUser.cityId === 'number' ? apiUser.cityId : null,
   birthDate: apiUser.birthDate ?? null,

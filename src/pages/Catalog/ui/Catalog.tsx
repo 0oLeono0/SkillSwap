@@ -23,6 +23,7 @@ import { SkillsList } from '@/widgets/SkillsList';
 import { Title } from '@/shared/ui/Title';
 import {
   DEFAULT_FILTERS,
+  buildCatalogSkills,
   createUsersMap,
   filterCatalogSkills,
   loadCatalogBaseData,
@@ -33,6 +34,8 @@ import { Button } from '@/shared/ui/button/Button';
 import { ROUTES } from '@/shared/constants';
 import { useAuth } from '@/app/providers/auth';
 import { useFavorites } from '@/app/providers/favorites';
+import { adminApi } from '@/shared/api/admin';
+import { isElevatedRole } from '@/shared/types/userRole';
 
 type CatalogVariant = 'home' | 'catalog';
 
@@ -105,12 +108,15 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   const [skillGroups, setSkillGroups] = useState<SkillGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user: authUser } = useAuth();
+  const [moderationError, setModerationError] = useState<string | null>(null);
+  const [deletingAuthorIds, setDeletingAuthorIds] = useState<string[]>([]);
+  const { user: authUser, accessToken } = useAuth();
   const { toggleFavorite, favoriteAuthorIds } = useFavorites();
   const favoriteAuthorSet = useMemo(
     () => new Set(favoriteAuthorIds),
     [favoriteAuthorIds],
   );
+  const moderationEnabled = isElevatedRole(authUser?.role);
 
   const mapSkillsWithFavorites = useCallback(
     (skillList: CatalogSkill[]) =>
@@ -429,11 +435,47 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
     [toggleFavorite]
   );
 
+  const handleDeleteUser = useCallback(
+    async (authorId: string) => {
+      if (!accessToken || !moderationEnabled) {
+        return;
+      }
+      setDeletingAuthorIds((prev) =>
+        prev.includes(authorId) ? prev : [...prev, authorId],
+      );
+      setModerationError(null);
+
+      try {
+        await adminApi.deleteUser(authorId, accessToken);
+        setUsers((prevUsers) => prevUsers.filter((user) => user.id !== authorId));
+        setSkills((prevSkills) => prevSkills.filter((item) => item.authorId !== authorId));
+      } catch (err) {
+        console.error('[Catalog] Failed to delete user', err);
+        setModerationError('Не удалось удалить пользователя. Попробуйте ещё раз.');
+      } finally {
+        setDeletingAuthorIds((prev) => prev.filter((id) => id !== authorId));
+      }
+    },
+    [accessToken, moderationEnabled],
+  );
+
   const handleDetailsClick = useCallback(
     (authorId: string) => {
       navigate(ROUTES.SKILL_DETAILS.replace(':authorId', authorId));
     },
     [navigate]
+  );
+
+  const moderationControls = useMemo(
+    () =>
+      moderationEnabled
+        ? {
+            enabled: true,
+            deletingAuthorIds,
+            onDelete: handleDeleteUser,
+          }
+        : undefined,
+    [moderationEnabled, deletingAuthorIds, handleDeleteUser],
   );
 
   const renderList = () => (
@@ -455,6 +497,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
         skills={mapSkillsWithFavorites(listSkills)}
         onToggleFavorite={handleToggleFavorite}
         onDetailsClick={handleDetailsClick}
+        moderation={moderationControls}
       />
     </>
   );
@@ -487,6 +530,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
               skills={mapSkillsWithFavorites(sectionSkills)}
               onToggleFavorite={handleToggleFavorite}
               onDetailsClick={handleDetailsClick}
+              moderation={moderationControls}
             />
           </div>
         );
@@ -529,7 +573,12 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
           />
         </aside>
 
-        <div className={styles.content}>{content}</div>
+        <div className={styles.content}>
+          {moderationError && (
+            <p className={styles.moderationError}>{moderationError}</p>
+          )}
+          {content}
+        </div>
       </div>
     </section>
   );

@@ -1,4 +1,5 @@
 import { request, ApiError } from './request';
+import type { UserRole } from '@/shared/types/userRole';
 
 export interface ApiUserSkill {
   id: string;
@@ -15,6 +16,7 @@ export interface ApiAuthUser {
   id: string;
   email: string;
   name: string;
+  role: UserRole;
   avatarUrl?: string | null;
   cityId?: number | null;
   birthDate?: string | null;

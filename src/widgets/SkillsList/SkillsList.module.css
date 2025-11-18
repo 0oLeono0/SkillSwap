@@ -25,3 +25,18 @@
   color: var(--font-color-secondary);
   text-align: center;
 }
+
+.cardWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.moderation {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.moderationButton {
+  align-self: flex-end;
+}
