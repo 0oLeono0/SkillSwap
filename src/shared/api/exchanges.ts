@@ -1,5 +1,5 @@
 import type { Exchange, ExchangeMessage, ExchangeWithMessages } from '@/entities/Exchange/types';
-import { request } from './request';
+import { request } from '@/shared/api/request';
 
 export interface ExchangesListResponse {
   exchanges: Exchange[];

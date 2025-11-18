@@ -1,3 +1,5 @@
+import type { Gender } from '@/shared/types/gender';
+
 interface ApiSubskill {
   id: number;
   name: string;
@@ -18,8 +20,8 @@ export interface City {
 
 export type ApiCity = City;
 
-export type ApiGender = 'Мужской' | 'Женский';
-export type Gender = ApiGender;
+export type ApiGender = Gender;
+export type { Gender };
 
 export interface ApiUserSkillEntry {
   id?: string;
@@ -51,4 +53,3 @@ export interface ApiMockData {
   skills: ApiSkillCategory[];
   cities: ApiCity[];
 }
-

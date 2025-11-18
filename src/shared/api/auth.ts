@@ -1,4 +1,5 @@
-import { request, ApiError } from './request';
+import { request, ApiError } from '@/shared/api/request';
+import type { Gender } from '@/shared/types/gender';
 import type { UserRole } from '@/shared/types/userRole';
 
 export interface ApiUserSkill {
@@ -20,7 +21,7 @@ export interface ApiAuthUser {
   avatarUrl?: string | null;
   cityId?: number | null;
   birthDate?: string | null;
-  gender?: string | null;
+  gender?: Gender | null;
   bio?: string | null;
   teachableSkills?: ApiUserSkillResponse[];
   learningSkills?: ApiUserSkillResponse[];
@@ -41,7 +42,7 @@ export interface RegisterPayload extends LoginPayload {
   avatarUrl?: string | null;
   cityId?: number | null;
   birthDate?: string | null;
-  gender?: string | null;
+  gender?: Gender | null;
   bio?: string | null;
   teachableSkills?: ApiUserSkill[];
   learningSkills?: ApiUserSkill[];
@@ -53,7 +54,7 @@ export interface UpdateProfilePayload {
   avatarUrl?: string | null;
   cityId?: number | null;
   birthDate?: string | null;
-  gender?: string | null;
+  gender?: Gender | null;
   bio?: string | null;
   teachableSkills?: ApiUserSkill[];
   learningSkills?: ApiUserSkill[];

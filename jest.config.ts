@@ -5,6 +5,7 @@ const config: Config = {
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
+    '^@/shared/api/request$': '<rootDir>/tests/__mocks__/requestMock.ts',
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css|scss|sass)$': 'identity-obj-proxy',
     '^.+\\.(jpg|jpeg|png|gif|webp|avif)$': '<rootDir>/tests/__mocks__/fileMock.ts',
@@ -28,4 +29,3 @@ const config: Config = {
 };
 
 export default config;
-

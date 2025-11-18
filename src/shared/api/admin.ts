@@ -1,4 +1,4 @@
-import { request } from './request';
+import { request } from '@/shared/api/request';
 import type { ApiAuthUser } from './auth';
 import type { UsersListResponse } from './users';
 
