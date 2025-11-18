@@ -1,5 +1,6 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
+import { hashToken } from '../utils/tokenHash.js';
 
 export const userRepository = {
   findByEmail(email: string) {
@@ -35,12 +36,12 @@ export const userRepository = {
     });
   },
 
-  saveRefreshToken(id: string, userId: string, token: string, expiresAt: Date) {
+  saveRefreshToken(id: string, userId: string, tokenHash: string, expiresAt: Date) {
     return prisma.refreshToken.create({
       data: {
         id,
         userId,
-        token,
+        token: tokenHash,
         expiresAt,
       },
     });
@@ -55,6 +56,13 @@ export const userRepository = {
   },
 
   deleteRefreshTokenByToken(token: string) {
-    return prisma.refreshToken.deleteMany({ where: { token } });
+    const tokenHash = hashToken(token);
+    return prisma.refreshToken.deleteMany({
+      where: {
+        token: {
+          in: [tokenHash, token],
+        },
+      },
+    });
   },
 };

@@ -6,11 +6,24 @@ import type { UserRole } from '@/shared/types/userRole';
 interface ProtectedRouteProps {
   children: ReactNode;
   allowedRoles?: UserRole[];
+  fallback?: ReactNode;
 }
 
-export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
-  const { isAuthenticated, user } = useAuth();
+const defaultFallback = (
+  <div style={{ padding: 24, textAlign: 'center' }}>Загрузка...</div>
+);
+
+export const ProtectedRoute = ({
+  children,
+  allowedRoles,
+  fallback = defaultFallback,
+}: ProtectedRouteProps) => {
+  const { isAuthenticated, isInitializing, user } = useAuth();
   const location = useLocation();
+
+  if (isInitializing) {
+    return <>{fallback}</>;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;

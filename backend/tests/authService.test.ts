@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { jest } from '@jest/globals';
+import { hashToken } from '../src/utils/tokenHash.js';
 
 const mockUserRepository = {
   findByEmail: jest.fn(),
@@ -131,12 +132,7 @@ describe('authService', () => {
         role: 'user',
       });
 
-      expect(mockUserRepository.saveRefreshToken).toHaveBeenCalledWith(
-        'jti-123',
-        'user-1',
-        'refresh-token',
-        expect.any(Date),
-      );
+      expect(mockUserRepository.saveRefreshToken).toHaveBeenCalledWith('jti-123', 'user-1', hashToken('refresh-token'), expect.any(Date));
 
       (crypto.randomUUID as jest.MockedFunction<typeof crypto.randomUUID>).mockRestore?.();
     });
