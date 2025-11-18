@@ -11,6 +11,7 @@ import {
   type UserSkill,
 } from '../types/userSkill.js';
 import { isUserRole, type UserRole } from '../types/userRole.js';
+import { hashToken } from '../utils/tokenHash.js';
 
 interface RegisterInput {
   email: string;
@@ -163,7 +164,8 @@ export const authService = {
     const accessToken = tokenService.createAccessToken({ sub: id, email, name, role });
     const { token: refreshToken, expiresAt } = tokenService.createRefreshToken({ sub: id, tokenId: jti });
 
-    await userRepository.saveRefreshToken(jti, id, refreshToken, expiresAt);
+    const refreshTokenHash = hashToken(refreshToken);
+    await userRepository.saveRefreshToken(jti, id, refreshTokenHash, expiresAt);
 
     return {
       accessToken,
@@ -186,7 +188,11 @@ export const authService = {
     }
 
     const existingToken = await userRepository.findRefreshToken(payload.tokenId);
-    if (!existingToken || existingToken.token !== refreshToken) {
+    const providedTokenHash = hashToken(refreshToken);
+    const tokenMatches =
+      existingToken &&
+      (existingToken.token === providedTokenHash || existingToken.token === refreshToken);
+    if (!tokenMatches) {
       throw createUnauthorized();
     }
 
