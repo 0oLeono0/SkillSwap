@@ -14,6 +14,11 @@ import { Button } from '@/shared/ui/button/Button';
 import { Title } from '@/shared/ui/Title';
 import { useAuth } from '@/app/providers/auth';
 import { getCities } from '@/features/Filter/utils';
+import {
+  formatBirthDate,
+  normalizeGenderInput,
+  toISODate,
+} from './profilePersonalData.helpers';
 
 interface PersonalDataForm {
   email: string;
@@ -23,25 +28,6 @@ interface PersonalDataForm {
   city: string;
   bio: string;
 }
-
-const formatBirthDate = (value?: string | null) => {
-  if (!value) return '';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
-  return `${day}.${month}.${year}`;
-};
-
-const toISODate = (value: string) => {
-  const [day, month, year] = value.split(/[./-]/).map(Number);
-  if (!day || !month || !year) {
-    return value;
-  }
-  const parsed = new Date(year, month - 1, day);
-  return Number.isNaN(parsed.getTime()) ? value : parsed.toISOString();
-};
 
 const readFileAsDataUrl = (file: File) =>
   new Promise<string>((resolve, reject) => {
@@ -192,7 +178,7 @@ export function ProfilePersonalData() {
         email: formState.email.trim(),
         name: formState.name.trim(),
         birthDate: formState.birthDate ? toISODate(formState.birthDate) : null,
-        gender: formState.gender.trim() || null,
+        gender: normalizeGenderInput(formState.gender),
         bio: formState.bio.trim() || null,
         ...(cityIdPayload !== undefined ? { cityId: cityIdPayload } : {}),
         ...(avatarUrlPayload ? { avatarUrl: avatarUrlPayload } : {}),
@@ -305,3 +291,4 @@ export function ProfilePersonalData() {
     </div>
   );
 }
+

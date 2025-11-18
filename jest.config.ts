@@ -6,10 +6,10 @@ const config: Config = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
     '^@/shared/api/request$': '<rootDir>/tests/__mocks__/requestMock.ts',
-    '^@/(.*)$': '<rootDir>/src/$1',
-    '\\.(css|scss|sass)$': 'identity-obj-proxy',
     '^.+\\.(jpg|jpeg|png|gif|webp|avif)$': '<rootDir>/tests/__mocks__/fileMock.ts',
     '^.+\\.svg(\\?react)?$': '<rootDir>/tests/__mocks__/fileMock.ts',
+    '\\.(css|scss|sass)$': 'identity-obj-proxy',
+    '^@/(.*)$': '<rootDir>/src/$1',
   },
   transform: {
     '^.+\\.(t|j)sx?$': [
