@@ -9,9 +9,13 @@ export class ApiError extends Error {
   }
 }
 
-type FetchRequestInit = Parameters<typeof fetch>[1];
+type FetchRequestInit = RequestInit;
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:4000';
+// @ts-ignore -- Vite injects import.meta at runtime; tests rely on process.env fallback
+const API_BASE_URL =
+  (import.meta?.env?.VITE_API_URL as string | undefined) ??
+  process.env?.VITE_API_URL ??
+  'http://localhost:4000';
 
 const buildUrl = (path: string) => {
   if (path.startsWith('http://') || path.startsWith('https://')) return path;

@@ -1,4 +1,7 @@
-export type Gender = '�?�?��?��?��' | '�-��?�?����';
+import type { Gender as SharedGender } from '@/shared/types/gender';
+import type { UserRole } from '@/shared/types/userRole';
+
+export type Gender = SharedGender;
 
 export interface UserSkill {
   id: string;
@@ -8,8 +11,6 @@ export interface UserSkill {
   description: string;
   imageUrls: string[];
 }
-
-import type { UserRole } from '@/shared/types/userRole';
 
 export interface User {
   id: string;
@@ -34,3 +35,4 @@ export interface UserCard {
   teachSkills: string[];
   learnSkills: string[];
 }
+

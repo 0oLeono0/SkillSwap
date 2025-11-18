@@ -1,4 +1,4 @@
-import { request } from './request';
+import { request } from '@/shared/api/request';
 import type { Request, RequestStatus } from '@/entities/Request/types';
 
 export interface RequestsListResponse {

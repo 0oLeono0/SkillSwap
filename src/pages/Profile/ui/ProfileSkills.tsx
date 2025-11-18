@@ -69,7 +69,7 @@ const enrichSkillsWithCategory = (
 const FALLBACK_TITLE = 'Без названия';
 const FALLBACK_DESCRIPTION = 'Описание появится позже.';
 
-const sanitizeSkillsForSubmit = (
+export const sanitizeSkillsForSubmit = (
   skills: UserSkill[],
   subskillToCategory: Map<number, number>,
   subskillNameMap: Map<number, string>,
@@ -110,7 +110,7 @@ const sanitizeSkillsForSubmit = (
         .filter((url) => url.length > 0),
     };
   });
-const serializeSkills = (
+export const serializeSkills = (
   skills: UserSkill[],
   subskillToCategory: Map<number, number>,
   subskillNameMap: Map<number, string>,

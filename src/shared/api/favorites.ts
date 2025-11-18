@@ -1,4 +1,4 @@
-import { request } from './request';
+import { request } from '@/shared/api/request';
 
 interface FavoritesResponse {
   favorites: string[];
