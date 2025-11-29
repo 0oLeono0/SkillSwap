@@ -51,6 +51,14 @@ export default [
       },
     },
   },
+  {
+    files: ['**/__tests__/**/*.{ts,tsx}', '**/*.{test,spec}.{ts,tsx}'],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+      },
+    },
+  },
   ...storybookConfigs,
 ];
 
