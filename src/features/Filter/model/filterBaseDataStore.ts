@@ -14,6 +14,11 @@ const mapResponse = (data: FiltersBaseData): FiltersBaseData => ({
   skillGroups: data.skillGroups ?? [],
 });
 
+export const resetFiltersBaseDataCache = () => {
+  cachedBaseData = null;
+  pendingRequest = null;
+};
+
 export const loadFiltersBaseData = async (): Promise<FiltersBaseData> => {
   if (cachedBaseData) {
     return cachedBaseData;
