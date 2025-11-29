@@ -1,13 +1,19 @@
 import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 import { HttpError } from '../src/utils/httpErrors.js';
 
-const mockUserRepository = {
+type UserRecord = { id: string; role: string };
+
+const mockUserRepository: {
+  findById: jest.MockedFunction<(id: string) => Promise<UserRecord | null>>;
+  deleteById: jest.MockedFunction<(id: string) => Promise<void>>;
+  updateById: jest.MockedFunction<(id: string, data: Record<string, unknown>) => Promise<UserRecord>>;
+} = {
   findById: jest.fn(),
   deleteById: jest.fn(),
   updateById: jest.fn(),
 };
 
-const mockSanitizeUser = jest.fn();
+const mockSanitizeUser: jest.Mock = jest.fn();
 
 jest.unstable_mockModule('../src/repositories/userRepository.js', () => ({
   userRepository: mockUserRepository,
