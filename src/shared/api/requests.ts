@@ -13,7 +13,7 @@ export interface CreateRequestPayload {
 
 export const requestsApi = {
   fetchAll(accessToken: string) {
-    return request<RequestsListResponse>('/api/requests', {
+    return request<RequestsListResponse>('/requests', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -21,7 +21,7 @@ export const requestsApi = {
   },
 
   create(accessToken: string, payload: CreateRequestPayload) {
-    return request<{ request: Request }>('/api/requests', {
+    return request<{ request: Request }>('/requests', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -31,7 +31,7 @@ export const requestsApi = {
   },
 
   updateStatus(accessToken: string, requestId: string, status: RequestStatus) {
-    return request<{ request: Request }>(`/api/requests/${requestId}`, {
+    return request<{ request: Request }>(`/requests/${requestId}`, {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${accessToken}`,

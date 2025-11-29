@@ -10,7 +10,7 @@ interface FavoritePayload {
 
 export const favoritesApi = {
   list(accessToken: string) {
-    return request<FavoritesResponse>('/api/favorites', {
+    return request<FavoritesResponse>('/favorites', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -18,7 +18,7 @@ export const favoritesApi = {
   },
 
   add(accessToken: string, targetUserId: string) {
-    return request<{ favorite: FavoritePayload }>('/api/favorites', {
+    return request<{ favorite: FavoritePayload }>('/favorites', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -28,7 +28,7 @@ export const favoritesApi = {
   },
 
   remove(accessToken: string, targetUserId: string) {
-    return request<void>(`/api/favorites/${targetUserId}`, {
+    return request<void>(`/favorites/${targetUserId}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -37,7 +37,7 @@ export const favoritesApi = {
   },
 
   clear(accessToken: string) {
-    return request<void>('/api/favorites', {
+    return request<void>('/favorites', {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${accessToken}`,

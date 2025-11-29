@@ -1,3 +1,5 @@
+import { apiBaseUrl } from '@/shared/config/env';
+
 export class ApiError extends Error {
   status: number;
   details?: unknown;
@@ -9,18 +11,12 @@ export class ApiError extends Error {
   }
 }
 
-type FetchRequestInit = RequestInit;
-
-// @ts-ignore -- Vite injects import.meta at runtime; tests rely on process.env fallback
-const API_BASE_URL =
-  (import.meta?.env?.VITE_API_URL as string | undefined) ??
-  process.env?.VITE_API_URL ??
-  'http://localhost:4000';
+type FetchRequestInit = globalThis.RequestInit;
 
 const buildUrl = (path: string) => {
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
-  if (path.startsWith('/')) return `${API_BASE_URL}${path}`;
-  return `${API_BASE_URL}/${path}`;
+  if (path.startsWith('/')) return `${apiBaseUrl}${path}`;
+  return `${apiBaseUrl}/${path}`;
 };
 
 const shouldAttachJsonHeader = (body: FetchRequestInit['body'], headers: Headers) => {

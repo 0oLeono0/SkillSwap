@@ -13,6 +13,6 @@ export interface AdminUsersListResponse {
 
 export const usersApi = {
   fetchAll() {
-    return request<UsersListResponse>('/api/users/public');
+    return request<UsersListResponse>('/users/public');
   },
 };

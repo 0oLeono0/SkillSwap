@@ -11,6 +11,6 @@ export interface CatalogFilterBaseData {
 
 export const catalogApi = {
   fetchFiltersBaseData() {
-    return request<CatalogFilterBaseData>('/api/catalog/filters');
+    return request<CatalogFilterBaseData>('/catalog/filters');
   },
 };

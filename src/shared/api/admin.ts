@@ -4,7 +4,7 @@ import type { AdminUsersListResponse } from './users';
 
 export const adminApi = {
   fetchUsers(accessToken: string) {
-    return request<AdminUsersListResponse>('/api/admin/users', {
+    return request<AdminUsersListResponse>('/admin/users', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -12,7 +12,7 @@ export const adminApi = {
   },
 
   updateUserRole(userId: string, role: 'user' | 'admin', accessToken: string) {
-    return request<{ user: ApiAuthUser }>(`/api/admin/users/${userId}/role`, {
+    return request<{ user: ApiAuthUser }>(`/admin/users/${userId}/role`, {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -22,7 +22,7 @@ export const adminApi = {
   },
 
   deleteUser(userId: string, accessToken: string) {
-    return request<void>(`/api/admin/users/${userId}`, {
+    return request<void>(`/admin/users/${userId}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${accessToken}`,
