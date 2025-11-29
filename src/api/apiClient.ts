@@ -1,8 +1,7 @@
 import axios from 'axios';
+import { apiBaseUrl } from '@/shared/config/env';
 
-const envApiUrl = import.meta?.env?.VITE_API_URL as string | undefined;
-const defaultBaseUrl = typeof window !== 'undefined' ? `${window.location.origin}/api` : 'http://localhost:4000/api';
-const API_BASE_URL = envApiUrl ?? defaultBaseUrl;
+const API_BASE_URL = apiBaseUrl;
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
