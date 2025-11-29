@@ -1,9 +1,7 @@
 import axios from 'axios';
 
 const API_BASE_URL =
-  // Vite at runtime
   (import.meta?.env?.VITE_API_URL as string | undefined) ??
-  // Jest/Node fallback
   process.env?.VITE_API_URL ??
   'http://localhost:4000';
 
