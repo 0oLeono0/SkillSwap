@@ -57,7 +57,7 @@ const baseCookieOptions = {
 
 const cookieOptions = {
   ...baseCookieOptions,
-  maxAge: Math.floor(refreshTtlMs / 1000),
+  maxAge: refreshTtlMs,
 };
 
 export const register = asyncHandler(async (req, res) => {
