@@ -145,12 +145,32 @@ describe('authService', () => {
         tokenId: 'token-id',
       });
       mockUserRepository.findById.mockResolvedValue({ id: 'user-id', email: 'user@example.com', name: 'User', role: 'user' });
-      mockUserRepository.findRefreshToken.mockResolvedValue({ token: 'refresh-token' });
+      mockUserRepository.findRefreshToken.mockResolvedValue({
+        token: 'refresh-token',
+        expiresAt: new Date('2999-01-01'),
+        id: 'token-id',
+      });
 
       await authService.refreshSession('refresh-token');
 
       expect(mockUserRepository.deleteRefreshTokenById).toHaveBeenCalledWith('token-id');
       expect(mockUserRepository.saveRefreshToken).toHaveBeenCalled();
+    });
+
+    it('rejects expired refresh token and cleans it up', async () => {
+      mockTokenService.verifyRefreshToken.mockReturnValue({
+        sub: 'user-id',
+        tokenId: 'token-id',
+      });
+      mockUserRepository.findById.mockResolvedValue({ id: 'user-id', email: 'user@example.com', name: 'User', role: 'user' });
+      mockUserRepository.findRefreshToken.mockResolvedValue({
+        token: 'refresh-token',
+        expiresAt: new Date('2000-01-01'),
+        id: 'token-id',
+      });
+
+      await expect(authService.refreshSession('refresh-token')).rejects.toThrow('Unauthorized');
+      expect(mockUserRepository.deleteRefreshTokenById).toHaveBeenCalledWith('token-id');
     });
   });
 
