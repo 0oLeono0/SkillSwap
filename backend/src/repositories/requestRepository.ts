@@ -20,7 +20,7 @@ export const requestRepository = {
       where: {
         OR: [{ fromUserId: userId }, { toUserId: userId }],
         status: {
-          in: ['pending', 'rejected'],
+          in: ['pending', 'accepted', 'rejected'],
         },
       },
       include: defaultInclude,
