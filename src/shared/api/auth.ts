@@ -62,37 +62,37 @@ export interface UpdateProfilePayload {
 
 export const authApi = {
   login(payload: LoginPayload) {
-    return request<AuthSuccessResponse>('/api/auth/login', {
+    return request<AuthSuccessResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
   },
 
   register(payload: RegisterPayload) {
-    return request<AuthSuccessResponse>('/api/auth/register', {
+    return request<AuthSuccessResponse>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
   },
 
   refresh() {
-    return request<AuthSuccessResponse>('/api/auth/refresh', {
+    return request<AuthSuccessResponse>('/auth/refresh', {
       method: 'POST',
     });
   },
 
   logout() {
-    return request<void>('/api/auth/logout', {
+    return request<void>('/auth/logout', {
       method: 'POST',
     });
   },
 
   me() {
-    return request<{ user: ApiAuthUser }>('/api/auth/me');
+    return request<{ user: ApiAuthUser }>('/auth/me');
   },
 
   updateProfile(payload: UpdateProfilePayload, accessToken: string) {
-    return request<{ user: ApiAuthUser }>('/api/auth/me', {
+    return request<{ user: ApiAuthUser }>('/auth/me', {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${accessToken}`,

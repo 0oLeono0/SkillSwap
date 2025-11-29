@@ -19,7 +19,7 @@ export interface CompleteExchangeResponse {
 
 export const exchangesApi = {
   fetchAll(accessToken: string) {
-    return request<ExchangesListResponse>('/api/exchanges', {
+    return request<ExchangesListResponse>('/exchanges', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -27,7 +27,7 @@ export const exchangesApi = {
   },
 
   fetchById(accessToken: string, exchangeId: string) {
-    return request<ExchangeDetailsResponse>(`/api/exchanges/${exchangeId}`, {
+    return request<ExchangeDetailsResponse>(`/exchanges/${exchangeId}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -35,7 +35,7 @@ export const exchangesApi = {
   },
 
   sendMessage(accessToken: string, exchangeId: string, content: string) {
-    return request<SendExchangeMessageResponse>(`/api/exchanges/${exchangeId}/messages`, {
+    return request<SendExchangeMessageResponse>(`/exchanges/${exchangeId}/messages`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -45,7 +45,7 @@ export const exchangesApi = {
   },
 
   complete(accessToken: string, exchangeId: string) {
-    return request<CompleteExchangeResponse>(`/api/exchanges/${exchangeId}/complete`, {
+    return request<CompleteExchangeResponse>(`/exchanges/${exchangeId}/complete`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
