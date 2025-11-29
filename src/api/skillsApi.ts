@@ -4,29 +4,15 @@ import { apiClient } from './apiClient';
 
 export const skillsApi = {
   async fetchAllCategories(): Promise<ApiSkillCategory[]> {
-    try {
-      const response = await apiClient.get<ApiSkillCategory[]>('/skills');
-      return response.data;
-    } catch (error) {
-      console.error('Ошибка при загрузке списка навыков:', error);
-      throw error;
-    }
+    const response = await apiClient.get<ApiSkillCategory[]>('/skills');
+    return response.data;
   },
 
   async fetchCategoryById(id: ApiSkillCategory['id']): Promise<ApiSkillCategory> {
-    try {
-      const response = await apiClient.get<ApiSkillCategory>(`/skills/${id}`);
-      if (!response.data) {
-        throw new AxiosError(`Категория навыков с id=${id} не найден`);
-      }
-      return response.data;
-    } catch (error) {
-      if (error instanceof AxiosError)
-        console.error(
-          `Ошибка при загрузке категории навыков ${id}:`,
-          error.message
-        );
-      throw error;
+    const response = await apiClient.get<ApiSkillCategory>(`/skills/${id}`);
+    if (!response.data) {
+      throw new AxiosError(`Skill category with id=${id} not found`, 'ERR_BAD_RESPONSE');
     }
-  }
+    return response.data;
+  },
 };
