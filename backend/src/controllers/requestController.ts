@@ -30,10 +30,14 @@ export const createRequest = asyncHandler(async (req, res) => {
 
   const parseResult = createRequestSchema.safeParse(req.body);
   if (!parseResult.success) {
-    return res.status(400).json({ message: 'Некорректные данные', details: parseResult.error.flatten() });
+    throw createBadRequest('Invalid payload', parseResult.error.flatten());
   }
 
-  const request = await requestService.createRequest(currentUser.sub, parseResult.data.toUserId, parseResult.data.skillId);
+  const request = await requestService.createRequest(
+    currentUser.sub,
+    parseResult.data.toUserId,
+    parseResult.data.skillId,
+  );
   return res.status(201).json({ request });
 });
 
@@ -45,12 +49,12 @@ export const updateRequestStatus = asyncHandler(async (req, res) => {
 
   const parseResult = updateStatusSchema.safeParse(req.body);
   if (!parseResult.success) {
-    return res.status(400).json({ message: 'Некорректные данные', details: parseResult.error.flatten() });
+    throw createBadRequest('Invalid payload', parseResult.error.flatten());
   }
 
   const { requestId } = req.params;
   if (!requestId) {
-    throw createBadRequest('Идентификатор заявки обязателен');
+    throw createBadRequest('Request id is required');
   }
 
   const request = await requestService.updateStatus(requestId, currentUser.sub, parseResult.data.status);
