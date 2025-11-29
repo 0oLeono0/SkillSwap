@@ -27,6 +27,10 @@ export const updateUserRole = asyncHandler(async (req, res) => {
     throw createBadRequest('Invalid payload', payloadResult.error.flatten());
   }
 
+   if (req.user?.sub === userId) {
+    throw createBadRequest('You cannot change your own role');
+   }
+
   const updatedUser = await adminService.updateUserRole(userId, payloadResult.data.role);
   return res.status(200).json({ user: updatedUser });
 });
