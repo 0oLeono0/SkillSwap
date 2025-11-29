@@ -68,13 +68,13 @@ export default defineConfig(({ mode }) => {
     },
 
     server: {
-      port: 4000,
+      port: 5173,
       open: true,
       host: true,
     },
 
     preview: {
-      port: 4000,
+      port: 4173,
       open: true,
     },
 
