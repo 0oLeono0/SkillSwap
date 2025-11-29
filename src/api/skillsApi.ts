@@ -13,9 +13,7 @@ export const skillsApi = {
     }
   },
 
-  async fetchCategoryById(
-    id: ApiSkillCategory['id']
-  ): Promise<Promise<ApiSkillCategory>> {
+  async fetchCategoryById(id: ApiSkillCategory['id']): Promise<ApiSkillCategory> {
     try {
       const response = await apiClient.get<ApiSkillCategory>(`/skills/${id}`);
       if (!response.data) {
