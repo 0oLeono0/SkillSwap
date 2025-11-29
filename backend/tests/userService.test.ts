@@ -1,4 +1,4 @@
-/* eslint-env jest */
+import { describe, expect, it } from '@jest/globals';
 import type { User as PrismaUser } from '@prisma/client';
 import { sanitizeUser } from '../src/services/userService.js';
 
