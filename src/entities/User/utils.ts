@@ -24,8 +24,8 @@ export const getUserAge = (user: User): number => {
 
 export const getUserCity = (user: User): string => {
   if (typeof user.cityId !== 'number') {
-    return '�?�� �?��������?';
+    return 'Город не указан';
   }
   const city = db.cities.find((c) => c.id === user.cityId);
-  return city ? city.name : '�?�� �?��������?';
+  return city ? city.name : 'Город не указан';
 };
