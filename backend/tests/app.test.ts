@@ -1,12 +1,15 @@
 import request from 'supertest';
-import { jest } from '@jest/globals';
+import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 
-const mockUserService = {
+const mockUserService: {
+  listUsers: jest.MockedFunction<() => Promise<unknown>>;
+  listPublicUsers: jest.MockedFunction<() => Promise<unknown>>;
+} = {
   listUsers: jest.fn(),
   listPublicUsers: jest.fn(),
 };
-const mockSanitizeUser = jest.fn();
-const mockCatalogService = {
+const mockSanitizeUser: jest.Mock = jest.fn();
+const mockCatalogService: { getFiltersBaseData: jest.MockedFunction<() => unknown> } = {
   getFiltersBaseData: jest.fn(),
 };
 
@@ -15,6 +18,16 @@ const mockTokenService = {
   createAccessToken: jest.fn(),
   verifyRefreshToken: jest.fn(),
   createRefreshToken: jest.fn(),
+};
+
+const mockRequestService: {
+  listForUser: jest.MockedFunction<(userId: string) => Promise<unknown>>;
+  createRequest: jest.MockedFunction<(userId: string, targetUserId: string, skillId: string) => Promise<unknown>>;
+  updateStatus: jest.MockedFunction<(requestId: string, userId: string, status: string) => Promise<unknown>>;
+} = {
+  listForUser: jest.fn(),
+  createRequest: jest.fn(),
+  updateStatus: jest.fn(),
 };
 
 jest.unstable_mockModule('../src/services/userService.js', () => ({
@@ -29,6 +42,10 @@ jest.unstable_mockModule('../src/services/tokenService.js', () => ({
 
 jest.unstable_mockModule('../src/services/catalogService.js', () => ({
   catalogService: mockCatalogService,
+}));
+
+jest.unstable_mockModule('../src/services/requestService.js', () => ({
+  requestService: mockRequestService,
 }));
 
 const { app } = await import('../src/app.js');
@@ -158,5 +175,41 @@ describe('Catalog routes', () => {
       cities: [{ id: 1, name: 'City' }],
       skillGroups: [{ id: 10, name: 'Group', skills: [{ id: 11, name: 'Skill' }] }],
     });
+  });
+});
+
+describe('Requests routes', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockTokenService.verifyAccessToken.mockReturnValue({
+      sub: 'user-1',
+      email: 'u@example.com',
+      name: 'User',
+      role: 'user',
+    });
+  });
+
+  it('rejects invalid payload on create', async () => {
+    const response = await request(app)
+      .post('/api/requests')
+      .set('Authorization', 'Bearer token')
+      .send({ toUserId: '' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe('Invalid payload');
+    expect(mockRequestService.createRequest).not.toHaveBeenCalled();
+  });
+
+  it('passes validated payload to requestService', async () => {
+    mockRequestService.createRequest.mockResolvedValue({ id: 'req-1' });
+
+    const response = await request(app)
+      .post('/api/requests')
+      .set('Authorization', 'Bearer token')
+      .send({ toUserId: 'target', skillId: 'skill-1' });
+
+    expect(mockRequestService.createRequest).toHaveBeenCalledWith('user-1', 'target', 'skill-1');
+    expect(response.status).toBe(201);
+    expect(response.body).toEqual({ request: { id: 'req-1' } });
   });
 });
