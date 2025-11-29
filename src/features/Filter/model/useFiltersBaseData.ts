@@ -1,10 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FiltersBaseData } from './filterBaseDataStore';
 import { getCachedFiltersBaseData, loadFiltersBaseData } from './filterBaseDataStore';
 
 interface HookState extends FiltersBaseData {
   isLoading: boolean;
   error: string | null;
+}
+
+interface HookResult extends HookState {
+  refetch: () => Promise<void>;
 }
 
 const initialState: HookState = {
@@ -14,7 +18,7 @@ const initialState: HookState = {
   error: null,
 };
 
-export const useFiltersBaseData = (): HookState => {
+export const useFiltersBaseData = (): HookResult => {
   const [state, setState] = useState<HookState>(() => {
     const cached = getCachedFiltersBaseData();
     if (cached) {
@@ -22,40 +26,59 @@ export const useFiltersBaseData = (): HookState => {
     }
     return initialState;
   });
+  const isMountedRef = useRef(true);
+
+  useEffect(
+    () => () => {
+      isMountedRef.current = false;
+    },
+    [],
+  );
+
+  const safeSetState = useCallback(
+    (updater: Parameters<typeof setState>[0]) => {
+      if (!isMountedRef.current) {
+        return;
+      }
+      setState(updater);
+    },
+    [],
+  );
+
+  const performLoad = useCallback(async (force = false) => {
+    safeSetState((prev) => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      const data = await loadFiltersBaseData({ force });
+      safeSetState({
+        ...data,
+        isLoading: false,
+        error: null,
+      });
+    } catch (error) {
+      safeSetState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Failed to load filter data',
+      }));
+    }
+  }, [safeSetState]);
 
   useEffect(() => {
-    if (!state.isLoading && !state.error && state.cities.length && state.skillGroups.length) {
+    if (state.cities.length && state.skillGroups.length) {
       return;
     }
 
-    let isMounted = true;
-    loadFiltersBaseData()
-      .then((data) => {
-        if (!isMounted) {
-          return;
-        }
-        setState({
-          ...data,
-          isLoading: false,
-          error: null,
-        });
-      })
-      .catch((error) => {
-        if (!isMounted) {
-          return;
-        }
-        setState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error: error instanceof Error ? error.message : 'Failed to load filter data',
-        }));
-      });
+    performLoad().catch(() => undefined);
+  }, [performLoad, state.cities.length, state.skillGroups.length]);
 
-    return () => {
-      isMounted = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const refetch = useCallback(() => performLoad(true), [performLoad]);
 
-  return state;
+  return useMemo(
+    () => ({
+      ...state,
+      refetch,
+    }),
+    [state, refetch],
+  );
 };

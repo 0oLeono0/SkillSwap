@@ -19,16 +19,20 @@ export const resetFiltersBaseDataCache = () => {
   pendingRequest = null;
 };
 
-export const loadFiltersBaseData = async (): Promise<FiltersBaseData> => {
-  if (cachedBaseData) {
+interface LoadOptions {
+  force?: boolean;
+}
+
+export const loadFiltersBaseData = async ({ force = false }: LoadOptions = {}): Promise<FiltersBaseData> => {
+  if (cachedBaseData && !force) {
     return cachedBaseData;
   }
 
-  if (pendingRequest) {
+  if (pendingRequest && !force) {
     return pendingRequest;
   }
 
-  pendingRequest = catalogApi
+  const request = catalogApi
     .fetchFiltersBaseData()
     .then((data) => {
       cachedBaseData = mapResponse(data);
@@ -38,12 +42,18 @@ export const loadFiltersBaseData = async (): Promise<FiltersBaseData> => {
       console.warn('[filterBaseDataStore] Failed to load filters base data, using fallback', error);
       cachedBaseData = { cities: [], skillGroups: [] };
       return cachedBaseData;
-    })
-    .finally(() => {
-      pendingRequest = null;
     });
 
-  return pendingRequest;
+  pendingRequest = request;
+
+  try {
+    return await request;
+  } finally {
+    if (pendingRequest === request) {
+      pendingRequest = null;
+    }
+  }
+
 };
 
 export const getCachedFiltersBaseData = (): FiltersBaseData | null => cachedBaseData;
