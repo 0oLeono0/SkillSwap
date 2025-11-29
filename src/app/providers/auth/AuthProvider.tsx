@@ -23,12 +23,10 @@ interface AuthState {
   accessToken: string | null;
 }
 
-const initialState: AuthState = {
-  user: null,
-  accessToken: null,
-};
+const initialState: AuthState = { user: null, accessToken: null };
 
 const SESSION_STORAGE_KEY = 'auth:session';
+type StoredSession = { user: AuthUser };
 
 const getStorage = (): Storage | null => {
   if (typeof window === 'undefined') {
@@ -41,7 +39,7 @@ const getStorage = (): Storage | null => {
   }
 };
 
-const readStoredSession = (): AuthState | null => {
+const readStoredSession = (): StoredSession | null => {
   const storage = getStorage();
   if (!storage) {
     return null;
@@ -51,26 +49,24 @@ const readStoredSession = (): AuthState | null => {
     if (!raw) {
       return null;
     }
-    const parsed = JSON.parse(raw) as AuthState;
-    if (parsed?.user && parsed?.accessToken) {
-      return parsed;
-    }
+    const parsed = JSON.parse(raw) as StoredSession;
+    if (parsed?.user) return parsed;
   } catch (error) {
     console.warn('[AuthProvider] Failed to read stored session', error);
   }
   return null;
 };
 
-const persistSession = (state: AuthState | null) => {
+const persistSession = (user: AuthUser | null) => {
   const storage = getStorage();
   if (!storage) {
     return;
   }
   try {
-    if (!state?.user || !state?.accessToken) {
+    if (!user) {
       storage.removeItem(SESSION_STORAGE_KEY);
     } else {
-      storage.setItem(SESSION_STORAGE_KEY, JSON.stringify(state));
+      storage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ user }));
     }
   } catch (error) {
     console.warn('[AuthProvider] Failed to persist session', error);
@@ -101,7 +97,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       accessToken: session.accessToken,
     };
     setState(nextState);
-    persistSession(nextState);
+    persistSession(nextState.user);
   }, []);
 
   const clearSession = useCallback(() => {
@@ -154,7 +150,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           ...prev,
           user: mapToAuthUser(response.user),
         };
-        persistSession(next);
+        persistSession(next.user);
         return next;
       });
     },
@@ -164,8 +160,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   useEffect(() => {
     let mounted = true;
     const stored = readStoredSession();
-    if (stored) {
-      setState(stored);
+    if (stored?.user) {
+      setState({ user: stored.user, accessToken: null });
       setIsInitializing(false);
     }
     const initialise = async () => {
