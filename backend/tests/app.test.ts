@@ -212,4 +212,37 @@ describe('Requests routes', () => {
     expect(response.status).toBe(201);
     expect(response.body).toEqual({ request: { id: 'req-1' } });
   });
+
+  it('returns list for authorized user', async () => {
+    mockRequestService.listForUser.mockResolvedValue({ incoming: [], outgoing: [] });
+
+    const response = await request(app).get('/api/requests').set('Authorization', 'Bearer token');
+
+    expect(mockRequestService.listForUser).toHaveBeenCalledWith('user-1');
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ incoming: [], outgoing: [] });
+  });
+
+  it('rejects invalid status payload on update', async () => {
+    const response = await request(app)
+      .patch('/api/requests/req-1')
+      .set('Authorization', 'Bearer token')
+      .send({ status: 'unknown' });
+
+    expect(response.status).toBe(400);
+    expect(mockRequestService.updateStatus).not.toHaveBeenCalled();
+  });
+
+  it('updates status for participant', async () => {
+    mockRequestService.updateStatus.mockResolvedValue({ id: 'req-1', status: 'accepted' });
+
+    const response = await request(app)
+      .patch('/api/requests/req-1')
+      .set('Authorization', 'Bearer token')
+      .send({ status: 'accepted' });
+
+    expect(mockRequestService.updateStatus).toHaveBeenCalledWith('req-1', 'user-1', 'accepted');
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ request: { id: 'req-1', status: 'accepted' } });
+  });
 });
