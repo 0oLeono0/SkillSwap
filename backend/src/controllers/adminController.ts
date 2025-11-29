@@ -13,6 +13,9 @@ export const deleteUserAccount = asyncHandler(async (req, res) => {
   if (!userId) {
     throw createBadRequest('User id is required');
   }
+  if (req.user?.sub === userId) {
+    throw createBadRequest('You cannot delete your own account');
+  }
   await adminService.deleteUser(userId);
   return res.status(204).send();
 });
