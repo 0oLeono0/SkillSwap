@@ -35,10 +35,13 @@ export const sanitizeUser = (user: PrismaUser | null): SanitizedUser | null => {
     return null;
   }
 
-  const { passwordHash: _passwordHash, teachableSkills, learningSkills, ...rest } = user;
+  const { passwordHash: _passwordHash, teachableSkills, learningSkills, avatarUrl, ...rest } = user;
+  const normalizeNullableString = (value?: string | null) =>
+    value && value.trim().length > 0 ? value : null;
 
   return {
     ...rest,
+    avatarUrl: normalizeNullableString(avatarUrl),
     role: isUserRole(user.role) ? user.role : 'user',
     teachableSkills: parseSkillList(teachableSkills),
     learningSkills: parseSkillList(learningSkills),
