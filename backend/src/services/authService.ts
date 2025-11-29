@@ -234,7 +234,7 @@ export const authService = {
       data.name = updates.name;
     }
     if ('avatarUrl' in updates) {
-      data.avatarUrl = updates.avatarUrl ?? '';
+      data.avatarUrl = updates.avatarUrl ?? null;
     }
     if ('cityId' in updates) {
       data.cityId = updates.cityId ?? null;
