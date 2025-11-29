@@ -9,8 +9,18 @@ const mockUserService: {
   listPublicUsers: jest.fn(),
 };
 const mockSanitizeUser: jest.Mock = jest.fn();
-const mockCatalogService: { getFiltersBaseData: jest.MockedFunction<() => unknown> } = {
+const mockCatalogService: {
+  getFiltersBaseData: jest.MockedFunction<() => unknown>;
+  getSkillCategories: jest.MockedFunction<() => unknown>;
+  findSkillCategoryById: jest.MockedFunction<(id: number) => unknown>;
+  getCities: jest.MockedFunction<() => unknown>;
+  findCityById: jest.MockedFunction<(id: number) => unknown>;
+} = {
   getFiltersBaseData: jest.fn(),
+  getSkillCategories: jest.fn(),
+  findSkillCategoryById: jest.fn(),
+  getCities: jest.fn(),
+  findCityById: jest.fn(),
 };
 
 const mockTokenService = {
@@ -175,6 +185,56 @@ describe('Catalog routes', () => {
       cities: [{ id: 1, name: 'City' }],
       skillGroups: [{ id: 10, name: 'Group', skills: [{ id: 11, name: 'Skill' }] }],
     });
+  });
+
+  it('returns skill categories list', async () => {
+    mockCatalogService.getSkillCategories.mockReturnValue([{ id: 1, name: 'Cat', subskills: [] }]);
+
+    const response = await request(app).get('/api/skills');
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([{ id: 1, name: 'Cat', subskills: [] }]);
+  });
+
+  it('returns skill category by id', async () => {
+    mockCatalogService.findSkillCategoryById.mockReturnValue({ id: 2, name: 'Cat2', subskills: [] });
+
+    const response = await request(app).get('/api/skills/2');
+    expect(mockCatalogService.findSkillCategoryById).toHaveBeenCalledWith(2);
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ id: 2, name: 'Cat2', subskills: [] });
+  });
+
+  it('returns 404 when skill category not found', async () => {
+    mockCatalogService.findSkillCategoryById.mockReturnValue(null);
+
+    const response = await request(app).get('/api/skills/999');
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe('Skill category not found');
+  });
+
+  it('returns cities list', async () => {
+    mockCatalogService.getCities.mockReturnValue([{ id: 1, name: 'City' }]);
+
+    const response = await request(app).get('/api/cities');
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([{ id: 1, name: 'City' }]);
+  });
+
+  it('returns city by id', async () => {
+    mockCatalogService.findCityById.mockReturnValue({ id: 3, name: 'City3' });
+
+    const response = await request(app).get('/api/cities/3');
+    expect(mockCatalogService.findCityById).toHaveBeenCalledWith(3);
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ id: 3, name: 'City3' });
+  });
+
+  it('returns 404 when city not found', async () => {
+    mockCatalogService.findCityById.mockReturnValue(null);
+
+    const response = await request(app).get('/api/cities/404');
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe('City not found');
   });
 });
 
