@@ -29,6 +29,11 @@ export const loadFiltersBaseData = async (): Promise<FiltersBaseData> => {
       cachedBaseData = mapResponse(data);
       return cachedBaseData;
     })
+    .catch((error) => {
+      console.warn('[filterBaseDataStore] Failed to load filters base data, using fallback', error);
+      cachedBaseData = { cities: [], skillGroups: [] };
+      return cachedBaseData;
+    })
     .finally(() => {
       pendingRequest = null;
     });
