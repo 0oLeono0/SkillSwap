@@ -180,7 +180,6 @@ export const authService = {
 
   async refreshSession(refreshToken: string) {
     const payload = tokenService.verifyRefreshToken(refreshToken);
-    // Ensure token exists in DB (may be revoked)
     const { sub: userId } = payload;
     const user = await userRepository.findById(userId);
     if (!user) {
@@ -192,11 +191,15 @@ export const authService = {
     const tokenMatches =
       existingToken &&
       (existingToken.token === providedTokenHash || existingToken.token === refreshToken);
-    if (!tokenMatches) {
+    const isExpired = existingToken?.expiresAt ? existingToken.expiresAt.getTime() <= Date.now() : false;
+
+    if (!tokenMatches || isExpired) {
+      if (existingToken && isExpired) {
+        await userRepository.deleteRefreshTokenById(existingToken.id);
+      }
       throw createUnauthorized();
     }
 
-    // Remove used refresh token to prevent reuse
     await userRepository.deleteRefreshTokenById(payload.tokenId);
 
     const tokens = await authService.issueTokens({
