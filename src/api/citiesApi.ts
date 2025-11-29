@@ -4,27 +4,16 @@ import { apiClient } from './apiClient';
 
 export const citiesApi = {
   async fetchAllCities(): Promise<ApiCity[]> {
-    try {
-      const response = await apiClient.get<ApiCity[]>('/cities');
-      return response.data;
-    } catch (error) {
-      console.error('Ошибка при загрузке списка городов:', error);
-      throw error;
-    }
+    const response = await apiClient.get<ApiCity[]>('/cities');
+    return response.data;
   },
 
   async fetchCityById(id: ApiCity['id']): Promise<ApiCity> {
-    try {
-      const response = await apiClient.get<ApiCity>(`/cities/${id}`);
+    const response = await apiClient.get<ApiCity>(`/cities/${id}`);
 
-      if (!response.data) {
-        throw new AxiosError(`Город с id=${id} не найден`);
-      }
-      return response.data;
-    } catch (error) {
-      if (error instanceof AxiosError)
-        console.error(`Ошибка при загрузке города id=${id}:`, error.message);
-      throw error;
+    if (!response.data) {
+      throw new AxiosError(`City with id=${id} not found`, 'ERR_BAD_RESPONSE');
     }
-  }
+    return response.data;
+  },
 };
