@@ -10,6 +10,7 @@ import { exchangesRouter } from './routes/exchanges.js';
 import { adminRouter } from './routes/admin.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { catalogRouter } from './routes/catalog.js';
+import { referenceRouter } from './routes/reference.js';
 
 export const app = express();
 
@@ -43,5 +44,6 @@ app.use('/api/favorites', favoritesRouter);
 app.use('/api/exchanges', exchangesRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/catalog', catalogRouter);
+app.use('/api', referenceRouter);
 
 app.use(errorHandler);
