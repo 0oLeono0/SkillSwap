@@ -1,5 +1,5 @@
 import type { Exchange, ExchangeMessage, ExchangeWithMessages } from '@/entities/Exchange/types';
-import { request } from '@/shared/api/request';
+import { authorizedRequest } from '@/shared/api/request';
 
 export interface ExchangesListResponse {
   exchanges: Exchange[];
@@ -19,37 +19,23 @@ export interface CompleteExchangeResponse {
 
 export const exchangesApi = {
   fetchAll(accessToken: string) {
-    return request<ExchangesListResponse>('/exchanges', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+    return authorizedRequest<ExchangesListResponse>('/exchanges', accessToken);
   },
 
   fetchById(accessToken: string, exchangeId: string) {
-    return request<ExchangeDetailsResponse>(`/exchanges/${exchangeId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+    return authorizedRequest<ExchangeDetailsResponse>(`/exchanges/${exchangeId}`, accessToken);
   },
 
   sendMessage(accessToken: string, exchangeId: string, content: string) {
-    return request<SendExchangeMessageResponse>(`/exchanges/${exchangeId}/messages`, {
+    return authorizedRequest<SendExchangeMessageResponse>(`/exchanges/${exchangeId}/messages`, accessToken, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
       body: JSON.stringify({ content }),
     });
   },
 
   complete(accessToken: string, exchangeId: string) {
-    return request<CompleteExchangeResponse>(`/exchanges/${exchangeId}/complete`, {
+    return authorizedRequest<CompleteExchangeResponse>(`/exchanges/${exchangeId}/complete`, accessToken, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
     });
   },
 };

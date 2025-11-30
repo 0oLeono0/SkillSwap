@@ -12,10 +12,17 @@ export class ApiError extends Error {
 }
 
 type FetchRequestInit = globalThis.RequestInit;
+type HeadersInit = globalThis.HeadersInit;
 
 export interface RequestOptions extends FetchRequestInit {
   timeoutMs?: number;
 }
+
+export const buildAuthHeaders = (accessToken: string, headers?: HeadersInit) => {
+  const next = new Headers(headers);
+  next.set('Authorization', `Bearer ${accessToken}`);
+  return next;
+};
 
 const buildUrl = (path: string) => {
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
@@ -28,6 +35,12 @@ const shouldAttachJsonHeader = (body: FetchRequestInit['body'], headers: Headers
   if (body instanceof FormData) return false;
   if (headers.has('Content-Type')) return false;
   return true;
+};
+
+const ensureAcceptHeader = (headers: Headers) => {
+  if (!headers.has('Accept')) {
+    headers.set('Accept', 'application/json');
+  }
 };
 
 const abortSignalFrom = (externalSignal: AbortSignal | undefined) => {
@@ -57,6 +70,7 @@ export async function request<TResponse>(path: string, options: RequestOptions =
   if (shouldAttachJsonHeader(body, headers)) {
     headers.set('Content-Type', 'application/json');
   }
+  ensureAcceptHeader(headers);
 
   const controller = abortSignalFrom(externalSignal ?? undefined);
   const timeoutId =
@@ -113,3 +127,9 @@ export async function request<TResponse>(path: string, options: RequestOptions =
 
   return (payload as TResponse) ?? (undefined as TResponse);
 }
+
+export const authorizedRequest = <TResponse>(path: string, accessToken: string, options: RequestOptions = {}) =>
+  request<TResponse>(path, {
+    ...options,
+    headers: buildAuthHeaders(accessToken, options.headers),
+  });

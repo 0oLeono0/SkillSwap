@@ -1,4 +1,4 @@
-import { request, ApiError } from '@/shared/api/request';
+import { request, authorizedRequest, ApiError } from '@/shared/api/request';
 import type { Gender } from '@/shared/types/gender';
 import type { UserRole } from '@/shared/types/userRole';
 
@@ -92,11 +92,8 @@ export const authApi = {
   },
 
   updateProfile(payload: UpdateProfilePayload, accessToken: string) {
-    return request<{ user: ApiAuthUser }>('/auth/me', {
+    return authorizedRequest<{ user: ApiAuthUser }>('/auth/me', accessToken, {
       method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
       body: JSON.stringify(payload),
     });
   },

@@ -3,6 +3,7 @@ import type {
   LoginPayload,
   RegisterPayload,
   UpdateProfilePayload,
+  AuthSuccessResponse
 } from '@/shared/api/auth';
 import type { UserSkill } from '@/entities/User/types';
 import type { UserRole } from '@/shared/types/userRole';
@@ -29,7 +30,7 @@ export interface AuthContextType {
   login: (credentials: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
-  refresh: () => Promise<void>;
+  refresh: () => Promise<AuthSuccessResponse>;
   updateProfile: (payload: UpdateProfilePayload) => Promise<void>;
 }
 

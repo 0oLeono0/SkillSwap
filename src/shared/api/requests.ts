@@ -1,4 +1,4 @@
-import { request } from '@/shared/api/request';
+import { authorizedRequest } from '@/shared/api/request';
 import type { Request, RequestStatus } from '@/entities/Request/types';
 
 export interface RequestsListResponse {
@@ -13,29 +13,19 @@ export interface CreateRequestPayload {
 
 export const requestsApi = {
   fetchAll(accessToken: string) {
-    return request<RequestsListResponse>('/requests', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+    return authorizedRequest<RequestsListResponse>('/requests', accessToken);
   },
 
   create(accessToken: string, payload: CreateRequestPayload) {
-    return request<{ request: Request }>('/requests', {
+    return authorizedRequest<{ request: Request }>('/requests', accessToken, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
       body: JSON.stringify(payload),
     });
   },
 
   updateStatus(accessToken: string, requestId: string, status: RequestStatus) {
-    return request<{ request: Request }>(`/requests/${requestId}`, {
+    return authorizedRequest<{ request: Request }>(`/requests/${requestId}`, accessToken, {
       method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
       body: JSON.stringify({ status }),
     });
   },
