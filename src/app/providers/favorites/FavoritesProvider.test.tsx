@@ -98,4 +98,30 @@ describe('FavoritesProvider', () => {
     expect(screen.getByTestId('favorites')).toHaveTextContent('');
     expect(mockFavoritesApi.clear).toHaveBeenCalledWith('token');
   });
+
+  it('keeps latest state when earlier optimistic update fails', async () => {
+    mockFavoritesApi.list.mockResolvedValue({ favorites: [] });
+    mockFavoritesApi.add.mockResolvedValueOnce({ favorite: { targetUserId: 'u1' } });
+    mockFavoritesApi.remove.mockRejectedValueOnce(new Error('network'));
+    mockFavoritesApi.add.mockResolvedValueOnce({ favorite: { targetUserId: 'u2' } });
+
+    const { result } = renderHook(() => useFavorites(), {
+      wrapper: ({ children }) => (
+        <FavoritesProvider>
+          {children}
+        </FavoritesProvider>
+      ),
+    });
+
+    await waitFor(() => expect(mockFavoritesApi.list).toHaveBeenCalled());
+
+    act(() => {
+      result.current.toggleFavorite('u1'); // optimistic add u1
+      result.current.toggleFavorite('u1'); // optimistic remove u1 (will fail)
+      result.current.toggleFavorite('u2'); // optimistic add u2
+    });
+
+    await waitFor(() => expect(mockFavoritesApi.remove).toHaveBeenCalledWith('token', 'u1'));
+    await waitFor(() => expect(result.current.favoriteAuthorIds).toEqual(['u2']));
+  });
 });

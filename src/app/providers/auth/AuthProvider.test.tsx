@@ -41,6 +41,16 @@ const sampleUser = {
   learningSkills: [],
 };
 
+const createDeferred = <T,>() => {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+};
+
 describe('AuthProvider', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -98,5 +108,25 @@ describe('AuthProvider', () => {
     expect(result.current.user?.name).toBe('Updated');
     expect(result.current.accessToken).toBe('token');
     expect(mockAuthApi.updateProfile).toHaveBeenCalledWith({ name: 'Updated' }, 'token');
+  });
+
+  it('keeps initializing until refresh resolves', async () => {
+    const deferred = createDeferred<{ user: typeof sampleUser; accessToken: string }>();
+    mockAuthApi.refresh.mockReturnValue(deferred.promise);
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: ({ children }) => <AuthProvider>{children}</AuthProvider>,
+    });
+
+    expect(result.current.isInitializing).toBe(true);
+    expect(mockAuthApi.refresh).toHaveBeenCalled();
+
+    await act(async () => {
+      deferred.resolve({ user: sampleUser, accessToken: 'token' });
+      await deferred.promise;
+    });
+
+    await waitFor(() => expect(result.current.isInitializing).toBe(false));
+    expect(result.current.isAuthenticated).toBe(true);
   });
 });

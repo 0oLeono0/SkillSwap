@@ -162,7 +162,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     const stored = readStoredSession();
     if (stored?.user) {
       setState({ user: stored.user, accessToken: null });
-      setIsInitializing(false);
     }
     const initialise = async () => {
       try {

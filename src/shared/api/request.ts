@@ -13,6 +13,10 @@ export class ApiError extends Error {
 
 type FetchRequestInit = globalThis.RequestInit;
 
+export interface RequestOptions extends FetchRequestInit {
+  timeoutMs?: number;
+}
+
 const buildUrl = (path: string) => {
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
   if (path.startsWith('/')) return `${apiBaseUrl}${path}`;
@@ -26,7 +30,27 @@ const shouldAttachJsonHeader = (body: FetchRequestInit['body'], headers: Headers
   return true;
 };
 
-export async function request<TResponse>(path: string, options: FetchRequestInit = {}): Promise<TResponse> {
+const abortSignalFrom = (externalSignal: AbortSignal | undefined) => {
+  const controller = new AbortController();
+
+  if (!externalSignal) {
+    return controller;
+  }
+
+  if (externalSignal.aborted) {
+    controller.abort(externalSignal.reason);
+    return controller;
+  }
+
+  externalSignal.addEventListener('abort', () => controller.abort(externalSignal.reason), {
+    once: true,
+  });
+
+  return controller;
+};
+
+export async function request<TResponse>(path: string, options: RequestOptions = {}): Promise<TResponse> {
+  const { timeoutMs, signal: externalSignal, ...restOptions } = options;
   const headers = new Headers(options.headers);
   const body = options.body;
 
@@ -34,11 +58,40 @@ export async function request<TResponse>(path: string, options: FetchRequestInit
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(buildUrl(path), {
-    ...options,
-    headers,
-    credentials: 'include',
-  });
+  const controller = abortSignalFrom(externalSignal ?? undefined);
+  const timeoutId =
+    typeof timeoutMs === 'number' && timeoutMs > 0
+      ? setTimeout(() => controller.abort(new ApiError(408, 'Request timeout')), timeoutMs)
+      : null;
+
+  let response: Response;
+
+  try {
+    response = await fetch(buildUrl(path), {
+      ...restOptions,
+      headers,
+      credentials: 'include',
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (timeoutId) clearTimeout(timeoutId);
+    if (controller.signal.aborted) {
+      const reason = controller.signal.reason;
+      if (reason instanceof ApiError) {
+        throw reason;
+      }
+      const message =
+        reason instanceof Error
+          ? reason.message
+          : typeof reason === 'string'
+            ? reason
+            : 'Request aborted';
+      throw new ApiError(499, message, reason);
+    }
+    throw error;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
 
   const contentType = response.headers.get('Content-Type') ?? '';
   const isJson = contentType.includes('application/json');
