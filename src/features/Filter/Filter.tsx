@@ -1,43 +1,39 @@
 import { FilterPanel } from './ui/FilterPanel.tsx';
-import { type FC, useState } from 'react';
-import type { Filters, SearchMode } from './types.ts';
+import { type FC, useReducer } from 'react';
+import type { SearchMode } from './types.ts';
 import { collectSkillIds, countActiveFilters, mapCityIdsToCityNames } from './utils.ts';
 import { useFiltersBaseData } from './model/useFiltersBaseData';
+import { filterReducer, filtersInitialState } from './model/filterReducer';
 
 export const Filter: FC = () => {
-  const initialFilters: Filters = {
-    mode: 'all',
-    gender: undefined,
-    cities: [],
-    skillIds: []
-  };
-
-  const [filters, setFilters] = useState<Filters>(initialFilters);
+  const [filters, dispatchFilters] = useReducer(filterReducer, filtersInitialState);
   const { cities: cityOptions, skillGroups: skillCategories } = useFiltersBaseData();
 
   const handleModeChange = (mode: SearchMode) => {
-    setFilters(prev => ({ ...prev, mode: mode }));
+    dispatchFilters({ type: 'setMode', mode });
   };
 
   const handleGenderChange = (gender: string) => {
-    setFilters(prev => ({ ...prev, gender: gender }));
+    dispatchFilters({ type: 'setGender', gender });
   };
 
   const handleCitySelect = (cityIds: number[]) => {
-    setFilters(prev => ({
-      ...prev, cities: mapCityIdsToCityNames(cityOptions, cityIds)
-    }));
+    const cities = mapCityIdsToCityNames(cityOptions, cityIds);
+    dispatchFilters({ type: 'setCities', cities });
   };
 
   const handleSkillSelect = (categoryId: number, skillIds: number[]) => {
-    setFilters(prev => ({
-      ...prev,
-      skillIds: collectSkillIds(skillCategories, filters.skillIds, categoryId, skillIds)
-    }));
+    const nextSkillIds = collectSkillIds(
+      skillCategories,
+      filters.skillIds,
+      categoryId,
+      skillIds,
+    );
+    dispatchFilters({ type: 'setSkillIds', skillIds: nextSkillIds });
   };
 
   const handleReset = () => {
-    setFilters(initialFilters);
+    dispatchFilters({ type: 'reset' });
   };
 
   return (

@@ -2,6 +2,7 @@
   useCallback,
   useEffect,
   useMemo,
+  useReducer,
   useState,
   type ReactNode
 } from 'react';
@@ -19,11 +20,10 @@ import {
   countActiveFilters,
   mapCityIdsToCityNames
 } from '@/features/Filter/utils.ts';
+import { filterReducer, filtersInitialState } from '@/features/Filter/model/filterReducer';
 import { SkillsList } from '@/widgets/SkillsList';
 import { Title } from '@/shared/ui/Title';
 import {
-  DEFAULT_FILTERS,
-  buildCatalogSkills,
   createUsersMap,
   filterCatalogSkills,
   loadCatalogBaseData,
@@ -99,7 +99,7 @@ const countAuthors = (skills: CatalogSkill[]) =>
 
 const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<Filters>({ ...DEFAULT_FILTERS });
+  const [filters, dispatchFilters] = useReducer(filterReducer, filtersInitialState);
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [users, setUsers] = useState<User[]>([]);
@@ -184,35 +184,35 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
 
     const nextMode = isValidSearchMode(modeParam) ? modeParam : null;
 
-    setFilters((prev) => {
-      let hasChanges = false;
-      const next = { ...prev };
+    const nextFilters: Filters = { ...filters };
+    let hasChanges = false;
 
-      if (parsedSkillIds.length) {
-        const isSameSelection =
-          parsedSkillIds.length === prev.skillIds.length &&
-          parsedSkillIds.every((id) => prev.skillIds.includes(id));
+    if (parsedSkillIds.length) {
+      const isSameSelection =
+        parsedSkillIds.length === filters.skillIds.length &&
+        parsedSkillIds.every((id) => filters.skillIds.includes(id));
 
-        if (!isSameSelection) {
-          next.skillIds = parsedSkillIds;
-          hasChanges = true;
-        }
-      }
-
-      if (nextMode && nextMode !== prev.mode) {
-        next.mode = nextMode;
+      if (!isSameSelection) {
+        nextFilters.skillIds = parsedSkillIds;
         hasChanges = true;
       }
+    }
 
-      return hasChanges ? next : prev;
-    });
+    if (nextMode && nextMode !== filters.mode) {
+      nextFilters.mode = nextMode;
+      hasChanges = true;
+    }
+
+    if (hasChanges) {
+      dispatchFilters({ type: 'replace', filters: nextFilters });
+    }
 
     const nextParams = new URLSearchParams(searchParams);
     if (skillParam) nextParams.delete('skills');
     if (modeParam) nextParams.delete('mode');
 
     setSearchParams(nextParams, { replace: true });
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, filters]);
 
   useEffect(() => {
     const nextSearch = (searchParams.get('search') ?? '').trim();
@@ -389,43 +389,36 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
     Boolean(heading) || variant === 'catalog' || activeFilterLabels.length > 0;
 
   const handleModeChange = useCallback((mode: SearchMode) => {
-    setFilters((prev) => ({ ...prev, mode }));
+    dispatchFilters({ type: 'setMode', mode });
   }, []);
 
   const handleGenderChange = useCallback((gender: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      gender: gender || undefined
-    }));
+    dispatchFilters({ type: 'setGender', gender: gender || undefined });
   }, []);
 
   const handleCitySelect = useCallback(
     (cityIds: number[]) => {
-      setFilters((prev) => ({
-        ...prev,
-        cities: mapCityIdsToCityNames(cityOptions, cityIds)
-      }));
+      const cities = mapCityIdsToCityNames(cityOptions, cityIds);
+      dispatchFilters({ type: 'setCities', cities });
     },
     [cityOptions]
   );
 
   const handleSkillSelect = useCallback(
     (categoryId: number, skillIds: number[]) => {
-      setFilters((prev) => ({
-        ...prev,
-        skillIds: collectSkillIds(
-          skillGroups,
-          prev.skillIds,
-          categoryId,
-          skillIds
-        )
-      }));
+      const nextSkillIds = collectSkillIds(
+        skillGroups,
+        filters.skillIds,
+        categoryId,
+        skillIds,
+      );
+      dispatchFilters({ type: 'setSkillIds', skillIds: nextSkillIds });
     },
-    [skillGroups]
+    [skillGroups, filters.skillIds]
   );
 
   const handleResetFilters = useCallback(() => {
-    setFilters({ ...DEFAULT_FILTERS });
+    dispatchFilters({ type: 'reset' });
   }, []);
 
   const handleToggleFavorite = useCallback(
