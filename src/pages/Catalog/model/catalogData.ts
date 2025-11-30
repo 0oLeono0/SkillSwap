@@ -120,7 +120,7 @@ export const buildCatalogSkills = (users: User[]): CatalogSkill[] =>
   users.flatMap((user) => {
     const authorCity = getUserCity(user);
     const authorAge = getUserAge(user);
-    const authorAbout = user.bio;
+    const authorAbout = user.bio ?? undefined;
 
     const convertSkill = (
       skill: UserSkill,
