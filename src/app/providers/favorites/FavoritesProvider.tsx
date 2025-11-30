@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -13,9 +14,13 @@ interface FavoritesProviderProps {
   children: ReactNode;
 }
 
+const arraysEqual = (a: string[], b: string[]) =>
+  a.length === b.length && a.every((value, index) => value === b[index]);
+
 export function FavoritesProvider({ children }: FavoritesProviderProps) {
   const { accessToken } = useAuth();
   const [favoriteAuthorIds, setFavoriteAuthorIds] = useState<string[]>([]);
+  const favoritesRef = useRef<string[]>([]);
 
   useEffect(() => {
     if (!accessToken) {
@@ -40,6 +45,26 @@ export function FavoritesProvider({ children }: FavoritesProviderProps) {
     };
   }, [accessToken]);
 
+  useEffect(() => {
+    favoritesRef.current = favoriteAuthorIds;
+  }, [favoriteAuthorIds]);
+
+  const applyOptimisticUpdate = useCallback(
+    (updater: (prev: string[]) => string[]) => {
+      let rollback: string[] = favoritesRef.current;
+      let applied: string[] = favoritesRef.current;
+
+      setFavoriteAuthorIds((prev) => {
+        rollback = prev;
+        applied = updater(prev);
+        return applied;
+      });
+
+      return { rollback, applied };
+    },
+    [],
+  );
+
   const toggleFavorite = useCallback(
     (authorId: string) => {
       if (!accessToken) {
@@ -47,15 +72,14 @@ export function FavoritesProvider({ children }: FavoritesProviderProps) {
         return;
       }
 
-      let previous: string[] = [];
-      let shouldFavorite = false;
-      setFavoriteAuthorIds((prev) => {
-        previous = prev;
-        shouldFavorite = !prev.includes(authorId);
+      const { rollback, applied } = applyOptimisticUpdate((prev) => {
+        const shouldFavorite = !prev.includes(authorId);
         return shouldFavorite
           ? [...prev, authorId]
           : prev.filter((id) => id !== authorId);
       });
+
+      const shouldFavorite = applied.includes(authorId);
 
       const request = shouldFavorite
         ? favoritesApi.add(accessToken, authorId)
@@ -63,10 +87,12 @@ export function FavoritesProvider({ children }: FavoritesProviderProps) {
 
       request.catch((error) => {
         console.error('[FavoritesProvider] Failed to sync favorite', error);
-        setFavoriteAuthorIds(previous);
+      setFavoriteAuthorIds((current) =>
+          arraysEqual(current, applied) ? rollback : current,
+        );
       });
     },
-    [accessToken],
+    [accessToken, applyOptimisticUpdate],
   );
 
   const setFavorite = useCallback(
@@ -76,29 +102,21 @@ export function FavoritesProvider({ children }: FavoritesProviderProps) {
         return;
       }
 
-      let previous: string[] = [];
-      let changed = false;
-      setFavoriteAuthorIds((prev) => {
-        previous = prev;
+      const { rollback, applied } = applyOptimisticUpdate((prev) => {
         const hasAuthor = prev.includes(authorId);
 
         if (shouldBeFavorite && !hasAuthor) {
-          changed = true;
           return [...prev, authorId];
         }
 
         if (!shouldBeFavorite && hasAuthor) {
-          changed = true;
           return prev.filter((id) => id !== authorId);
         }
 
-        changed = false;
         return prev;
       });
 
-      if (!changed) {
-        return;
-      }
+      if (arraysEqual(rollback, applied)) return;
 
       const request = shouldBeFavorite
         ? favoritesApi.add(accessToken, authorId)
@@ -106,10 +124,12 @@ export function FavoritesProvider({ children }: FavoritesProviderProps) {
 
       request.catch((error) => {
         console.error('[FavoritesProvider] Failed to sync favorite', error);
-        setFavoriteAuthorIds(previous);
+        setFavoriteAuthorIds((current) =>
+          arraysEqual(current, applied) ? rollback : current,
+        );
       });
     },
-    [accessToken],
+    [accessToken, applyOptimisticUpdate],
   );
 
   const clearFavorites = useCallback(() => {
@@ -118,14 +138,15 @@ export function FavoritesProvider({ children }: FavoritesProviderProps) {
       return;
     }
 
-    const previous = favoriteAuthorIds;
-    setFavoriteAuthorIds([]);
+    const { rollback, applied } = applyOptimisticUpdate(() => []);
 
     favoritesApi.clear(accessToken).catch((error) => {
       console.error('[FavoritesProvider] Failed to clear favorites', error);
-      setFavoriteAuthorIds(previous);
+      setFavoriteAuthorIds((current) =>
+        arraysEqual(current, applied) ? rollback : current,
+      );
     });
-  }, [accessToken, favoriteAuthorIds]);
+  }, [accessToken, applyOptimisticUpdate]);
 
   const favoriteSet = useMemo(
     () => new Set(favoriteAuthorIds),
