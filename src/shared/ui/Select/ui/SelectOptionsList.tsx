@@ -7,6 +7,7 @@ interface SelectOptionsListProps {
   uniqueId: string;
   isMultiple: boolean;
   filteredOptions: SelectOption[];
+  options?: SelectOption[]; // optional, passed through for compatibility
   normalizedValue: string | string[];
   highlightedIndex: number;
   optionsRef: RefObject<HTMLLIElement[]>;
@@ -39,7 +40,7 @@ export const SelectOptionsList: FC<SelectOptionsListProps> = (props) => {
   } = props;
 
   if (filteredOptions.length === 0) {
-    return <li className="custom-select__no-options">Нет вариантов</li>;
+    return <li className="custom-select__no-options">РќРµС‚ РІР°СЂРёР°РЅС‚РѕРІ</li>;
   }
 
   return (

@@ -10,9 +10,10 @@ import { ROUTES } from '@/shared/constants';
 import { useFiltersBaseData } from '@/features/Filter/model/useFiltersBaseData';
 import type { Gender } from '@/entities/User/types';
 import UserInfoIcon from '@/shared/assets/images/user-info.svg?react';
-
-const REGISTRATION_STEP_TWO_STORAGE_KEY = 'registration:step2';
-const REGISTRATION_CREDENTIALS_STORAGE_KEY = 'registration:credentials';
+import {
+  useRegistrationDraft,
+  type RegistrationStepTwoData,
+} from '@/pages/Auth/model/RegistrationContext';
 
 const GENDERS: Array<{ value: Gender | ''; label: string }> = [
   { value: '', label: 'Не указан' },
@@ -28,35 +29,11 @@ const readFileAsDataUrl = (file: File) =>
     reader.readAsDataURL(file);
   });
 
-interface StepOneCredentials {
-  email: string;
-  password: string;
-}
-
-interface StepTwoStorageData {
-  name: string;
-  birthDate: string;
-  gender: Gender | '';
-  cityId: number | null;
-  categoryId: number | null;
-  subskillId: number | null;
-  avatarUrl: string;
-}
-
 const AuthStepTwo = () => {
   const navigate = useNavigate();
 
   const { cities: cityOptions, skillGroups } = useFiltersBaseData();
-
-  const credentials = useMemo<StepOneCredentials | null>(() => {
-    const raw = sessionStorage.getItem(REGISTRATION_CREDENTIALS_STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as StepOneCredentials) : null;
-  }, []);
-
-  const storedStepTwo = useMemo<StepTwoStorageData | null>(() => {
-    const raw = sessionStorage.getItem(REGISTRATION_STEP_TWO_STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as StepTwoStorageData) : null;
-  }, []);
+  const { credentials, stepTwo, setStepTwo } = useRegistrationDraft();
 
   useEffect(() => {
     if (!credentials) {
@@ -64,13 +41,13 @@ const AuthStepTwo = () => {
     }
   }, [credentials, navigate]);
 
-  const [avatarPreview, setAvatarPreview] = useState(storedStepTwo?.avatarUrl ?? '');
-  const [name, setName] = useState(storedStepTwo?.name ?? '');
-  const [birthDate, setBirthDate] = useState(storedStepTwo?.birthDate ?? '');
-  const [gender, setGender] = useState<Gender | ''>(storedStepTwo?.gender ?? '');
-  const [cityId, setCityId] = useState<number | null>(storedStepTwo?.cityId ?? null);
-  const [categoryId, setCategoryId] = useState<number | null>(storedStepTwo?.categoryId ?? null);
-  const [subskillId, setSubskillId] = useState<number | null>(storedStepTwo?.subskillId ?? null);
+  const [avatarPreview, setAvatarPreview] = useState(stepTwo?.avatarUrl ?? '');
+  const [name, setName] = useState(stepTwo?.name ?? '');
+  const [birthDate, setBirthDate] = useState(stepTwo?.birthDate ?? '');
+  const [gender, setGender] = useState<Gender | ''>(stepTwo?.gender ?? '');
+  const [cityId, setCityId] = useState<number | null>(stepTwo?.cityId ?? null);
+  const [categoryId, setCategoryId] = useState<number | null>(stepTwo?.categoryId ?? null);
+  const [subskillId, setSubskillId] = useState<number | null>(stepTwo?.subskillId ?? null);
 
   const subskillOptions = useMemo(() => {
     if (!categoryId) return [];
@@ -96,18 +73,16 @@ const AuthStepTwo = () => {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    sessionStorage.setItem(
-      REGISTRATION_STEP_TWO_STORAGE_KEY,
-      JSON.stringify({
-        name,
-        birthDate,
-        gender,
-        cityId,
-        categoryId,
-        subskillId,
-        avatarUrl: avatarPreview || '',
-      }),
-    );
+    const nextStepTwo: RegistrationStepTwoData = {
+      name,
+      birthDate,
+      gender,
+      cityId,
+      categoryId,
+      subskillId,
+      avatarUrl: avatarPreview || '',
+    };
+    setStepTwo(nextStepTwo);
 
     navigate(ROUTES.REGISTER_STEP_THREE);
   };
@@ -132,6 +107,7 @@ const AuthStepTwo = () => {
               placeholder='Введите ваше имя'
               value={name}
               onChange={(event) => setName(event.target.value)}
+              data-testid='name-input'
               required
             />
 
@@ -183,7 +159,7 @@ const AuthStepTwo = () => {
               <Button type='button' variant='secondary' onClick={() => navigate(-1)}>
                 Назад
               </Button>
-              <Button type='submit' variant='primary'>
+              <Button type='submit' variant='primary' data-testid='step-two-submit'>
                 Продолжить
               </Button>
             </div>

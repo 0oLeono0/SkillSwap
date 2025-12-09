@@ -10,17 +10,16 @@ import { ROUTES } from '@/shared/constants';
 import { useAuth } from '@/app/providers/auth';
 import { Title } from '@/shared/ui/Title';
 import { ApiError } from '@/shared/api/auth';
+import { useRegistrationDraft } from '@/pages/Auth/model/RegistrationContext';
 
 interface AuthStepOneProps {
   isRegistered?: boolean;
 }
 
-const REGISTRATION_CREDENTIALS_STORAGE_KEY = 'registration:credentials';
-const REGISTRATION_STEP_TWO_STORAGE_KEY = 'registration:step2';
-
 export const AuthStepOne = ({ isRegistered = false }: AuthStepOneProps) => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { setCredentials, clear } = useRegistrationDraft();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,8 +34,7 @@ export const AuthStepOne = ({ isRegistered = false }: AuthStepOneProps) => {
       try {
         setIsSubmitting(true);
         await login({ email, password });
-        sessionStorage.removeItem(REGISTRATION_CREDENTIALS_STORAGE_KEY);
-        sessionStorage.removeItem(REGISTRATION_STEP_TWO_STORAGE_KEY);
+        clear();
         navigate(ROUTES.HOME);
       } catch (loginError) {
         if (loginError instanceof ApiError) {
@@ -50,10 +48,7 @@ export const AuthStepOne = ({ isRegistered = false }: AuthStepOneProps) => {
       return;
     }
 
-    sessionStorage.setItem(
-      REGISTRATION_CREDENTIALS_STORAGE_KEY,
-      JSON.stringify({ email, password }),
-    );
+    setCredentials({ email, password });
     navigate(ROUTES.REGISTER_STEP_TWO);
   };
 
@@ -81,6 +76,8 @@ export const AuthStepOne = ({ isRegistered = false }: AuthStepOneProps) => {
               placeholder='Введите email'
               value={email}
               onChange={(event) => setEmail(event.target.value)}
+              data-testid='email-input'
+              name='email'
               required
             />
             <Input
@@ -89,13 +86,19 @@ export const AuthStepOne = ({ isRegistered = false }: AuthStepOneProps) => {
               placeholder='Введите пароль'
               value={password}
               onChange={(event) => setPassword(event.target.value)}
+              data-testid='password-input'
+              name='password'
               hint='Пароль должен содержать не менее 8 символов'
               required
             />
 
             {error && <p className={styles.errorMessage}>{error}</p>}
 
-            <Button type='submit' variant='primary' disabled={isRegistered && isSubmitting}>
+            <Button
+              type='submit'
+              variant='primary'
+              disabled={isRegistered && isSubmitting}
+              data-testid='submit-button'>
               Войти
             </Button>
           </form>
