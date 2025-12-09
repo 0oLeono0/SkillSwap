@@ -82,8 +82,9 @@ export const Calendar = ({ date, onSelect, selectedDate }: CalendarProps) => {
     }
   };
 
-  const handleMonthChange = (value: string) => {
-    const newMonth = Number(value);
+  const handleMonthChange = (value: string | string[]) => {
+    const normalized = Array.isArray(value) ? value[0] ?? '' : value;
+    const newMonth = Number(normalized);
     setCurrent((prev) => {
       const currentDay = selectedDate?.getDate() ?? prev.getDate();
       const safeDay = getSafeDayInMonth(prev.getFullYear(), newMonth, currentDay);
@@ -93,8 +94,9 @@ export const Calendar = ({ date, onSelect, selectedDate }: CalendarProps) => {
     });
   };
 
-  const handleYearChange = (value: string) => {
-    const newYear = Number(value);
+  const handleYearChange = (value: string | string[]) => {
+    const normalized = Array.isArray(value) ? value[0] ?? '' : value;
+    const newYear = Number(normalized);
     setCurrent((prev) => {
       const currentDay = selectedDate?.getDate() ?? prev.getDate();
       const safeDay = getSafeDayInMonth(newYear, prev.getMonth(), currentDay);

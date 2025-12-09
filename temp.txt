@@ -16,10 +16,13 @@ interface AuthStepOneProps {
   isRegistered?: boolean;
 }
 
+const REGISTRATION_CREDENTIALS_STORAGE_KEY = 'registration:credentials';
+const REGISTRATION_STEP_TWO_STORAGE_KEY = 'registration:step2';
+
 export const AuthStepOne = ({ isRegistered = false }: AuthStepOneProps) => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { setCredentials, clear } = useRegistrationDraft();
+  const { setDraft, clear } = useRegistrationDraft();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,6 +38,8 @@ export const AuthStepOne = ({ isRegistered = false }: AuthStepOneProps) => {
         setIsSubmitting(true);
         await login({ email, password });
         clear();
+        sessionStorage.removeItem(REGISTRATION_CREDENTIALS_STORAGE_KEY);
+        sessionStorage.removeItem(REGISTRATION_STEP_TWO_STORAGE_KEY);
         navigate(ROUTES.HOME);
       } catch (loginError) {
         if (loginError instanceof ApiError) {
@@ -48,7 +53,7 @@ export const AuthStepOne = ({ isRegistered = false }: AuthStepOneProps) => {
       return;
     }
 
-    setCredentials({ email, password });
+    setDraft({ email, password });
     navigate(ROUTES.REGISTER_STEP_TWO);
   };
 
@@ -76,8 +81,6 @@ export const AuthStepOne = ({ isRegistered = false }: AuthStepOneProps) => {
               placeholder='Введите email'
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              data-testid='email-input'
-              name='email'
               required
             />
             <Input
@@ -86,19 +89,13 @@ export const AuthStepOne = ({ isRegistered = false }: AuthStepOneProps) => {
               placeholder='Введите пароль'
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              data-testid='password-input'
-              name='password'
               hint='Пароль должен содержать не менее 8 символов'
               required
             />
 
             {error && <p className={styles.errorMessage}>{error}</p>}
 
-            <Button
-              type='submit'
-              variant='primary'
-              disabled={isRegistered && isSubmitting}
-              data-testid='submit-button'>
+            <Button type='submit' variant='primary' disabled={isRegistered && isSubmitting}>
               Войти
             </Button>
           </form>
