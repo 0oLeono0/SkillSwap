@@ -3,8 +3,6 @@ import { sanitizeUser, type SanitizedUser } from './userService.js';
 import { createBadRequest, createNotFound } from '../utils/httpErrors.js';
 import { isUserRole, type UserRole } from '../types/userRole.js';
 
-type AssignableRole = Extract<UserRole, 'admin' | 'user'>;
-
 const ensureUser = async (userId: string) => {
   const user = await userRepository.findById(userId);
   if (!user) {
@@ -22,7 +20,7 @@ export const adminService = {
     await userRepository.deleteById(userId);
   },
 
-  async updateUserRole(userId: string, role: AssignableRole): Promise<SanitizedUser> {
+  async updateUserRole(userId: string, role: UserRole): Promise<SanitizedUser> {
     const user = await ensureUser(userId);
 
     if (user.role === 'owner') {

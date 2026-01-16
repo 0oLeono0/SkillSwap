@@ -22,14 +22,17 @@ export const deleteUserAccount = asyncHandler(async (req, res) => {
 
 export const updateUserRole = asyncHandler(async (req, res) => {
   const { userId } = req.params;
+  if (!userId) {
+    throw createBadRequest('User id is required');
+  }
   const payloadResult = updateRoleSchema.safeParse(req.body);
   if (!payloadResult.success) {
     throw createBadRequest('Invalid payload', payloadResult.error.flatten());
   }
 
-   if (req.user?.sub === userId) {
+  if (req.user?.sub === userId) {
     throw createBadRequest('You cannot change your own role');
-   }
+  }
 
   const updatedUser = await adminService.updateUserRole(userId, payloadResult.data.role);
   return res.status(200).json({ user: updatedUser });

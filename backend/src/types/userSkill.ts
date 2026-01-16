@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 
 export interface RawUserSkill {
-  id?: string | null;
+  id?: string | null | undefined;
   title?: string | null;
   categoryId?: number | null;
   subcategoryId?: number | null;

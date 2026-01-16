@@ -105,27 +105,26 @@ const AuthStepThree = () => {
     }
 
     const groupId = typeof stepTwoData.categoryId === 'number' ? stepTwoData.categoryId : null;
-    const title =
-      findSkillName(groupId, stepTwoData.subskillId) ?? 'Р СњР В°Р Р†РЎвЂ№Р С” Р Т‘Р В»РЎРЏ Р С‘Р В·РЎС“РЎвЂЎР ВµР Р…Р С‘РЎРЏ';
+    const title = 'Навык для обучения';
 
     return {
       id: generateSkillId(),
       title,
       categoryId: groupId,
       subcategoryId: stepTwoData.subskillId,
-      description: 'Р ТђР С•РЎвЂЎРЎС“ Р С‘Р В·РЎС“РЎвЂЎР С‘РЎвЂљРЎРЉ РЎРЊРЎвЂљР С•РЎвЂљ Р Р…Р В°Р Р†РЎвЂ№Р С”',
+      description: 'Я хочу научиться этому навыку',
       imageUrls: STOCK_IMAGES.slice(1),
     };
   };
 
   const buildTeachableSkillPayload = async (): Promise<ApiUserSkill | null> => {
     if (typeof subskillId !== 'number' || typeof categoryId !== 'number') {
-      setError('Р вЂ™РЎвЂ№Р В±Р ВµРЎР‚Р С‘РЎвЂљР Вµ Р С”Р В°РЎвЂљР ВµР С–Р С•РЎР‚Р С‘РЎР‹ Р С‘ Р С—Р С•Р Т‘Р С”Р В°РЎвЂљР ВµР С–Р С•РЎР‚Р С‘РЎР‹ Р Т‘Р В»РЎРЏ Р Р…Р В°Р Р†РЎвЂ№Р С”Р В°');
+      setError('Выберите категорию и подкатегорию для навыка');
       return null;
     }
 
     const subskillName = findSkillName(categoryId, subskillId);
-    const trimmedTitle = skillTitle.trim() || subskillName || 'Р СљР С•Р в„– Р Р…Р В°Р Р†РЎвЂ№Р С”';
+    const trimmedTitle = skillTitle.trim() || subskillName || 'Мой навык';
     const trimmedDescription = description.trim();
 
     const uploadedImages = images.length
@@ -142,7 +141,7 @@ const AuthStepThree = () => {
       categoryId,
       subcategoryId: subskillId,
       description:
-        trimmedDescription || 'Р Р‡ Р С—Р С•Р Т‘Р ВµР В»РЎР‹РЎРѓРЎРЉ Р С—Р С•Р Т‘РЎР‚Р С•Р В±Р Р…Р С•РЎРѓРЎвЂљРЎРЏР СР С‘ Р С•Р В± РЎРЊРЎвЂљР С•Р С Р Р…Р В°Р Р†РЎвЂ№Р С”Р Вµ Р С—Р С•Р В·Р В¶Р Вµ',
+      trimmedDescription || 'Я хочу обучиться навыку, описанному в этой категории',
       imageUrls: imageUrls.length ? imageUrls : STOCK_IMAGES,
     };
   };
@@ -186,15 +185,15 @@ const AuthStepThree = () => {
       if (registerError instanceof ApiError) {
         setError(registerError.message);
       } else {
-        setError('Р СџРЎР‚Р С•Р С‘Р В·Р С•РЎв‚¬Р В»Р В° Р Р…Р ВµР С‘Р В·Р Р†Р ВµРЎРѓРЎвЂљР Р…Р В°РЎРЏ Р С•РЎв‚¬Р С‘Р В±Р С”Р В° Р С—РЎР‚Р С‘ РЎР‚Р ВµР С–Р С‘РЎРѓРЎвЂљРЎР‚Р В°РЎвЂ Р С‘Р С‘. Р СџР С•Р В¶Р В°Р В»РЎС“Р в„–РЎРѓРЎвЂљР В°, Р С—Р С•Р С—РЎР‚Р С•Р В±РЎС“Р в„–РЎвЂљР Вµ Р С—Р С•Р В·Р В¶Р Вµ.');
+        setError('Произошла неизвестная ошибка при регистрации. Пожалуйста, попробуйте позже.');
       }
     } finally {
       setIsSubmitting(false);
     }
   };
 const previewCategoryName = categoryId
-  ? skillGroups.find((group) => group.id === categoryId)?.name ?? 'Р СњР ВµР С‘Р В·Р Р†Р ВµРЎРѓРЎвЂљР Р…Р В°РЎРЏ Р С”Р В°РЎвЂљР ВµР С–Р С•РЎР‚Р С‘РЎРЏ'
-  : 'Р С™Р В°РЎвЂљР ВµР С–Р С•РЎР‚Р С‘РЎРЏ Р Р…Р Вµ Р Р†РЎвЂ№Р В±РЎР‚Р В°Р Р…Р В°';
+  ? skillGroups.find((group) => group.id === categoryId)?.name ?? 'Неизвестная категория'
+  : 'Категория не выбрана';
 
   const previewSubcategoryName = subskillId
     ? skillOptions.find((skill) => skill.id === subskillId)?.name ?? ''
@@ -212,12 +211,12 @@ const previewCategoryName = categoryId
   return (
     <section className={styles.auth}>
       <div className={styles.card}>
-        <div className={styles.stepIndicator}>Р РЃР В°Р С– 3 Р С‘Р В· 3</div>
+        <div className={styles.stepIndicator}>Шаг 3 из 3</div>
         <div className={styles.layout}>
             <form className={styles.form} onSubmit={handleSubmit}>
             <Input
-              title='Р СњР В°Р В·Р Р†Р В°Р Р…Р С‘Р Вµ Р Р…Р В°Р Р†РЎвЂ№Р С”Р В°'
-              placeholder='Р вЂ™Р Р†Р ВµР Т‘Р С‘РЎвЂљР Вµ Р Р…Р В°Р В·Р Р†Р В°Р Р…Р С‘Р Вµ Р Р†Р В°РЎв‚¬Р ВµР С–Р С• Р Р…Р В°Р Р†РЎвЂ№Р С”Р В°'
+              title='Название навыка'
+              placeholder='Введите название вашего навыка'
               value={skillTitle}
               onChange={(event) => setSkillTitle(event.target.value)}
               data-testid='skill-title-input'
@@ -225,7 +224,7 @@ const previewCategoryName = categoryId
             />
 
             <Select
-              label='Р С™Р В°РЎвЂљР ВµР С–Р С•РЎР‚Р С‘РЎРЏ Р Р…Р В°Р Р†РЎвЂ№Р С”Р В°'
+              label='Категория навыка'
               options={skillGroups.map((group) => ({ value: group.id.toString(), label: group.name }))}
               value={categoryId?.toString() ?? ''}
               onChange={(value) => {
@@ -233,24 +232,24 @@ const previewCategoryName = categoryId
               setSubskillId(null);
               }}
               data-testid='category-select'
-              placeholder='Р вЂ™РЎвЂ№Р В±Р ВµРЎР‚Р С‘РЎвЂљР Вµ Р С”Р В°РЎвЂљР ВµР С–Р С•РЎР‚Р С‘РЎР‹ Р Р…Р В°Р Р†РЎвЂ№Р С”Р В°'
+              placeholder='Выберите категорию навыка'
             />
 
             <Select
-              label='Р СџР С•Р Т‘Р С”Р В°РЎвЂљР ВµР С–Р С•РЎР‚Р С‘РЎРЏ Р Р…Р В°Р Р†РЎвЂ№Р С”Р В°'
+              label='Подкатегория навыка'
               options={skillOptions.map((skill) => ({ value: skill.id.toString(), label: skill.name }))}
               value={subskillId?.toString() ?? ''}
               onChange={(value) => setSubskillId(value ? Number(value) : null)}
               data-testid='subskill-select'
-              placeholder='Р вЂ™РЎвЂ№Р В±Р ВµРЎР‚Р С‘РЎвЂљР Вµ Р С—Р С•Р Т‘Р С”Р В°РЎвЂљР ВµР С–Р С•РЎР‚Р С‘РЎР‹ Р Р…Р В°Р Р†РЎвЂ№Р С”Р В°'
+              placeholder='Выберите подкатегорию навыка'
               disabled={!categoryId}
             />
 
             <label className={styles.textareaLabel}>
-              Р С›Р С—Р С‘РЎРѓР В°Р Р…Р С‘Р Вµ
+              Описание
               <textarea
               className={styles.textarea}
-              placeholder='Р С™Р С•РЎР‚Р С•РЎвЂљР С”Р С• Р С•Р С—Р С‘РЎв‚¬Р С‘РЎвЂљР Вµ, РЎвЂЎР ВµР СРЎС“ Р СР С•Р В¶Р ВµРЎвЂљР Вµ Р Р…Р В°РЎС“РЎвЂЎР С‘РЎвЂљРЎРЉ'
+              placeholder='Кратко опишите, чему вы можете научить'
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               rows={5}
@@ -259,30 +258,29 @@ const previewCategoryName = categoryId
             </label>
 
             <label className={styles.dropzone}>
-              <span className={styles.dropzoneTitle}>Р СџР ВµРЎР‚Р ВµРЎвЂљР В°РЎвЂ°Р С‘РЎвЂљР Вµ Р С‘Р В»Р С‘ Р Р†РЎвЂ№Р В±Р ВµРЎР‚Р С‘РЎвЂљР Вµ Р С‘Р В·Р С•Р В±РЎР‚Р В°Р В¶Р ВµР Р…Р С‘РЎРЏ Р Р…Р В°Р Р†РЎвЂ№Р С”Р В°</span>
-              <span className={styles.dropzoneHint}>Р вЂ™РЎвЂ№Р В±РЎР‚Р В°РЎвЂљРЎРЉ Р С‘Р В·Р С•Р В±РЎР‚Р В°Р В¶Р ВµР Р…Р С‘РЎРЏ</span>
+              <span className={styles.dropzoneTitle}>Загрузите или выберите изображения навыка</span>
+              <span className={styles.dropzoneHint}>Выберите изображения</span>
               <input type='file' accept='image/*' multiple hidden onChange={handleImagesChange} />
               {images.length > 0 && (
-              <span className={styles.dropzoneMeta}>Р вЂ™РЎвЂ№Р В±РЎР‚Р В°Р Р…Р С• РЎвЂћР В°Р в„–Р В»Р С•Р Р†: {images.length}</span>
+              <span className={styles.dropzoneMeta}>Выбрано файлов: {images.length}</span>
               )}
             </label>
 
             <div className={styles.actions}>
               <Button type='button' variant='secondary' onClick={() => navigate(-1)}>
-              Р СњР В°Р В·Р В°Р Т‘
+              Назад
               </Button>
               <Button type='submit' variant='primary' data-testid='preview-submit'>
-              Р СџРЎР‚Р С•Р Т‘Р С•Р В»Р В¶Р С‘РЎвЂљРЎРЉ
+              Продолжить
               </Button>
             </div>
             </form>
 
           <div className={styles.preview}>
             <SchoolBoardIcon />
-            <Title tag='h2' variant='lg'>Р СџРЎР‚Р ВµР Т‘Р Р†Р В°РЎР‚Р С‘РЎвЂљР ВµР В»РЎРЉР Р…РЎвЂ№Р в„– Р С—РЎР‚Р С•РЎРѓР СР С•РЎвЂљРЎР‚ Р Р…Р В°Р Р†РЎвЂ№Р С”Р В°</Title>
+            <Title tag='h2' variant='lg'>Предварительный просмотр вашего навыка</Title>
             <p>
-              Р вЂ”Р Т‘Р ВµРЎРѓРЎРЉ Р С—Р С•Р С”Р В°Р В·Р В°Р Р… Р С—РЎР‚Р ВµР Т‘Р Р†Р В°РЎР‚Р С‘РЎвЂљР ВµР В»РЎРЉР Р…РЎвЂ№Р в„– Р С—РЎР‚Р С•РЎРѓР СР С•РЎвЂљРЎР‚ Р Р†Р В°РЎв‚¬Р ВµР С–Р С• Р Р…Р В°Р Р†РЎвЂ№Р С”Р В°. Р Р€Р В±Р ВµР Т‘Р С‘РЎвЂљР ВµРЎРѓРЎРЉ, РЎвЂЎРЎвЂљР С• Р Р…Р В°Р В·Р Р†Р В°Р Р…Р С‘Р Вµ, Р С”Р В°РЎвЂљР ВµР С–Р С•РЎР‚Р С‘РЎРЏ, Р С•Р С—Р С‘РЎРѓР В°Р Р…Р С‘Р Вµ Р С‘ Р С‘Р В·Р С•Р В±РЎР‚Р В°Р В¶Р ВµР Р…Р С‘РЎРЏ
-              Р Р†РЎвЂ№Р С–Р В»РЎРЏР Т‘РЎРЏРЎвЂљ РЎвЂљР В°Р С”, Р С”Р В°Р С” Р Р†РЎвЂ№ РЎвЂ¦Р С•РЎвЂљР С‘РЎвЂљР Вµ. Р В§РЎвЂљР С•Р В±РЎвЂ№ Р Р†Р Р…Р ВµРЎРѓРЎвЂљР С‘ Р С‘Р В·Р СР ВµР Р…Р ВµР Р…Р С‘РЎРЏ РІР‚вЂќ Р Р…Р В°Р В¶Р СР С‘РЎвЂљР Вµ Р’В«Р В Р ВµР Т‘Р В°Р С”РЎвЂљР С‘РЎР‚Р С•Р Р†Р В°РЎвЂљРЎРЉР’В», РЎвЂЎРЎвЂљР С•Р В±РЎвЂ№ Р С—Р С•Р Т‘РЎвЂљР Р†Р ВµРЎР‚Р Т‘Р С‘РЎвЂљРЎРЉ Р С‘ Р В·Р В°Р Р†Р ВµРЎР‚РЎв‚¬Р С‘РЎвЂљРЎРЉ РЎР‚Р ВµР С–Р С‘РЎРѓРЎвЂљРЎР‚Р В°РЎвЂ Р С‘РЎР‹ РІР‚вЂќ Р Р…Р В°Р В¶Р СР С‘РЎвЂљР Вµ Р’В«Р СџР С•Р Т‘РЎвЂљР Р†Р ВµРЎР‚Р Т‘Р С‘РЎвЂљРЎРЉР’В».
+              Ниже показан предварительный просмотр вашего навыка. Убедитесь, что название, категория, описание и изображения выглядят так, как вы хотите. Любое изменение — нажмите «Редактировать», чтобы вернуться к форме редактирования — любое удаление — нажмите «Подтвердить», чтобы завершить регистрацию на SkillSwap.
             </p>
           </div>
         </div>
@@ -290,42 +288,42 @@ const previewCategoryName = categoryId
 
       <Modal isOpen={isPreviewOpen} onClose={handleEdit} className={styles.previewModal}>
         <div className={styles.previewModalHeader}>
-          <Title tag='h2' variant='lg'>Р СџРЎР‚Р ВµР Т‘Р Р†Р В°РЎР‚Р С‘РЎвЂљР ВµР В»РЎРЉР Р…РЎвЂ№Р в„– Р С—РЎР‚Р С•РЎРѓР СР С•РЎвЂљРЎР‚ Р С‘ Р С—Р С•Р Т‘РЎвЂљР Р†Р ВµРЎР‚Р В¶Р Т‘Р ВµР Р…Р С‘Р Вµ</Title>
-          <p>
-            Р СџРЎР‚Р С•Р Р†Р ВµРЎР‚РЎРЉРЎвЂљР Вµ Р С‘Р Р…РЎвЂћР С•РЎР‚Р СР В°РЎвЂ Р С‘РЎР‹ Р С• Р Р…Р В°Р Р†РЎвЂ№Р С”Р Вµ: Р Р…Р В°Р В·Р Р†Р В°Р Р…Р С‘Р Вµ, Р С”Р В°РЎвЂљР ВµР С–Р С•РЎР‚Р С‘РЎРЏ, Р С•Р С—Р С‘РЎРѓР В°Р Р…Р С‘Р Вµ Р С‘ Р С‘Р В·Р С•Р В±РЎР‚Р В°Р В¶Р ВµР Р…Р С‘РЎРЏ. Р вЂўРЎРѓР В»Р С‘ Р Р†РЎРѓРЎвЂ Р Р†Р ВµРЎР‚Р Р…Р С• РІР‚вЂќ Р Р…Р В°Р В¶Р СР С‘РЎвЂљР Вµ Р’В«Р СџР С•Р Т‘РЎвЂљР Р†Р ВµРЎР‚Р Т‘Р С‘РЎвЂљРЎРЉР’В» Р Т‘Р В»РЎРЏ Р В·Р В°Р Р†Р ВµРЎР‚РЎв‚¬Р ВµР Р…Р С‘РЎРЏ РЎР‚Р ВµР С–Р С‘РЎРѓРЎвЂљРЎР‚Р В°РЎвЂ Р С‘Р С‘; РЎвЂЎРЎвЂљР С•Р В±РЎвЂ№ Р Р†Р Р…Р ВµРЎРѓРЎвЂљР С‘ Р С‘Р В·Р СР ВµР Р…Р ВµР Р…Р С‘РЎРЏ РІР‚вЂќ Р Р…Р В°Р В¶Р СР С‘РЎвЂљР Вµ Р’В«Р В Р ВµР Т‘Р В°Р С”РЎвЂљР С‘РЎР‚Р С•Р Р†Р В°РЎвЂљРЎРЉР’В».
-          </p>
+          <Title tag='h2' variant='lg'>Предварительный просмотр вашего навыка</Title>
+            <p>
+            Проверьте предварительный просмотр о навыке: название, категория, описание и изображения. Если что-то неправильно — нажмите «Редактировать» для возврата к форме редактирования; любое удаление — нажмите «Подтвердить» для завершения регистрации.
+            </p>
         </div>
         <div className={styles.previewModalBody}>
           <div className={styles.previewContent}>
-            <Title tag='h2' variant='lg'>{skillTitle || 'Р СњР В°Р В·Р Р†Р В°Р Р…Р С‘Р Вµ Р Р…Р В°Р Р†РЎвЂ№Р С”Р В°'}</Title>
+            <Title tag='h2' variant='lg'>{skillTitle || 'Название навыка'}</Title>
             <span className={styles.previewCategory}>
               {previewCategoryName}
               {previewSubcategoryName ? ` / ${previewSubcategoryName}` : ''}
             </span>
             <p className={styles.previewDescription}>
-              {description || 'Р С›Р С—Р С‘РЎРѓР В°Р Р…Р С‘Р Вµ Р Р…Р В°Р Р†РЎвЂ№Р С”Р В°, Р Р†Р С”Р В»РЎР‹РЎвЂЎР В°РЎРЏ Р ВµР С–Р С• Р С•РЎРѓР С•Р В±Р ВµР Р…Р Р…Р С•РЎРѓРЎвЂљР С‘ Р С‘ Р С—РЎР‚Р ВµР С‘Р СРЎС“РЎвЂ°Р ВµРЎРѓРЎвЂљР Р†Р В°, Р Т‘Р С•Р В»Р В¶Р Р…Р С• Р В±РЎвЂ№РЎвЂљРЎРЉ РЎвЂЎР ВµРЎвЂљР С”Р С‘Р С Р С‘ Р С‘Р Р…РЎвЂћР С•РЎР‚Р СР В°РЎвЂљР С‘Р Р†Р Р…РЎвЂ№Р С. Р РЎРѓР С—Р С•Р В»РЎРЉР В·РЎС“Р в„–РЎвЂљР Вµ Р С—РЎР‚Р С•РЎРѓРЎвЂљРЎвЂ№Р Вµ Р С‘ Р С—Р С•Р Р…РЎРЏРЎвЂљР Р…РЎвЂ№Р Вµ РЎвЂћР С•РЎР‚Р СРЎС“Р В»Р С‘РЎР‚Р С•Р Р†Р С”Р С‘, Р С‘Р В·Р В±Р ВµР С–Р В°Р в„–РЎвЂљР Вµ РЎРѓР В»Р С•Р В¶Р Р…РЎвЂ№РЎвЂ¦ РЎвЂљР ВµРЎР‚Р СР С‘Р Р…Р С•Р Р† Р С‘ Р В¶Р В°РЎР‚Р С–Р С•Р Р…Р В°.'}
+              {description || 'Описание навыка, которое вы предоставили здесь, должно быть актуальным и информативным. Используйте простые и понятные слова в описании профессионального навыка, избегайте сложных терминов. Данное описание играет важную роль в контексте вашего профиля.'}
             </p>
             <div className={styles.previewActions}>
-              <Button type='button' variant='secondary' onClick={handleEdit} data-testid='edit-button'>
-                Р В Р ВµР Т‘Р В°Р С”РЎвЂљР С‘РЎР‚Р С•Р Р†Р В°РЎвЂљРЎРЉ
-              </Button>
+                <Button type='button' variant='secondary' onClick={handleEdit} data-testid='edit-button'>
+                Редактировать
+                </Button>
               {error && <p className={styles.errorMessage}>{error}</p>}
-              <Button type='button' variant='primary' onClick={handleConfirm} disabled={isSubmitting} data-testid='confirm-button'>
-                Р СџР С•Р Т‘РЎвЂљР Р†Р ВµРЎР‚Р Т‘Р С‘РЎвЂљРЎРЉ
-              </Button>
+                <Button type='button' variant='primary' onClick={handleConfirm} disabled={isSubmitting} data-testid='confirm-button'>
+                Подтвердить
+                </Button>
             </div>
           </div>
-          <div className={styles.previewGallery}>
-            <img src={mainImage} alt={skillTitle || 'Р СњР В°Р В·Р Р†Р В°Р Р…Р С‘Р Вµ Р Р…Р В°Р Р†РЎвЂ№Р С”Р В°'} className={styles.previewMainImage} />
+            <div className={styles.previewGallery}>
+            <img src={mainImage} alt={skillTitle || 'Навык'} className={styles.previewMainImage} />
             <div className={styles.previewThumbs}>
               {secondaryImages.map((image) => (
-                <img key={image} src={image} alt='Р СњР В°Р В·Р Р†Р В°Р Р…Р С‘Р Вµ Р Р…Р В°Р Р†РЎвЂ№Р С”Р В°' className={styles.previewThumb} />
+              <img key={image} src={image} alt='Изображение навыка' className={styles.previewThumb} />
               ))}
               {!usingFallbackImages && remainingCount > 0 && (
-                <div className={styles.previewThumbMore}>+{remainingCount}</div>
+              <div className={styles.previewThumbMore}>+{remainingCount}</div>
               )}
             </div>
-          </div>
+            </div>
         </div>
       </Modal>
     </section>

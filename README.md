@@ -35,8 +35,10 @@ src/
 
 ## Переменные окружения
 Файлы уже в репозитории и безопасны для публикации:
-- `/.env` и `/.env.example` — фронтенд (`VITE_API_URL`).
-- `/backend/.env` и `/backend/.env.example` — бэкенд (порт, CORS, БД, JWT, bcrypt).
+- `/.env` и `/.env.example` - фронтенд (`VITE_API_URL`).
+- `/backend/.env` и `/backend/.env.example` - бэкенд (порт, CORS, БД, JWT, bcrypt, rate limit, Redis).
+
+Если `REDIS_URL` не задан, лимиты хранятся в памяти процесса. Пример: `REDIS_URL="redis://localhost:6379"`.
 
 Пример фронтенда (`.env`):
 ```
@@ -53,6 +55,13 @@ JWT_REFRESH_SECRET="replace-with-strong-refresh-secret"
 JWT_ACCESS_EXPIRES_IN="15m"
 JWT_REFRESH_EXPIRES_IN="7d"
 BCRYPT_SALT_ROUNDS=10
+RATE_LIMIT_LOGIN_WINDOW_MS=60000
+RATE_LIMIT_LOGIN_MAX=5
+RATE_LIMIT_REGISTER_WINDOW_MS=600000
+RATE_LIMIT_REGISTER_MAX=3
+RATE_LIMIT_REFRESH_WINDOW_MS=60000
+RATE_LIMIT_REFRESH_MAX=10
+REDIS_URL=""
 ```
 
 ## Быстрый старт

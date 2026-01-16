@@ -1,4 +1,4 @@
-import type { ApiMockData } from './types';
+import type { ApiMockData } from './types.js';
 
 export const db: ApiMockData = {
   users: [
