@@ -6,7 +6,8 @@ export const mapSkillToCard = (
   skill: Skill,
   user: User,
   subskillMap: Map<number, string>,
-  mode: 'all' | 'want_to_learn' | 'can_teach'
+  mode: 'all' | 'want_to_learn' | 'can_teach',
+  cityNameById?: Map<number, string>
 ) => {
   const typeMap = {
     want_to_learn: 'teach',
@@ -36,7 +37,7 @@ export const mapSkillToCard = (
     id: skill.id,
     authorName: getUserName(user),
     authorAge: getUserAge(user),
-    authorCity: getUserCity(user),
+    authorCity: getUserCity(user, cityNameById),
     primaryType,
     primarySkill,
     otherSkills

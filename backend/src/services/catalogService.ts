@@ -1,4 +1,4 @@
-import { db } from '../data/mockData.js';
+import { prisma } from '../lib/prisma.js';
 
 export interface CityOption {
   id: number;
@@ -23,71 +23,115 @@ export interface SkillCategory {
   }>;
 }
 
-type DbCity = (typeof db.cities)[number];
-type DbSkill = (typeof db.skills)[number];
-type DbSubskill = NonNullable<DbSkill['subskills']>[number];
-
-const buildCityOptions = (): CityOption[] => {
-  return db.cities.map((city: DbCity) => ({
-    id: city.id,
-    name: city.name,
-  }));
+type NamedEntity = { id: number; name: string };
+type SkillGroupRecord = {
+  id: number;
+  name: string;
+  skills: NamedEntity[];
 };
 
-const buildSkillGroups = (): SkillGroup[] => {
-  return db.skills.map((group: DbSkill) => ({
-    id: group.id,
-    name: group.name,
-    skills:
-      group.subskills?.map((subskill: DbSubskill) => ({
-        id: subskill.id,
-        name: subskill.name,
-      })) ?? [],
-  }));
-};
+const mapCity = (city: NamedEntity): CityOption => ({
+  id: city.id,
+  name: city.name,
+});
+
+const mapSkillGroup = (group: SkillGroupRecord): SkillGroup => ({
+  id: group.id,
+  name: group.name,
+  skills: group.skills.map((skill) => ({ id: skill.id, name: skill.name })),
+});
+
+const mapSkillCategory = (group: SkillGroupRecord): SkillCategory => ({
+  id: group.id,
+  name: group.name,
+  subskills: group.skills.map((skill) => ({ id: skill.id, name: skill.name })),
+});
+
+const listCities = async (): Promise<NamedEntity[]> =>
+  prisma.city.findMany({
+    select: {
+      id: true,
+      name: true,
+    },
+    orderBy: {
+      id: 'asc',
+    },
+  });
+
+const listSkillGroups = async (): Promise<SkillGroupRecord[]> =>
+  prisma.skillGroup.findMany({
+    select: {
+      id: true,
+      name: true,
+      skills: {
+        select: {
+          id: true,
+          name: true,
+        },
+        orderBy: {
+          id: 'asc',
+        },
+      },
+    },
+    orderBy: {
+      id: 'asc',
+    },
+  });
 
 export const catalogService = {
-  getFiltersBaseData() {
+  async getFiltersBaseData() {
+    const [cities, skillGroups] = await Promise.all([
+      listCities(),
+      listSkillGroups(),
+    ]);
+
     return {
-      cities: buildCityOptions(),
-      skillGroups: buildSkillGroups(),
+      cities: cities.map(mapCity),
+      skillGroups: skillGroups.map(mapSkillGroup),
     };
   },
 
-  getSkillCategories(): SkillCategory[] {
-    return db.skills.map((group: DbSkill) => ({
-      id: group.id,
-      name: group.name,
-      subskills:
-        group.subskills?.map((subskill: DbSubskill) => ({
-          id: subskill.id,
-          name: subskill.name,
-        })) ?? [],
-    }));
+  async getSkillCategories(): Promise<SkillCategory[]> {
+    const skillGroups = await listSkillGroups();
+    return skillGroups.map(mapSkillCategory);
   },
 
-  findSkillCategoryById(id: number): SkillCategory | null {
-    const category = db.skills.find((skill: DbSkill) => skill.id === id);
-    if (!category) {
+  async findSkillCategoryById(id: number): Promise<SkillCategory | null> {
+    const group = await prisma.skillGroup.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        skills: {
+          select: {
+            id: true,
+            name: true,
+          },
+          orderBy: {
+            id: 'asc',
+          },
+        },
+      },
+    });
+    if (!group) {
       return null;
     }
-    return {
-      id: category.id,
-      name: category.name,
-      subskills:
-        category.subskills?.map((subskill: DbSubskill) => ({
-          id: subskill.id,
-          name: subskill.name,
-        })) ?? [],
-    };
+    return mapSkillCategory(group);
   },
 
-  getCities(): CityOption[] {
-    return buildCityOptions();
+  async getCities(): Promise<CityOption[]> {
+    const cities = await listCities();
+    return cities.map(mapCity);
   },
 
-  findCityById(id: number): CityOption | null {
-    const city = db.cities.find((item: DbCity) => item.id === id);
-    return city ? { id: city.id, name: city.name } : null;
+  async findCityById(id: number): Promise<CityOption | null> {
+    const city = await prisma.city.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+    return city ? mapCity(city) : null;
   },
 };

@@ -1,12 +1,22 @@
-import type { ApiSkillCategory } from '@/api/types';
-import { db } from '@/api/mockData';
+type SkillItem = {
+  id: number;
+  name: string;
+};
+
+type SkillGroupLike = {
+  skills?: SkillItem[];
+  subskills?: SkillItem[];
+};
+
+const resolveSkills = (group: SkillGroupLike): SkillItem[] =>
+  group.skills ?? group.subskills ?? [];
 
 export const getSubskillNameMap = (
-  allCategories: ApiSkillCategory[] = db.skills
+  allCategories: SkillGroupLike[] = []
 ): Map<number, string> => {
   const subskillMap = new Map<number, string>();
   for (const cat of allCategories) {
-    for (const sub of cat.subskills) {
+    for (const sub of resolveSkills(cat)) {
       subskillMap.set(sub.id, sub.name);
     }
   }

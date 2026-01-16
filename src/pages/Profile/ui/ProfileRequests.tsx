@@ -1,7 +1,6 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
   useState,
   type ReactElement,
 } from 'react';
@@ -12,6 +11,7 @@ import { Button } from '@/shared/ui/button/Button';
 import { useAuth } from '@/app/providers/auth';
 import type { Request, RequestStatus } from '@/entities/Request/types';
 import { getSubskillNameMap } from '@/entities/Skill/mappers';
+import { loadFiltersBaseData } from '@/features/Filter/model/filterBaseDataStore';
 import { requestsApi } from '@/shared/api/requests';
 import { acceptRequest, rejectRequest } from '@/features/requests/model/actions';
 
@@ -77,7 +77,18 @@ export function ProfileRequests(): ReactElement {
   const [outgoing, setOutgoing] = useState<Request[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const skillNames = useMemo(() => getSubskillNameMap(), []);
+  const [skillNames, setSkillNames] = useState<Map<number, string>>(new Map());
+
+  useEffect(() => {
+    let isMounted = true;
+    loadFiltersBaseData().then((data) => {
+      if (!isMounted) return;
+      setSkillNames(getSubskillNameMap(data.skillGroups));
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const loadRequests = useCallback(
     async (token?: string) => {

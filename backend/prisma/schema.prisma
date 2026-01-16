@@ -111,3 +111,23 @@ model ExchangeMessage {
   @@index([senderId])
   @@index([createdAt])
 }
+
+model City {
+  id   Int    @id @default(autoincrement())
+  name String
+}
+
+model SkillGroup {
+  id     Int     @id @default(autoincrement())
+  name   String
+  skills Skill[]
+}
+
+model Skill {
+  id      Int        @id @default(autoincrement())
+  name    String
+  groupId Int
+  group   SkillGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+}

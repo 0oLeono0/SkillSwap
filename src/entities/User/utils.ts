@@ -1,5 +1,4 @@
 import type { User } from './types';
-import { db } from '@/api/mockData';
 
 export const getUserName = (user: User): string => user.name;
 
@@ -22,10 +21,17 @@ export const getUserAge = (user: User): number => {
   return age;
 };
 
-export const getUserCity = (user: User): string => {
+const fallbackCityName = 'گ"گ?‘?گ?گ? گ?گç ‘?گَگّگْگّگ?';
+
+export const getUserCity = (
+  user: User,
+  cityNameById?: Map<number, string>,
+): string => {
   if (typeof user.cityId !== 'number') {
-    return 'Город не указан';
+    return fallbackCityName;
   }
-  const city = db.cities.find((c) => c.id === user.cityId);
-  return city ? city.name : 'Город не указан';
+  if (!cityNameById) {
+    return fallbackCityName;
+  }
+  return cityNameById.get(user.cityId) ?? fallbackCityName;
 };

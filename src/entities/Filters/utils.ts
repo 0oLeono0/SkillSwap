@@ -1,24 +1,21 @@
-import { db } from '@/api/mockData';
 import type { Skill } from '../Skill/types';
 import type { User, UserCard, UserSkill } from '../User/types';
 import { getUserAge, getUserCity } from '../User/utils';
 import type { FiltersState } from './types';
 
-const getSkillNameById = (id: number): string => {
-  const category = db.skills.find((cat) =>
-    cat.subskills.some((sub) => sub.id === id),
-  );
-  if (!category) {
-    return '';
-  }
-  return category.subskills.find((sub) => sub.id === id)?.name ?? '';
-};
+type SkillNameLookup = Map<number, string>;
 
-const mapUserSkillsToNames = (skills: UserSkill[]): string[] =>
+const getSkillNameById = (skillNameById: SkillNameLookup, id: number): string =>
+  skillNameById.get(id) ?? '';
+
+const mapUserSkillsToNames = (
+  skills: UserSkill[],
+  skillNameById: SkillNameLookup,
+): string[] =>
   skills
     .map((skill) => {
       if (typeof skill.subcategoryId === 'number') {
-        const name = getSkillNameById(skill.subcategoryId);
+        const name = getSkillNameById(skillNameById, skill.subcategoryId);
         return name || skill.title;
       }
       return skill.title;
@@ -26,12 +23,20 @@ const mapUserSkillsToNames = (skills: UserSkill[]): string[] =>
     .map((name) => name.trim())
     .filter((name) => name.length > 0);
 
+interface ApplyFiltersOptions {
+  skillNameById?: SkillNameLookup;
+  cityNameById?: Map<number, string>;
+}
+
 export const applyFilters = (
   skills: Skill[],
   users: User[],
-  filters: FiltersState
+  filters: FiltersState,
+  options: ApplyFiltersOptions = {},
 ): UserCard[] => {
   const userMap = new Map(users.map((u) => [u.id, u]));
+  const skillNameById = options.skillNameById ?? new Map();
+  const cityNameById = options.cityNameById;
 
   const filteredUsers = users.filter((user) => {
     const userSkills = skills.filter((skill) => {
@@ -67,10 +72,10 @@ export const applyFilters = (
     id: user.id,
     name: user.name,
     age: getUserAge(user),
-    city: getUserCity(user),
+    city: getUserCity(user, cityNameById),
     avatarUrl: user.avatarUrl ?? '',
-    bio: user.bio,
-    teachSkills: mapUserSkillsToNames(user.teachableSkills),
-    learnSkills: mapUserSkillsToNames(user.learningSkills),
+    bio: user.bio ?? undefined,
+    teachSkills: mapUserSkillsToNames(user.teachableSkills, skillNameById),
+    learnSkills: mapUserSkillsToNames(user.learningSkills, skillNameById),
   }));
 };

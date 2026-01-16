@@ -1,7 +1,7 @@
-﻿import {
+﻿/* eslint-disable react-refresh/only-export-components */
+import {
   useCallback,
   useEffect,
-  useMemo,
   useState,
   type ChangeEvent,
   type ReactElement,
@@ -19,6 +19,7 @@ import type {
   ExchangeWithMessages,
 } from '@/entities/Exchange/types';
 import { getSubskillNameMap } from '@/entities/Skill/mappers';
+import { loadFiltersBaseData } from '@/features/Filter/model/filterBaseDataStore';
 
 interface SkillMeta {
   title: string;
@@ -89,7 +90,18 @@ export function ProfileExchanges(): ReactElement {
   const [messageDraft, setMessageDraft] = useState('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
-  const skillNames = useMemo(() => getSubskillNameMap(), []);
+  const [skillNames, setSkillNames] = useState<Map<number, string>>(new Map());
+
+  useEffect(() => {
+    let isMounted = true;
+    loadFiltersBaseData().then((data) => {
+      if (!isMounted) return;
+      setSkillNames(getSubskillNameMap(data.skillGroups));
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const loadExchanges = useCallback(
     async (token?: string) => {

@@ -3,12 +3,12 @@ import { catalogService } from '../services/catalogService.js';
 import { createNotFound } from '../utils/httpErrors.js';
 
 export const getFiltersBaseData = asyncHandler(async (_req, res) => {
-  const data = catalogService.getFiltersBaseData();
+  const data = await catalogService.getFiltersBaseData();
   return res.status(200).json(data);
 });
 
 export const getSkillCategories = asyncHandler(async (_req, res) => {
-  const data = catalogService.getSkillCategories();
+  const data = await catalogService.getSkillCategories();
   return res.status(200).json(data);
 });
 
@@ -18,7 +18,7 @@ export const getSkillCategoryById = asyncHandler(async (req, res) => {
     throw createNotFound('Skill category not found');
   }
 
-  const category = catalogService.findSkillCategoryById(id);
+  const category = await catalogService.findSkillCategoryById(id);
   if (!category) {
     throw createNotFound('Skill category not found');
   }
@@ -27,7 +27,7 @@ export const getSkillCategoryById = asyncHandler(async (req, res) => {
 });
 
 export const getCities = asyncHandler(async (_req, res) => {
-  const data = catalogService.getCities();
+  const data = await catalogService.getCities();
   return res.status(200).json(data);
 });
 
@@ -37,7 +37,7 @@ export const getCityById = asyncHandler(async (req, res) => {
     throw createNotFound('City not found');
   }
 
-  const city = catalogService.findCityById(id);
+  const city = await catalogService.findCityById(id);
   if (!city) {
     throw createNotFound('City not found');
   }

@@ -1,4 +1,3 @@
-import { db } from '@/api/mockData';
 import { mapApiToUser } from '@/entities/User/mappers';
 import type { User, UserSkill } from '@/entities/User/types';
 import type { Skill } from '@/entities/Skill/types';
@@ -43,26 +42,43 @@ const categoryNameToConstant = new Map<string, SkillCategory>(
   Object.values(SkillCategories).map((value) => [value, value]),
 );
 
-const buildCategoryLookup = (): Map<number, SkillCategory> => {
+const buildCategoryLookup = (skillGroups: SkillGroup[]): Map<number, SkillCategory> => {
   const categoryMap = new Map<number, SkillCategory>();
 
-  db.skills.forEach((category) => {
+  skillGroups.forEach((category) => {
     const categoryValue =
       categoryNameToConstant.get(category.name) ?? SkillCategories.EDUCATION;
 
-    category.subskills.forEach((subskill) => {
-      categoryMap.set(subskill.id, categoryValue);
+    category.skills.forEach((skill) => {
+      categoryMap.set(skill.id, categoryValue);
     });
   });
 
   return categoryMap;
 };
 
-const subskillNameById = getSubskillNameMap(db.skills);
-const categoryBySubskillId = buildCategoryLookup();
-const groupNameById = new Map(db.skills.map((group) => [group.id, group.name]));
+type CatalogReferenceMaps = {
+  subskillNameById: Map<number, string>;
+  categoryBySubskillId: Map<number, SkillCategory>;
+  groupNameById: Map<number, string>;
+  cityNameById: Map<number, string>;
+};
 
-const resolveSkillTitle = (skill: UserSkill, subskillId: number): string => {
+const buildReferenceMaps = (
+  skillGroups: SkillGroup[],
+  cities: CityOption[],
+): CatalogReferenceMaps => ({
+  subskillNameById: getSubskillNameMap(skillGroups),
+  categoryBySubskillId: buildCategoryLookup(skillGroups),
+  groupNameById: new Map(skillGroups.map((group) => [group.id, group.name])),
+  cityNameById: new Map(cities.map((city) => [city.id, city.name])),
+});
+
+const resolveSkillTitle = (
+  skill: UserSkill,
+  subskillId: number,
+  subskillNameById: Map<number, string>,
+): string => {
   const trimmed = skill.title.trim();
   if (trimmed.length > 0) {
     return trimmed;
@@ -73,6 +89,8 @@ const resolveSkillTitle = (skill: UserSkill, subskillId: number): string => {
 const resolveSkillCategory = (
   skill: UserSkill,
   subskillId: number,
+  categoryBySubskillId: Map<number, SkillCategory>,
+  groupNameById: Map<number, string>,
 ): SkillCategory => {
   if (typeof skill.categoryId === 'number') {
     const groupName = groupNameById.get(skill.categoryId);
@@ -116,11 +134,16 @@ const resolveSkillGallery = (
   return [];
 };
 
-export const buildCatalogSkills = (users: User[]): CatalogSkill[] =>
+export const buildCatalogSkills = (
+  users: User[],
+  referenceMaps: CatalogReferenceMaps,
+): CatalogSkill[] =>
   users.flatMap((user) => {
-    const authorCity = getUserCity(user);
+    const { cityNameById } = referenceMaps;
+    const authorCity = getUserCity(user, cityNameById);
     const authorAge = getUserAge(user);
     const authorAbout = user.bio ?? undefined;
+    const { subskillNameById, categoryBySubskillId, groupNameById } = referenceMaps;
 
     const convertSkill = (
       skill: UserSkill,
@@ -130,8 +153,13 @@ export const buildCatalogSkills = (users: User[]): CatalogSkill[] =>
         return null;
       }
 
-      const title = resolveSkillTitle(skill, skill.subcategoryId);
-      const category = resolveSkillCategory(skill, skill.subcategoryId);
+      const title = resolveSkillTitle(skill, skill.subcategoryId, subskillNameById);
+      const category = resolveSkillCategory(
+        skill,
+        skill.subcategoryId,
+        categoryBySubskillId,
+        groupNameById,
+      );
       const description = skill.description.trim() || authorAbout || '';
       const imageUrl = resolveSkillImage(skill, user.avatarUrl);
       const imageUrls = resolveSkillGallery(skill, user.avatarUrl);
@@ -172,10 +200,14 @@ export const loadCatalogBaseData = async (): Promise<CatalogBaseData> => {
   const response = await usersApi.fetchAll();
   const users = response.users.map((user: ApiCatalogUser) => mapApiToUser(user));
   const filtersBaseData = await loadFiltersBaseData();
+  const referenceMaps = buildReferenceMaps(
+    filtersBaseData.skillGroups,
+    filtersBaseData.cities,
+  );
 
   return {
     users,
-    skills: buildCatalogSkills(users),
+    skills: buildCatalogSkills(users, referenceMaps),
     cityOptions: filtersBaseData.cities,
     skillGroups: filtersBaseData.skillGroups,
   };
