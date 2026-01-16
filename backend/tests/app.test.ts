@@ -6,56 +6,64 @@ const mockUserService: {
   listPublicUsers: jest.MockedFunction<() => Promise<unknown>>;
 } = {
   listUsers: jest.fn(),
-  listPublicUsers: jest.fn(),
+  listPublicUsers: jest.fn()
 };
 const mockSanitizeUser: jest.Mock = jest.fn();
 const mockCatalogService: {
-  getFiltersBaseData: jest.MockedFunction<() => unknown>;
-  getSkillCategories: jest.MockedFunction<() => unknown>;
-  findSkillCategoryById: jest.MockedFunction<(id: number) => unknown>;
-  getCities: jest.MockedFunction<() => unknown>;
-  findCityById: jest.MockedFunction<(id: number) => unknown>;
+  getFiltersBaseData: jest.MockedFunction<() => Promise<unknown>>;
+  getSkillCategories: jest.MockedFunction<() => Promise<unknown>>;
+  findSkillCategoryById: jest.MockedFunction<(id: number) => Promise<unknown>>;
+  getCities: jest.MockedFunction<() => Promise<unknown>>;
+  findCityById: jest.MockedFunction<(id: number) => Promise<unknown>>;
+  searchCatalogSkills: jest.MockedFunction<
+    (options: unknown) => Promise<unknown>
+  >;
 } = {
   getFiltersBaseData: jest.fn(),
   getSkillCategories: jest.fn(),
   findSkillCategoryById: jest.fn(),
   getCities: jest.fn(),
   findCityById: jest.fn(),
+  searchCatalogSkills: jest.fn()
 };
 
 const mockTokenService = {
   verifyAccessToken: jest.fn(),
   createAccessToken: jest.fn(),
   verifyRefreshToken: jest.fn(),
-  createRefreshToken: jest.fn(),
+  createRefreshToken: jest.fn()
 };
 
 const mockRequestService: {
   listForUser: jest.MockedFunction<(userId: string) => Promise<unknown>>;
-  createRequest: jest.MockedFunction<(userId: string, targetUserId: string, skillId: string) => Promise<unknown>>;
-  updateStatus: jest.MockedFunction<(requestId: string, userId: string, status: string) => Promise<unknown>>;
+  createRequest: jest.MockedFunction<
+    (userId: string, targetUserId: string, skillId: string) => Promise<unknown>
+  >;
+  updateStatus: jest.MockedFunction<
+    (requestId: string, userId: string, status: string) => Promise<unknown>
+  >;
 } = {
   listForUser: jest.fn(),
   createRequest: jest.fn(),
-  updateStatus: jest.fn(),
+  updateStatus: jest.fn()
 };
 
 jest.unstable_mockModule('../src/services/userService.js', () => ({
   userService: mockUserService,
-  sanitizeUser: mockSanitizeUser,
+  sanitizeUser: mockSanitizeUser
 }));
 
 jest.unstable_mockModule('../src/services/tokenService.js', () => ({
   tokenService: mockTokenService,
-  refreshTtlMs: 0,
+  refreshTtlMs: 0
 }));
 
 jest.unstable_mockModule('../src/services/catalogService.js', () => ({
-  catalogService: mockCatalogService,
+  catalogService: mockCatalogService
 }));
 
 jest.unstable_mockModule('../src/services/requestService.js', () => ({
-  requestService: mockRequestService,
+  requestService: mockRequestService
 }));
 
 const { app } = await import('../src/app.js');
@@ -85,8 +93,8 @@ describe('Users routes', () => {
           cityId: null,
           teachableSkills: [],
           learningSkills: [],
-          birthDate: null,
-        },
+          birthDate: null
+        }
       ]);
 
       const response = await request(app).get('/api/users/public');
@@ -101,9 +109,9 @@ describe('Users routes', () => {
             cityId: null,
             teachableSkills: [],
             learningSkills: [],
-            birthDate: null,
-          },
-        ],
+            birthDate: null
+          }
+        ]
       });
     });
   });
@@ -119,7 +127,7 @@ describe('Users routes', () => {
         sub: 'admin',
         email: 'admin@example.com',
         name: 'Admin',
-        role: 'owner',
+        role: 'owner'
       });
       mockUserService.listUsers.mockResolvedValue([
         {
@@ -135,15 +143,17 @@ describe('Users routes', () => {
           teachableSkills: [],
           learningSkills: [],
           createdAt: new Date(0),
-          updatedAt: new Date(0),
-        },
+          updatedAt: new Date(0)
+        }
       ]);
 
       const response = await request(app)
         .get('/api/users')
         .set('Authorization', 'Bearer valid-token');
 
-      expect(mockTokenService.verifyAccessToken).toHaveBeenCalledWith('valid-token');
+      expect(mockTokenService.verifyAccessToken).toHaveBeenCalledWith(
+        'valid-token'
+      );
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
         users: [
@@ -160,9 +170,9 @@ describe('Users routes', () => {
             teachableSkills: [],
             learningSkills: [],
             createdAt: expect.any(String),
-            updatedAt: expect.any(String),
-          },
-        ],
+            updatedAt: expect.any(String)
+          }
+        ]
       });
     });
   });
@@ -174,21 +184,45 @@ describe('Catalog routes', () => {
   });
 
   it('returns filter base data from catalog service', async () => {
-    mockCatalogService.getFiltersBaseData.mockReturnValue({
+    mockCatalogService.getFiltersBaseData.mockResolvedValue({
       cities: [{ id: 1, name: 'City' }],
-      skillGroups: [{ id: 10, name: 'Group', skills: [{ id: 11, name: 'Skill' }] }],
+      skillGroups: [
+        { id: 10, name: 'Group', skills: [{ id: 11, name: 'Skill' }] }
+      ]
     });
 
     const response = await request(app).get('/api/catalog/filters');
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
       cities: [{ id: 1, name: 'City' }],
-      skillGroups: [{ id: 10, name: 'Group', skills: [{ id: 11, name: 'Skill' }] }],
+      skillGroups: [
+        { id: 10, name: 'Group', skills: [{ id: 11, name: 'Skill' }] }
+      ]
+    });
+  });
+
+  it('returns catalog search results', async () => {
+    mockCatalogService.searchCatalogSkills.mockResolvedValue({
+      skills: [],
+      page: 1,
+      pageSize: 12,
+      totalAuthors: 0
+    });
+
+    const response = await request(app).get('/api/catalog/search?mode=all');
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      skills: [],
+      page: 1,
+      pageSize: 12,
+      totalAuthors: 0
     });
   });
 
   it('returns skill categories list', async () => {
-    mockCatalogService.getSkillCategories.mockReturnValue([{ id: 1, name: 'Cat', subskills: [] }]);
+    mockCatalogService.getSkillCategories.mockResolvedValue([
+      { id: 1, name: 'Cat', subskills: [] }
+    ]);
 
     const response = await request(app).get('/api/skills');
     expect(response.status).toBe(200);
@@ -196,7 +230,11 @@ describe('Catalog routes', () => {
   });
 
   it('returns skill category by id', async () => {
-    mockCatalogService.findSkillCategoryById.mockReturnValue({ id: 2, name: 'Cat2', subskills: [] });
+    mockCatalogService.findSkillCategoryById.mockResolvedValue({
+      id: 2,
+      name: 'Cat2',
+      subskills: []
+    });
 
     const response = await request(app).get('/api/skills/2');
     expect(mockCatalogService.findSkillCategoryById).toHaveBeenCalledWith(2);
@@ -205,7 +243,7 @@ describe('Catalog routes', () => {
   });
 
   it('returns 404 when skill category not found', async () => {
-    mockCatalogService.findSkillCategoryById.mockReturnValue(null);
+    mockCatalogService.findSkillCategoryById.mockResolvedValue(null);
 
     const response = await request(app).get('/api/skills/999');
     expect(response.status).toBe(404);
@@ -213,7 +251,7 @@ describe('Catalog routes', () => {
   });
 
   it('returns cities list', async () => {
-    mockCatalogService.getCities.mockReturnValue([{ id: 1, name: 'City' }]);
+    mockCatalogService.getCities.mockResolvedValue([{ id: 1, name: 'City' }]);
 
     const response = await request(app).get('/api/cities');
     expect(response.status).toBe(200);
@@ -221,7 +259,7 @@ describe('Catalog routes', () => {
   });
 
   it('returns city by id', async () => {
-    mockCatalogService.findCityById.mockReturnValue({ id: 3, name: 'City3' });
+    mockCatalogService.findCityById.mockResolvedValue({ id: 3, name: 'City3' });
 
     const response = await request(app).get('/api/cities/3');
     expect(mockCatalogService.findCityById).toHaveBeenCalledWith(3);
@@ -230,7 +268,7 @@ describe('Catalog routes', () => {
   });
 
   it('returns 404 when city not found', async () => {
-    mockCatalogService.findCityById.mockReturnValue(null);
+    mockCatalogService.findCityById.mockResolvedValue(null);
 
     const response = await request(app).get('/api/cities/404');
     expect(response.status).toBe(404);
@@ -245,7 +283,7 @@ describe('Requests routes', () => {
       sub: 'user-1',
       email: 'u@example.com',
       name: 'User',
-      role: 'user',
+      role: 'user'
     });
   });
 
@@ -268,15 +306,24 @@ describe('Requests routes', () => {
       .set('Authorization', 'Bearer token')
       .send({ toUserId: 'target', skillId: 'skill-1' });
 
-    expect(mockRequestService.createRequest).toHaveBeenCalledWith('user-1', 'target', 'skill-1');
+    expect(mockRequestService.createRequest).toHaveBeenCalledWith(
+      'user-1',
+      'target',
+      'skill-1'
+    );
     expect(response.status).toBe(201);
     expect(response.body).toEqual({ request: { id: 'req-1' } });
   });
 
   it('returns list for authorized user', async () => {
-    mockRequestService.listForUser.mockResolvedValue({ incoming: [], outgoing: [] });
+    mockRequestService.listForUser.mockResolvedValue({
+      incoming: [],
+      outgoing: []
+    });
 
-    const response = await request(app).get('/api/requests').set('Authorization', 'Bearer token');
+    const response = await request(app)
+      .get('/api/requests')
+      .set('Authorization', 'Bearer token');
 
     expect(mockRequestService.listForUser).toHaveBeenCalledWith('user-1');
     expect(response.status).toBe(200);
@@ -294,15 +341,24 @@ describe('Requests routes', () => {
   });
 
   it('updates status for participant', async () => {
-    mockRequestService.updateStatus.mockResolvedValue({ id: 'req-1', status: 'accepted' });
+    mockRequestService.updateStatus.mockResolvedValue({
+      id: 'req-1',
+      status: 'accepted'
+    });
 
     const response = await request(app)
       .patch('/api/requests/req-1')
       .set('Authorization', 'Bearer token')
       .send({ status: 'accepted' });
 
-    expect(mockRequestService.updateStatus).toHaveBeenCalledWith('req-1', 'user-1', 'accepted');
+    expect(mockRequestService.updateStatus).toHaveBeenCalledWith(
+      'req-1',
+      'user-1',
+      'accepted'
+    );
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ request: { id: 'req-1', status: 'accepted' } });
+    expect(response.body).toEqual({
+      request: { id: 'req-1', status: 'accepted' }
+    });
   });
 });

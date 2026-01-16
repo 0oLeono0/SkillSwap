@@ -1,9 +1,12 @@
 import { describe, expect, it } from '@jest/globals';
-import type { User as PrismaUser } from '@prisma/client';
+import type {
+  User as PrismaUser,
+  UserSkill as PrismaUserSkill
+} from '@prisma/client';
 import { sanitizeUser } from '../src/services/userService.js';
 
 describe('userService.sanitizeUser', () => {
-  const baseUser: PrismaUser = {
+  const baseUser: PrismaUser & { userSkills: PrismaUserSkill[] } = {
     id: 'user-1',
     email: 'user@example.com',
     passwordHash: 'hashed',
@@ -14,10 +17,9 @@ describe('userService.sanitizeUser', () => {
     birthDate: null,
     gender: null,
     bio: null,
-    teachableSkills: '[]',
-    learningSkills: '[]',
     createdAt: new Date(),
     updatedAt: new Date(),
+    userSkills: []
   };
 
   it('returns null when user is null', () => {
@@ -30,7 +32,10 @@ describe('userService.sanitizeUser', () => {
   });
 
   it('keeps non-empty avatar', () => {
-    const result = sanitizeUser({ ...baseUser, avatarUrl: 'https://example.com/a.png' });
+    const result = sanitizeUser({
+      ...baseUser,
+      avatarUrl: 'https://example.com/a.png'
+    });
     expect(result?.avatarUrl).toBe('https://example.com/a.png');
   });
 });

@@ -7,12 +7,17 @@ import { SkillCategories, type SkillCategory } from '@/shared/lib/constants';
 import type {
   CityOption,
   Filters,
-  SkillCategories as SkillGroup,
+  SkillCategories as SkillGroup
 } from '@/features/Filter/types';
 import { mapCityNamesToCityIds } from '@/features/Filter/utils';
+import { loadFiltersBaseData } from '@/features/Filter/model/filterBaseDataStore';
 import { usersApi } from '@/shared/api/users';
 import type { ApiCatalogUser } from '@/shared/api/users';
-import { loadFiltersBaseData } from '@/features/Filter/model/filterBaseDataStore';
+import type {
+  CatalogSearchParams as ApiCatalogSearchParams,
+  CatalogSearchResponse as ApiCatalogSearchResponse
+} from '@/shared/api/catalog';
+import { catalogApi } from '@/shared/api/catalog';
 
 export interface CatalogSkill extends Skill {
   originalSkillId: number;
@@ -21,7 +26,7 @@ export interface CatalogSkill extends Skill {
   authorCity: string;
   authorAge: number;
   authorAbout?: string;
-  category: SkillCategory;
+  categoryId?: number | null;
 }
 
 export interface CatalogBaseData {
@@ -35,14 +40,23 @@ export const DEFAULT_FILTERS: Filters = {
   mode: 'all',
   gender: undefined,
   cities: [],
-  skillIds: [],
+  skillIds: []
 };
 
+export type CatalogSearchParams = ApiCatalogSearchParams;
+export type CatalogSearchResponse = ApiCatalogSearchResponse;
+
+export const loadCatalogSkills = async (
+  params: CatalogSearchParams
+): Promise<CatalogSearchResponse> => catalogApi.search(params);
+
 const categoryNameToConstant = new Map<string, SkillCategory>(
-  Object.values(SkillCategories).map((value) => [value, value]),
+  Object.values(SkillCategories).map((value) => [value, value])
 );
 
-const buildCategoryLookup = (skillGroups: SkillGroup[]): Map<number, SkillCategory> => {
+const buildCategoryLookup = (
+  skillGroups: SkillGroup[]
+): Map<number, SkillCategory> => {
   const categoryMap = new Map<number, SkillCategory>();
 
   skillGroups.forEach((category) => {
@@ -66,18 +80,18 @@ type CatalogReferenceMaps = {
 
 const buildReferenceMaps = (
   skillGroups: SkillGroup[],
-  cities: CityOption[],
+  cities: CityOption[]
 ): CatalogReferenceMaps => ({
   subskillNameById: getSubskillNameMap(skillGroups),
   categoryBySubskillId: buildCategoryLookup(skillGroups),
   groupNameById: new Map(skillGroups.map((group) => [group.id, group.name])),
-  cityNameById: new Map(cities.map((city) => [city.id, city.name])),
+  cityNameById: new Map(cities.map((city) => [city.id, city.name]))
 });
 
 const resolveSkillTitle = (
   skill: UserSkill,
   subskillId: number,
-  subskillNameById: Map<number, string>,
+  subskillNameById: Map<number, string>
 ): string => {
   const trimmed = skill.title.trim();
   if (trimmed.length > 0) {
@@ -90,7 +104,7 @@ const resolveSkillCategory = (
   skill: UserSkill,
   subskillId: number,
   categoryBySubskillId: Map<number, SkillCategory>,
-  groupNameById: Map<number, string>,
+  groupNameById: Map<number, string>
 ): SkillCategory => {
   if (typeof skill.categoryId === 'number') {
     const groupName = groupNameById.get(skill.categoryId);
@@ -106,7 +120,7 @@ const resolveSkillCategory = (
 
 const resolveSkillImage = (
   skill: UserSkill,
-  fallback?: string | null,
+  fallback?: string | null
 ): string | undefined => {
   const primaryImage = skill.imageUrls.find((url) => url.trim().length > 0);
   if (primaryImage) {
@@ -117,7 +131,7 @@ const resolveSkillImage = (
 
 const resolveSkillGallery = (
   skill: UserSkill,
-  fallback?: string | null,
+  fallback?: string | null
 ): string[] => {
   const images = skill.imageUrls
     .map((url) => url.trim())
@@ -136,29 +150,34 @@ const resolveSkillGallery = (
 
 export const buildCatalogSkills = (
   users: User[],
-  referenceMaps: CatalogReferenceMaps,
+  referenceMaps: CatalogReferenceMaps
 ): CatalogSkill[] =>
   users.flatMap((user) => {
     const { cityNameById } = referenceMaps;
     const authorCity = getUserCity(user, cityNameById);
     const authorAge = getUserAge(user);
     const authorAbout = user.bio ?? undefined;
-    const { subskillNameById, categoryBySubskillId, groupNameById } = referenceMaps;
+    const { subskillNameById, categoryBySubskillId, groupNameById } =
+      referenceMaps;
 
     const convertSkill = (
       skill: UserSkill,
-      type: CatalogSkill['type'],
+      type: CatalogSkill['type']
     ): CatalogSkill | null => {
       if (typeof skill.subcategoryId !== 'number') {
         return null;
       }
 
-      const title = resolveSkillTitle(skill, skill.subcategoryId, subskillNameById);
+      const title = resolveSkillTitle(
+        skill,
+        skill.subcategoryId,
+        subskillNameById
+      );
       const category = resolveSkillCategory(
         skill,
         skill.subcategoryId,
         categoryBySubskillId,
-        groupNameById,
+        groupNameById
       );
       const description = skill.description.trim() || authorAbout || '';
       const imageUrl = resolveSkillImage(skill, user.avatarUrl);
@@ -181,7 +200,7 @@ export const buildCatalogSkills = (
         authorName: user.name,
         authorCity,
         authorAge,
-        authorAbout,
+        authorAbout
       };
     };
 
@@ -198,18 +217,20 @@ export const buildCatalogSkills = (
 
 export const loadCatalogBaseData = async (): Promise<CatalogBaseData> => {
   const response = await usersApi.fetchAll();
-  const users = response.users.map((user: ApiCatalogUser) => mapApiToUser(user));
+  const users = response.users.map((user: ApiCatalogUser) =>
+    mapApiToUser(user)
+  );
   const filtersBaseData = await loadFiltersBaseData();
   const referenceMaps = buildReferenceMaps(
     filtersBaseData.skillGroups,
-    filtersBaseData.cities,
+    filtersBaseData.cities
   );
 
   return {
     users,
     skills: buildCatalogSkills(users, referenceMaps),
     cityOptions: filtersBaseData.cities,
-    skillGroups: filtersBaseData.skillGroups,
+    skillGroups: filtersBaseData.skillGroups
   };
 };
 
@@ -229,7 +250,7 @@ export const filterCatalogSkills = ({
   filters,
   cityOptions,
   usersById,
-  searchQuery = '',
+  searchQuery = ''
 }: FilterSkillsArgs): CatalogSkill[] => {
   if (!skills.length) return [];
 
@@ -256,10 +277,7 @@ export const filterCatalogSkills = ({
       return false;
     }
 
-    if (
-      selectedSkillIds.size &&
-      !selectedSkillIds.has(skill.originalSkillId)
-    ) {
+    if (selectedSkillIds.size && !selectedSkillIds.has(skill.originalSkillId)) {
       return false;
     }
 
@@ -270,7 +288,7 @@ export const filterCatalogSkills = ({
         skill.authorName,
         skill.authorCity,
         author.bio ?? '',
-        skill.tags?.join(' '),
+        skill.tags?.join(' ')
       ]
         .filter(Boolean)
         .join(' ')

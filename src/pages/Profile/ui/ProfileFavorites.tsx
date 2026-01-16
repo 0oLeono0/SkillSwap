@@ -11,7 +11,7 @@ import { Title } from '@/shared/ui/Title';
 import { Button } from '@/shared/ui/button/Button';
 import { SkillsList } from '@/widgets/SkillsList';
 import {
-  loadCatalogBaseData,
+  loadCatalogSkills,
   type CatalogSkill,
 } from '@/pages/Catalog/model/catalogData';
 import { useFavorites } from '@/app/providers/favorites';
@@ -25,18 +25,29 @@ export function ProfileFavorites(): ReactElement {
   const navigate = useNavigate();
 
   const fetchSkills = useCallback(async () => {
+    if (!favoriteAuthorIds.length) {
+      setSkills([]);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const data = await loadCatalogBaseData();
+      const data = await loadCatalogSkills({
+        authorIds: favoriteAuthorIds,
+        page: 1,
+        pageSize: favoriteAuthorIds.length,
+      });
       setSkills(data.skills);
       setError(null);
     } catch (err) {
       console.error('[ProfileFavorites] Failed to load data', err);
-      setError('Не удалось загрузить данные каталога. Попробуйте ещё раз позже.');
+      setError('Ошибка при загрузке данных. Пожалуйста, попробуйте позже.');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [favoriteAuthorIds]);
 
   useEffect(() => {
     void fetchSkills();

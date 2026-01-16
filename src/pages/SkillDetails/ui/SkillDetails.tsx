@@ -8,19 +8,19 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import styles from './skillDetails.module.scss';
 import {
-  loadCatalogBaseData,
+  loadCatalogSkills,
   type CatalogSkill
 } from '@/pages/Catalog/model/catalogData';
 import { useAuth } from '@/app/providers/auth';
 
 import { useFavorites } from '@/app/providers/favorites';
 import { createRequest } from '@/features/requests/model/actions';
-import type { User } from '@/entities/User/types';
 import { Button } from '@/shared/ui/button/Button';
 import { Tag } from '@/shared/ui/Tag/Tag';
 import { Title } from '@/shared/ui/Title';
 import { Modal } from '@/shared/ui/Modal/Modal';
 import { ROUTES } from '@/shared/constants';
+import type { SkillCategory } from '@/shared/lib/constants';
 import { SkillsList } from '@/widgets/SkillsList';
 import GalleryIcon from '@/shared/assets/icons/actions/like.svg?react';
 import ShareIcon from '@/shared/assets/icons/actions/share.svg?react';
@@ -34,11 +34,6 @@ import NotificationIcon from '@/shared/assets/icons/content/notification.svg?rea
 
 const RELATED_AUTHORS_LIMIT = 4;
 
-const collectAuthorSkills = (
-  source: CatalogSkill[],
-  authorIds: Set<string>,
-) => source.filter((skill) => authorIds.has(skill.authorId));
-
 const GALLERY_IMAGES = [stock1, stock2, stock3, stock4];
 
 const SkillDetails = (): ReactElement => {
@@ -50,7 +45,7 @@ const SkillDetails = (): ReactElement => {
   const { toggleFavorite, isFavorite } = useFavorites();
 
   const [skills, setSkills] = useState<CatalogSkill[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [relatedSkills, setRelatedSkills] = useState<CatalogSkill[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
@@ -69,10 +64,13 @@ const SkillDetails = (): ReactElement => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const data = await loadCatalogBaseData();
+        const data = await loadCatalogSkills({
+          authorIds: [authorId],
+          page: 1,
+          pageSize: 1
+        });
         if (!isMounted) return;
         setSkills(data.skills);
-        setUsers(data.users);
         setError(null);
       } catch (err) {
         if (!isMounted) return;
@@ -100,10 +98,17 @@ const SkillDetails = (): ReactElement => {
     setIsSuccessModalOpen(false);
   }, [selectedSkillId, authorId]);
 
-  const author = useMemo(
-    () => users.find((user) => user.id === authorId) ?? null,
-    [users, authorId]
-  );
+  const authorInfo = useMemo(() => {
+    const firstSkill = skills.find((skill) => skill.authorId === authorId);
+    if (!firstSkill) return null;
+    return {
+      name: firstSkill.authorName,
+      avatarUrl: firstSkill.authorAvatarUrl,
+      bio: firstSkill.authorAbout,
+      city: firstSkill.authorCity,
+      age: firstSkill.authorAge
+    };
+  }, [skills, authorId]);
 
   const authorSkills = useMemo(
     () => skills.filter((skill) => skill.authorId === authorId),
@@ -143,42 +148,46 @@ const SkillDetails = (): ReactElement => {
       return [selectedSkill.imageUrl];
     }
 
-    if (author?.avatarUrl) {
-      return [author.avatarUrl];
+    if (authorInfo?.avatarUrl) {
+      return [authorInfo.avatarUrl];
     }
 
     return GALLERY_IMAGES;
-  }, [author, selectedSkill]);
+  }, [authorInfo, selectedSkill]);
 
-  const relatedSkills = useMemo(() => {
-    if (!selectedSkill) return [];
+  useEffect(() => {
+    let isMounted = true;
 
-    const selectedAuthors = new Set<string>();
-    for (const skill of skills) {
-      if (
-        skill.category !== selectedSkill.category ||
-        skill.type !== 'teach' ||
-        skill.authorId === authorId
-      ) {
-        continue;
+    const fetchRelated = async () => {
+      if (!selectedSkill || typeof selectedSkill.categoryId !== 'number') {
+        setRelatedSkills([]);
+        return;
       }
 
-      if (
-        selectedAuthors.size >= RELATED_AUTHORS_LIMIT &&
-        !selectedAuthors.has(skill.authorId)
-      ) {
-        continue;
+      try {
+        const data = await loadCatalogSkills({
+          categoryIds: [selectedSkill.categoryId],
+          mode: 'wantToLearn',
+          excludeAuthorId: authorId,
+          page: 1,
+          pageSize: RELATED_AUTHORS_LIMIT
+        });
+
+        if (!isMounted) return;
+        setRelatedSkills(data.skills);
+      } catch (err) {
+        if (!isMounted) return;
+        console.error('[SkillDetails] Failed to load related skills', err);
+        setRelatedSkills([]);
       }
+    };
 
-      selectedAuthors.add(skill.authorId);
-    }
+    fetchRelated();
 
-    if (selectedAuthors.size === 0) {
-      return [];
-    }
-
-    return collectAuthorSkills(skills, selectedAuthors);
-  }, [skills, selectedSkill, authorId]);
+    return () => {
+      isMounted = false;
+    };
+  }, [authorId, selectedSkill]);
 
   const relatedSkillsWithFavorites = useMemo(
     () =>
@@ -189,13 +198,13 @@ const SkillDetails = (): ReactElement => {
         }
         return { ...skill, isFavorite: shouldBeFavorite };
       }),
-    [relatedSkills, isFavorite],
+    [relatedSkills, isFavorite]
   );
   const handleToggleFavorite = useCallback(
     (targetAuthorId: string) => {
       toggleFavorite(targetAuthorId);
     },
-    [toggleFavorite],
+    [toggleFavorite]
   );
 
   const handleAuthorFavoriteClick = useCallback(() => {
@@ -206,7 +215,7 @@ const SkillDetails = (): ReactElement => {
 
   const isCurrentAuthorFavorite = useMemo(
     () => (authorId ? isFavorite(authorId) : false),
-    [authorId, isFavorite],
+    [authorId, isFavorite]
   );
 
   const favoriteButtonLabel = isCurrentAuthorFavorite
@@ -236,7 +245,7 @@ const SkillDetails = (): ReactElement => {
     try {
       await createRequest(accessToken, {
         toUserId: selectedSkill.authorId,
-        skillId: selectedSkill.id,
+        skillId: selectedSkill.id
       });
       setIsProposalSent(true);
       setIsSuccessModalOpen(true);
@@ -267,7 +276,7 @@ const SkillDetails = (): ReactElement => {
     return <div className={styles.state}>Загрузка данных…</div>;
   }
 
-  if (error || !author || !selectedSkill) {
+  if (error || !authorInfo || !selectedSkill) {
     return (
       <div className={styles.stateError}>
         {error ?? 'Навык не найден или был удалён'}
@@ -278,12 +287,14 @@ const SkillDetails = (): ReactElement => {
   const placeholderDescription =
     'Привет! Я увлекаюсь этим навыком уже больше 10 лет — от первых занятий дома до выступлений на сцене. Научу вас основам, поделюсь любимыми техниками и помогу уверенно чувствовать себя даже без подготовки.';
 
-  const proposeButtonLabel = isProposalSent ? 'Обмен предложен' : 'Предложить обмен';
+  const proposeButtonLabel = isProposalSent
+    ? 'Обмен предложен'
+    : 'Предложить обмен';
   const proposeButtonInlineStyle = isProposalSent
     ? {
         backgroundColor: '#fff',
         color: '#000',
-        borderColor: 'var(--button-color-accent)',
+        borderColor: 'var(--button-color-accent)'
       }
     : undefined;
 
@@ -294,27 +305,31 @@ const SkillDetails = (): ReactElement => {
           <div className={styles.authorInfo}>
             <img
               className={styles.authorAvatar}
-              src={author.avatarUrl || selectedSkill.imageUrl || galleryImages[0]}
-              alt={author.name}
+              src={
+                authorInfo.avatarUrl ||
+                selectedSkill.imageUrl ||
+                galleryImages[0]
+              }
+              alt={authorInfo.name}
             />
             <div>
               <Title tag='h2' variant='lg'>
-                {author.name}
+                {authorInfo.name}
               </Title>
               <p className={styles.authorMeta}>
-                {selectedSkill.authorCity}, {selectedSkill.authorAge} лет
+                {authorInfo.city || 'Город не указан'}, {authorInfo.age} лет
               </p>
             </div>
           </div>
           <p className={styles.authorBio}>
-            {selectedSkill.authorAbout ?? author.bio}
+            {selectedSkill.authorAbout ?? authorInfo.bio ?? ''}
           </p>
 
           <div className={styles.authorSkills}>
             <span>Может научить:</span>
             <div className={styles.tags}>
               {teachSkills.map((skill) => (
-                <Tag key={skill.id} category={skill.category}>
+                <Tag key={skill.id} category={skill.category as SkillCategory}>
                   {skill.title}
                 </Tag>
               ))}
@@ -325,7 +340,7 @@ const SkillDetails = (): ReactElement => {
             <span>Хочет научиться:</span>
             <div className={styles.tags}>
               {learnSkills.map((skill) => (
-                <Tag key={skill.id} category={skill.category}>
+                <Tag key={skill.id} category={skill.category as SkillCategory}>
                   {skill.title}
                 </Tag>
               ))}
@@ -346,10 +361,10 @@ const SkillDetails = (): ReactElement => {
               >
                 <GalleryIcon />
               </button>
-              <button type='button' aria-label='??????????'>
+              <button type='button' aria-label='Поделиться'>
                 <ShareIcon />
               </button>
-              <button type='button' aria-label='?????????? ??????'>
+              <button type='button' aria-label='Ещё'>
                 <MoreIcon />
               </button>
             </div>
@@ -448,8 +463,3 @@ const SkillDetails = (): ReactElement => {
 };
 
 export default SkillDetails;
-
-
-
-
-

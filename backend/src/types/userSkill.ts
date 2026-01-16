@@ -42,6 +42,30 @@ const toStringArray = (value: unknown): string[] => {
     .filter((item): item is string => item.length > 0);
 };
 
+export const parseImageUrls = (value: unknown): string[] => {
+  if (!value) {
+    return [];
+  }
+
+  if (Array.isArray(value)) {
+    return toStringArray(value);
+  }
+
+  if (typeof value !== 'string') {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+    return toStringArray(parsed);
+  } catch {
+    return [];
+  }
+};
+
+export const serializeImageUrls = (value: string[] | undefined): string =>
+  JSON.stringify(toStringArray(value ?? []));
+
 export const normalizeUserSkill = (skill: UserSkillInput): UserSkill => {
   if (typeof skill === 'number') {
     return {
@@ -50,7 +74,7 @@ export const normalizeUserSkill = (skill: UserSkillInput): UserSkill => {
       categoryId: null,
       subcategoryId: Number.isFinite(skill) ? skill : null,
       description: '',
-      imageUrls: [],
+      imageUrls: []
     };
   }
 
@@ -65,13 +89,11 @@ export const normalizeUserSkill = (skill: UserSkillInput): UserSkill => {
     categoryId: toNumberOrNull(skill.categoryId),
     subcategoryId: toNumberOrNull(skill.subcategoryId),
     description: toTrimmedString(skill.description),
-    imageUrls: toStringArray(skill.imageUrls),
+    imageUrls: toStringArray(skill.imageUrls)
   };
 };
 
-export const normalizeUserSkillList = (
-  skills?: unknown,
-): UserSkill[] => {
+export const normalizeUserSkillList = (skills?: unknown): UserSkill[] => {
   if (!Array.isArray(skills)) {
     return [];
   }

@@ -4,11 +4,13 @@ import { hashPassword, verifyPassword } from '../utils/password.js';
 import { createConflict, createUnauthorized } from '../utils/httpErrors.js';
 import { tokenService } from './tokenService.js';
 import { userRepository } from '../repositories/userRepository.js';
+import { userSkillRepository } from '../repositories/userSkillRepository.js';
 import { sanitizeUser } from './userService.js';
 import {
   normalizeUserSkillList,
   type UserSkillInput,
   type UserSkill,
+  serializeImageUrls
 } from '../types/userSkill.js';
 import { isUserRole, type UserRole } from '../types/userRole.js';
 import { hashToken } from '../utils/tokenHash.js';
@@ -48,9 +50,26 @@ const normalizeSkills = (skills?: UserSkillInput[]): UserSkill[] => {
   return list.map((skill) => ({
     ...skill,
     title: skill.title.trim(),
-    description: skill.description.trim(),
+    description: skill.description.trim()
   }));
 };
+
+type SkillType = 'teach' | 'learn';
+
+const toSkillCreateInput = (
+  userId: string,
+  type: SkillType,
+  skill: UserSkill
+): Prisma.UserSkillCreateManyInput => ({
+  id: skill.id,
+  userId,
+  type,
+  title: skill.title.trim(),
+  description: skill.description.trim(),
+  categoryId: skill.categoryId ?? null,
+  subcategoryId: skill.subcategoryId ?? null,
+  imageUrls: serializeImageUrls(skill.imageUrls)
+});
 
 const parseBirthDate = (value?: string) => {
   if (!value) {
@@ -85,7 +104,7 @@ export const authService = {
     gender,
     bio,
     teachableSkills,
-    learningSkills,
+    learningSkills
   }: RegisterInput) {
     const existing = await userRepository.findByEmail(email);
     if (existing) {
@@ -99,16 +118,14 @@ export const authService = {
     const userData: Prisma.UserCreateInput = {
       email,
       passwordHash,
-      name,
-      teachableSkills: JSON.stringify(normalizedTeachableSkills),
-      learningSkills: JSON.stringify(normalizedLearningSkills),
+      name
     };
 
     if (typeof avatarUrl === 'string') {
       userData.avatarUrl = avatarUrl;
     }
     if (typeof cityId === 'number') {
-      userData.cityId = cityId;
+      userData.city = { connect: { id: cityId } };
     }
     if (parsedBirthDate) {
       userData.birthDate = parsedBirthDate;
@@ -122,16 +139,32 @@ export const authService = {
 
     const user = await userRepository.create(userData);
 
+    const skillRows = [
+      ...normalizedTeachableSkills.map((skill) =>
+        toSkillCreateInput(user.id, 'teach', skill)
+      ),
+      ...normalizedLearningSkills.map((skill) =>
+        toSkillCreateInput(user.id, 'learn', skill)
+      )
+    ];
+
+    await userSkillRepository.createMany(skillRows);
+
+    const userWithSkills = await userRepository.findById(user.id);
+    if (!userWithSkills) {
+      throw createUnauthorized();
+    }
+
     const tokens = await authService.issueTokens({
       id: user.id,
       email: user.email,
       name: user.name,
-      role: resolveUserRole(user.role),
+      role: resolveUserRole(user.role)
     });
 
     return {
-      user: sanitizeUser(user),
-      ...tokens,
+      user: sanitizeUser(userWithSkills),
+      ...tokens
     };
   },
 
@@ -150,19 +183,37 @@ export const authService = {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: resolveUserRole(user.role),
+      role: resolveUserRole(user.role)
     });
 
     return {
       user: sanitizeUser(user),
-      ...tokens,
+      ...tokens
     };
   },
 
-  async issueTokens({ id, email, name, role }: { id: string; email: string; name: string; role: UserRole }) {
+  async issueTokens({
+    id,
+    email,
+    name,
+    role
+  }: {
+    id: string;
+    email: string;
+    name: string;
+    role: UserRole;
+  }) {
     const jti = crypto.randomUUID();
-    const accessToken = tokenService.createAccessToken({ sub: id, email, name, role });
-    const { token: refreshToken, expiresAt } = tokenService.createRefreshToken({ sub: id, tokenId: jti });
+    const accessToken = tokenService.createAccessToken({
+      sub: id,
+      email,
+      name,
+      role
+    });
+    const { token: refreshToken, expiresAt } = tokenService.createRefreshToken({
+      sub: id,
+      tokenId: jti
+    });
 
     const refreshTokenHash = hashToken(refreshToken);
     await userRepository.saveRefreshToken(jti, id, refreshTokenHash, expiresAt);
@@ -170,7 +221,7 @@ export const authService = {
     return {
       accessToken,
       refreshToken,
-      refreshTokenExpiresAt: expiresAt,
+      refreshTokenExpiresAt: expiresAt
     };
   },
 
@@ -186,12 +237,17 @@ export const authService = {
       throw createUnauthorized();
     }
 
-    const existingToken = await userRepository.findRefreshToken(payload.tokenId);
+    const existingToken = await userRepository.findRefreshToken(
+      payload.tokenId
+    );
     const providedTokenHash = hashToken(refreshToken);
     const tokenMatches =
       existingToken &&
-      (existingToken.token === providedTokenHash || existingToken.token === refreshToken);
-    const isExpired = existingToken?.expiresAt ? existingToken.expiresAt.getTime() <= Date.now() : false;
+      (existingToken.token === providedTokenHash ||
+        existingToken.token === refreshToken);
+    const isExpired = existingToken?.expiresAt
+      ? existingToken.expiresAt.getTime() <= Date.now()
+      : false;
 
     if (!tokenMatches || isExpired) {
       if (existingToken && isExpired) {
@@ -206,12 +262,12 @@ export const authService = {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: resolveUserRole(user.role),
+      role: resolveUserRole(user.role)
     });
 
     return {
       user: sanitizeUser(user),
-      ...tokens,
+      ...tokens
     };
   },
 
@@ -240,7 +296,11 @@ export const authService = {
       data.avatarUrl = updates.avatarUrl ?? null;
     }
     if ('cityId' in updates) {
-      data.cityId = updates.cityId ?? null;
+      if (typeof updates.cityId === 'number') {
+        data.city = { connect: { id: updates.cityId } };
+      } else {
+        data.city = { disconnect: true };
+      }
     }
     if ('birthDate' in updates) {
       if (updates.birthDate) {
@@ -256,18 +316,38 @@ export const authService = {
     if ('bio' in updates) {
       data.bio = updates.bio ?? null;
     }
+
+    const shouldUpdateSkills =
+      'teachableSkills' in updates || 'learningSkills' in updates;
+
+    let updatedUser = existingUser;
+    if (Object.keys(data).length > 0) {
+      updatedUser = await userRepository.updateById(userId, data);
+    }
+
     if ('teachableSkills' in updates) {
-      data.teachableSkills = JSON.stringify(normalizeSkills(updates.teachableSkills));
+      await userSkillRepository.deleteByUserAndType(userId, 'teach');
+      const normalized = normalizeSkills(updates.teachableSkills);
+      const rows = normalized.map((skill) =>
+        toSkillCreateInput(userId, 'teach', skill)
+      );
+      await userSkillRepository.createMany(rows);
     }
+
     if ('learningSkills' in updates) {
-      data.learningSkills = JSON.stringify(normalizeSkills(updates.learningSkills));
+      await userSkillRepository.deleteByUserAndType(userId, 'learn');
+      const normalized = normalizeSkills(updates.learningSkills);
+      const rows = normalized.map((skill) =>
+        toSkillCreateInput(userId, 'learn', skill)
+      );
+      await userSkillRepository.createMany(rows);
     }
 
-    if (Object.keys(data).length === 0) {
-      return sanitizeUser(existingUser);
+    if (shouldUpdateSkills) {
+      const userWithSkills = await userRepository.findById(userId);
+      return sanitizeUser(userWithSkills);
     }
 
-    const updated = await userRepository.updateById(userId, data);
-    return sanitizeUser(updated);
-  },
+    return sanitizeUser(updatedUser);
+  }
 };

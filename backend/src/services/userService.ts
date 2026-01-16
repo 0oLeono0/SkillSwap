@@ -1,28 +1,24 @@
-import type { User as PrismaUser } from '@prisma/client';
+import type {
+  User as PrismaUser,
+  UserSkill as PrismaUserSkill
+} from '@prisma/client';
 import { userRepository } from '../repositories/userRepository.js';
-import {
-  normalizeUserSkillList,
-  type UserSkill,
-} from '../types/userSkill.js';
+import { parseImageUrls, type UserSkill } from '../types/userSkill.js';
 import { isUserRole, type UserRole } from '../types/userRole.js';
 
-const parseSkillList = (value?: string | null): UserSkill[] => {
-  if (!value) {
-    return [];
-  }
+type UserRecord = PrismaUser & { userSkills?: PrismaUserSkill[] | null };
 
-  try {
-    const parsed = JSON.parse(value);
-    return normalizeUserSkillList(parsed);
-  } catch {
-    return [];
-  }
-};
+const mapSkillRecord = (record: PrismaUserSkill): UserSkill => ({
+  id: record.id,
+  title: record.title?.trim() ?? '',
+  categoryId: typeof record.categoryId === 'number' ? record.categoryId : null,
+  subcategoryId:
+    typeof record.subcategoryId === 'number' ? record.subcategoryId : null,
+  description: record.description?.trim() ?? '',
+  imageUrls: parseImageUrls(record.imageUrls)
+});
 
-export type SanitizedUser = Omit<
-  PrismaUser,
-  'passwordHash' | 'teachableSkills' | 'learningSkills' | 'role'
-> & {
+export type SanitizedUser = Omit<PrismaUser, 'passwordHash' | 'role'> & {
   role: UserRole;
   teachableSkills: UserSkill[];
   learningSkills: UserSkill[];
@@ -30,21 +26,32 @@ export type SanitizedUser = Omit<
 
 export type PublicUser = Omit<SanitizedUser, 'email'>;
 
-export const sanitizeUser = (user: PrismaUser | null): SanitizedUser | null => {
+export const sanitizeUser = (user: UserRecord | null): SanitizedUser | null => {
   if (!user) {
     return null;
   }
 
-  const { passwordHash: _passwordHash, teachableSkills, learningSkills, avatarUrl, ...rest } = user;
+  const { passwordHash: _passwordHash, avatarUrl, userSkills, ...rest } = user;
   const normalizeNullableString = (value?: string | null) =>
     value && value.trim().length > 0 ? value : null;
+  const normalizedSkills = Array.isArray(userSkills) ? userSkills : [];
+  const teachableSkills: UserSkill[] = [];
+  const learningSkills: UserSkill[] = [];
+
+  for (const skill of normalizedSkills) {
+    if (skill.type === 'learn') {
+      learningSkills.push(mapSkillRecord(skill));
+    } else {
+      teachableSkills.push(mapSkillRecord(skill));
+    }
+  }
 
   return {
     ...rest,
     avatarUrl: normalizeNullableString(avatarUrl),
     role: isUserRole(user.role) ? user.role : 'user',
-    teachableSkills: parseSkillList(teachableSkills),
-    learningSkills: parseSkillList(learningSkills),
+    teachableSkills,
+    learningSkills
   };
 };
 
@@ -67,5 +74,5 @@ export const userService = {
       .map((user) => sanitizeUser(user))
       .filter((user): user is SanitizedUser => Boolean(user))
       .map(toPublicUser);
-  },
+  }
 };

@@ -2,48 +2,59 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { hashToken } from '../utils/tokenHash.js';
 
+const includeSkills = {
+  userSkills: true
+};
+
 export const userRepository = {
   findByEmail(email: string) {
-    return prisma.user.findUnique({ where: { email } });
+    return prisma.user.findUnique({ where: { email }, include: includeSkills });
   },
 
   findAll() {
     return prisma.user.findMany({
       orderBy: {
-        createdAt: 'desc',
+        createdAt: 'desc'
       },
+      include: includeSkills
     });
   },
 
   findById(id: string) {
-    return prisma.user.findUnique({ where: { id } });
+    return prisma.user.findUnique({ where: { id }, include: includeSkills });
   },
 
   create(data: Prisma.UserCreateInput) {
-    return prisma.user.create({ data });
+    return prisma.user.create({ data, include: includeSkills });
   },
 
   updateById(id: string, data: Prisma.UserUpdateInput) {
     return prisma.user.update({
       where: { id },
       data,
+      include: includeSkills
     });
   },
 
   deleteById(id: string) {
     return prisma.user.delete({
-      where: { id },
+      where: { id }
     });
   },
 
-  saveRefreshToken(id: string, userId: string, tokenHash: string, expiresAt: Date) {
+  saveRefreshToken(
+    id: string,
+    userId: string,
+    tokenHash: string,
+    expiresAt: Date
+  ) {
     return prisma.refreshToken.create({
       data: {
         id,
         userId,
         token: tokenHash,
-        expiresAt,
-      },
+        expiresAt
+      }
     });
   },
 
@@ -60,9 +71,9 @@ export const userRepository = {
     return prisma.refreshToken.deleteMany({
       where: {
         token: {
-          in: [tokenHash, token],
-        },
-      },
+          in: [tokenHash, token]
+        }
+      }
     });
-  },
+  }
 };
