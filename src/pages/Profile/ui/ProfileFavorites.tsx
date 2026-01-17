@@ -3,7 +3,7 @@ import {
   useEffect,
   useMemo,
   useState,
-  type ReactElement,
+  type ReactElement
 } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './profileFavorites.module.scss';
@@ -11,22 +11,22 @@ import { Title } from '@/shared/ui/Title';
 import { Button } from '@/shared/ui/button/Button';
 import { SkillsList } from '@/widgets/SkillsList';
 import {
-  loadCatalogSkills,
-  type CatalogSkill,
+  loadCatalogAuthors,
+  type CatalogAuthor
 } from '@/pages/Catalog/model/catalogData';
 import { useFavorites } from '@/app/providers/favorites';
 import { ROUTES } from '@/shared/constants';
 
 export function ProfileFavorites(): ReactElement {
   const { favoriteAuthorIds, toggleFavorite, clearFavorites } = useFavorites();
-  const [skills, setSkills] = useState<CatalogSkill[]>([]);
+  const [authors, setAuthors] = useState<CatalogAuthor[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const fetchSkills = useCallback(async () => {
+  const fetchAuthors = useCallback(async () => {
     if (!favoriteAuthorIds.length) {
-      setSkills([]);
+      setAuthors([]);
       setError(null);
       setIsLoading(false);
       return;
@@ -34,12 +34,12 @@ export function ProfileFavorites(): ReactElement {
 
     setIsLoading(true);
     try {
-      const data = await loadCatalogSkills({
+      const data = await loadCatalogAuthors({
         authorIds: favoriteAuthorIds,
         page: 1,
-        pageSize: favoriteAuthorIds.length,
+        pageSize: favoriteAuthorIds.length
       });
-      setSkills(data.skills);
+      setAuthors(data.authors);
       setError(null);
     } catch (err) {
       console.error('[ProfileFavorites] Failed to load data', err);
@@ -50,34 +50,34 @@ export function ProfileFavorites(): ReactElement {
   }, [favoriteAuthorIds]);
 
   useEffect(() => {
-    void fetchSkills();
-  }, [fetchSkills]);
+    void fetchAuthors();
+  }, [fetchAuthors]);
 
   const favoriteAuthorSet = useMemo(
     () => new Set(favoriteAuthorIds),
-    [favoriteAuthorIds],
+    [favoriteAuthorIds]
   );
 
-  const favoriteSkills = useMemo(
-    () => skills.filter((skill) => favoriteAuthorSet.has(skill.authorId)),
-    [skills, favoriteAuthorSet],
+  const favoriteAuthors = useMemo(
+    () => authors.filter((author) => favoriteAuthorSet.has(author.id)),
+    [authors, favoriteAuthorSet]
   );
 
-  const favoriteSkillsWithState = useMemo(
+  const favoriteAuthorsWithState = useMemo(
     () =>
-      favoriteSkills.map((skill) =>
-        skill.isFavorite ? skill : { ...skill, isFavorite: true },
+      favoriteAuthors.map((author) =>
+        author.isFavorite ? author : { ...author, isFavorite: true }
       ),
-    [favoriteSkills],
+    [favoriteAuthors]
   );
 
-  const hasFavorites = favoriteSkills.length > 0;
+  const hasFavorites = favoriteAuthors.length > 0;
 
   const handleDetailsClick = useCallback(
     (authorId: string) => {
       navigate(ROUTES.SKILL_DETAILS.replace(':authorId', authorId));
     },
-    [navigate],
+    [navigate]
   );
 
   const handleOpenCatalog = useCallback(() => {
@@ -89,7 +89,7 @@ export function ProfileFavorites(): ReactElement {
   }, [clearFavorites]);
 
   const renderContent = () => {
-    if (isLoading && !skills.length) {
+    if (isLoading && !authors.length) {
       return (
         <div className={styles.state}>Загружаем сохранённых авторов...</div>
       );
@@ -98,7 +98,7 @@ export function ProfileFavorites(): ReactElement {
     if (hasFavorites) {
       return (
         <SkillsList
-          skills={favoriteSkillsWithState}
+          authors={favoriteAuthorsWithState}
           onToggleFavorite={toggleFavorite}
           onDetailsClick={handleDetailsClick}
         />
@@ -109,7 +109,8 @@ export function ProfileFavorites(): ReactElement {
       <div className={styles.empty}>
         <p>
           Здесь появятся специалисты, которых вы добавите в избранное. Откройте
-          каталог и отмечайте понравившиеся профили, чтобы быстро находить их в личном кабинете.
+          каталог и отмечайте понравившиеся профили, чтобы быстро находить их в
+          личном кабинете.
         </p>
         <div className={styles.emptyActions}>
           <Button variant='primary' onClick={handleOpenCatalog}>
@@ -128,15 +129,15 @@ export function ProfileFavorites(): ReactElement {
             Избранное
           </Title>
           <p className={styles.subtitle}>
-            Сохраняйте интересные профили и возвращайтесь к ним в один клик —
-            мы запомним их даже после закрытия каталога.
+            Сохраняйте интересные профили и возвращайтесь к ним в один клик — мы
+            запомним их даже после закрытия каталога.
           </p>
         </div>
         {hasFavorites && (
           <div className={styles.actions}>
             <Button
               variant='secondary'
-              onClick={fetchSkills}
+              onClick={fetchAuthors}
               disabled={isLoading}
             >
               {isLoading ? 'Обновляем…' : 'Обновить данные'}
@@ -148,10 +149,14 @@ export function ProfileFavorites(): ReactElement {
         )}
       </div>
 
-  {error && (
+      {error && (
         <div className={styles.statusRow}>
           <p className={styles.error}>{error}</p>
-          <Button variant='secondary' onClick={fetchSkills} disabled={isLoading}>
+          <Button
+            variant='secondary'
+            onClick={fetchAuthors}
+            disabled={isLoading}
+          >
             Повторить
           </Button>
         </div>

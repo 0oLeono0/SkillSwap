@@ -34,7 +34,7 @@ type SkillGroupRecord = {
 
 const DEFAULT_CATEGORY_NAME = 'Образование и развитие';
 
-export interface CatalogSkill {
+export interface CatalogAuthorSkill {
   id: string;
   title: string;
   description: string;
@@ -43,20 +43,24 @@ export interface CatalogSkill {
   categoryId: number | null;
   imageUrl?: string;
   imageUrls?: string[];
-  authorAvatarUrl?: string;
   tags: string[];
-  authorId: string;
-  isFavorite?: boolean;
   originalSkillId: number;
   userSkillId: string;
-  authorName: string;
-  authorCity: string;
-  authorAge: number;
-  authorAbout?: string;
+}
+
+export interface CatalogAuthor {
+  id: string;
+  name: string;
+  avatarUrl?: string;
+  city: string;
+  age: number;
+  about?: string;
+  canTeach: CatalogAuthorSkill[];
+  wantsToLearn: CatalogAuthorSkill[];
 }
 
 export interface CatalogSearchResponse {
-  skills: CatalogSkill[];
+  authors: CatalogAuthor[];
   page: number;
   pageSize: number;
   totalAuthors: number;
@@ -177,16 +181,6 @@ const resolveGalleryImages = (images: string[], fallback?: string | null) => {
 
 type CatalogSkillRecord = Prisma.UserSkillGetPayload<{
   include: {
-    user: {
-      select: {
-        id: true;
-        name: true;
-        avatarUrl: true;
-        bio: true;
-        birthDate: true;
-        city: { select: { name: true } };
-      };
-    };
     category: { select: { id: true; name: true } };
     subcategory: {
       select: {
@@ -199,12 +193,38 @@ type CatalogSkillRecord = Prisma.UserSkillGetPayload<{
   };
 }>;
 
-const mapCatalogSkill = (record: CatalogSkillRecord): CatalogSkill | null => {
+type CatalogAuthorRecord = Prisma.UserGetPayload<{
+  select: {
+    id: true;
+    name: true;
+    avatarUrl: true;
+    bio: true;
+    birthDate: true;
+    city: { select: { name: true } };
+    userSkills: {
+      include: {
+        category: { select: { id: true; name: true } };
+        subcategory: {
+          select: {
+            id: true;
+            name: true;
+            groupId: true;
+            group: { select: { id: true; name: true } };
+          };
+        };
+      };
+    };
+  };
+}>;
+
+const mapCatalogSkill = (
+  record: CatalogSkillRecord,
+  user: CatalogAuthorRecord
+): CatalogAuthorSkill | null => {
   if (typeof record.subcategoryId !== 'number') {
     return null;
   }
 
-  const user = record.user;
   const subcategoryName = record.subcategory?.name ?? '';
   const categoryName = resolveSkillCategoryName(
     record.category?.name,
@@ -217,10 +237,8 @@ const mapCatalogSkill = (record: CatalogSkillRecord): CatalogSkill | null => {
 
   const imageUrls = parseImageUrls(record.imageUrls);
   const imageUrl = resolvePrimaryImage(imageUrls, user.avatarUrl);
-  const authorAvatarUrl = user.avatarUrl?.trim();
-  const authorAbout = user.bio?.trim();
 
-  const payload: CatalogSkill = {
+  const payload: CatalogAuthorSkill = {
     id: buildCatalogSkillId(
       user.id,
       record.type,
@@ -234,25 +252,51 @@ const mapCatalogSkill = (record: CatalogSkillRecord): CatalogSkill | null => {
     categoryId,
     imageUrls: resolveGalleryImages(imageUrls, user.avatarUrl),
     tags: [],
-    authorId: user.id,
-    isFavorite: false,
     originalSkillId: record.subcategoryId,
-    userSkillId: record.id,
-    authorName: user.name,
-    authorCity: user.city?.name ?? '',
-    authorAge: getAge(user.birthDate)
+    userSkillId: record.id
   };
 
   if (imageUrl) {
     payload.imageUrl = imageUrl;
   }
 
-  if (authorAvatarUrl && authorAvatarUrl.length > 0) {
-    payload.authorAvatarUrl = authorAvatarUrl;
+  return payload;
+};
+
+const mapCatalogAuthor = (user: CatalogAuthorRecord): CatalogAuthor => {
+  const canTeach: CatalogAuthorSkill[] = [];
+  const wantsToLearn: CatalogAuthorSkill[] = [];
+
+  user.userSkills.forEach((skill) => {
+    const mapped = mapCatalogSkill(skill, user);
+    if (!mapped) {
+      return;
+    }
+    if (mapped.type === 'learn') {
+      wantsToLearn.push(mapped);
+      return;
+    }
+    canTeach.push(mapped);
+  });
+
+  const avatarUrl = user.avatarUrl?.trim();
+  const about = user.bio?.trim();
+
+  const payload: CatalogAuthor = {
+    id: user.id,
+    name: user.name,
+    city: user.city?.name ?? '',
+    age: getAge(user.birthDate),
+    canTeach,
+    wantsToLearn
+  };
+
+  if (avatarUrl && avatarUrl.length > 0) {
+    payload.avatarUrl = avatarUrl;
   }
 
-  if (authorAbout && authorAbout.length > 0) {
-    payload.authorAbout = authorAbout;
+  if (about && about.length > 0) {
+    payload.about = about;
   }
 
   return payload;
@@ -300,7 +344,7 @@ export const catalogService = {
         : rawAuthorIds;
 
     if (rawAuthorIds.length && authorIds.length === 0) {
-      return { skills: [], page, pageSize, totalAuthors: 0 };
+      return { authors: [], page, pageSize, totalAuthors: 0 };
     }
 
     const mode = options.mode ?? 'all';
@@ -379,81 +423,42 @@ export const catalogService = {
     const totalAuthors = await prisma.user.count({ where: userWhere });
 
     if (totalAuthors === 0) {
-      return { skills: [], page, pageSize, totalAuthors };
+      return { authors: [], page, pageSize, totalAuthors };
     }
 
     const authors = await prisma.user.findMany({
       where: userWhere,
-      select: { id: true },
+      select: {
+        id: true,
+        name: true,
+        avatarUrl: true,
+        bio: true,
+        birthDate: true,
+        city: { select: { name: true } },
+        userSkills: {
+          where: skillFilters,
+          include: {
+            category: { select: { id: true, name: true } },
+            subcategory: {
+              select: {
+                id: true,
+                name: true,
+                groupId: true,
+                group: { select: { id: true, name: true } }
+              }
+            }
+          }
+        }
+      },
       orderBy: { createdAt: 'desc' },
       skip: (page - 1) * pageSize,
       take: pageSize
     });
 
-    const pageAuthorIds = authors.map((author) => author.id);
-
-    if (pageAuthorIds.length === 0) {
-      return { skills: [], page, pageSize, totalAuthors };
-    }
-
-    const skills = await prisma.userSkill.findMany({
-      where: {
-        ...skillFilters,
-        userId: { in: pageAuthorIds }
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            avatarUrl: true,
-            bio: true,
-            birthDate: true,
-            city: { select: { name: true } }
-          }
-        },
-        category: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        subcategory: {
-          select: {
-            id: true,
-            name: true,
-            groupId: true,
-            group: {
-              select: {
-                id: true,
-                name: true
-              }
-            }
-          }
-        }
-      }
-    });
-
-    const authorOrder = new Map(pageAuthorIds.map((id, index) => [id, index]));
-    const typeOrder = { teach: 0, learn: 1 } as const;
-
-    const sorted = [...skills].sort((left, right) => {
-      const leftOrder = authorOrder.get(left.userId) ?? 0;
-      const rightOrder = authorOrder.get(right.userId) ?? 0;
-      if (leftOrder !== rightOrder) {
-        return leftOrder - rightOrder;
-      }
-      const leftType = left.type === 'learn' ? 'learn' : 'teach';
-      const rightType = right.type === 'learn' ? 'learn' : 'teach';
-      return typeOrder[leftType] - typeOrder[rightType];
-    });
-
-    const mapped = sorted
-      .map((record) => mapCatalogSkill(record))
-      .filter((skill): skill is CatalogSkill => Boolean(skill));
+    const mapped = authors.map(mapCatalogAuthor);
 
     return {
-      skills: mapped,
+      authors: mapped,
       page,
       pageSize,
       totalAuthors

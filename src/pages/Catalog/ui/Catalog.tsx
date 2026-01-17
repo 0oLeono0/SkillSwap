@@ -29,8 +29,8 @@ import {
 import { SkillsList } from '@/widgets/SkillsList';
 import { Title } from '@/shared/ui/Title';
 import {
-  loadCatalogSkills,
-  type CatalogSkill
+  loadCatalogAuthors,
+  type CatalogAuthor
 } from '@/pages/Catalog/model/catalogData';
 import { Button } from '@/shared/ui/button/Button';
 import { ROUTES } from '@/shared/constants';
@@ -51,7 +51,7 @@ interface CatalogProps {
 interface SectionConfig {
   key: string;
   title: string;
-  skills: CatalogSkill[];
+  authors: CatalogAuthor[];
 }
 
 const SECTION_SIZE = 3;
@@ -74,34 +74,16 @@ const searchModeValues: SearchMode[] = ['all', 'wantToLearn', 'canTeach'];
 const isValidSearchMode = (value: string | null): value is SearchMode =>
   value !== null && searchModeValues.includes(value as SearchMode);
 
-const limitSkillsByAuthors = (
-  skills: CatalogSkill[],
+const limitAuthors = (
+  authors: CatalogAuthor[],
   maxAuthors: number
-): CatalogSkill[] => {
-  if (!skills.length || maxAuthors <= 0) {
+): CatalogAuthor[] => {
+  if (!authors.length || maxAuthors <= 0) {
     return [];
   }
 
-  const selectedAuthors = new Set<string>();
-  const limitedSkills: CatalogSkill[] = [];
-
-  skills.forEach((skill) => {
-    if (selectedAuthors.has(skill.authorId)) {
-      limitedSkills.push(skill);
-      return;
-    }
-
-    if (selectedAuthors.size < maxAuthors) {
-      selectedAuthors.add(skill.authorId);
-      limitedSkills.push(skill);
-    }
-  });
-
-  return limitedSkills;
+  return authors.slice(0, maxAuthors);
 };
-
-const countAuthors = (skills: CatalogSkill[]) =>
-  new Set(skills.map((skill) => skill.authorId)).size;
 
 const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   const navigate = useNavigate();
@@ -111,7 +93,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   );
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
-  const [skills, setSkills] = useState<CatalogSkill[]>([]);
+  const [authors, setAuthors] = useState<CatalogAuthor[]>([]);
   const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
   const [skillGroups, setSkillGroups] = useState<SkillGroup[]>([]);
   const [page, setPage] = useState(1);
@@ -131,14 +113,14 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   );
   const moderationEnabled = isElevatedRole(authUser?.role);
 
-  const mapSkillsWithFavorites = useCallback(
-    (skillList: CatalogSkill[]) =>
-      skillList.map((skill) => {
-        const shouldBeFavorite = favoriteAuthorSet.has(skill.authorId);
-        if (skill.isFavorite === shouldBeFavorite) {
-          return skill;
+  const mapAuthorsWithFavorites = useCallback(
+    (authorList: CatalogAuthor[]) =>
+      authorList.map((author) => {
+        const shouldBeFavorite = favoriteAuthorSet.has(author.id);
+        if (author.isFavorite === shouldBeFavorite) {
+          return author;
         }
-        return { ...skill, isFavorite: shouldBeFavorite };
+        return { ...author, isFavorite: shouldBeFavorite };
       }),
     [favoriteAuthorSet]
   );
@@ -154,7 +136,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
     };
   }, []);
 
-  const fetchSkills = useCallback(
+  const fetchAuthors = useCallback(
     async (nextPage: number, append: boolean) => {
       if (filters.cities.length && cityOptions.length === 0) {
         return;
@@ -175,11 +157,11 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
         setIsLoadingMore(true);
       } else {
         setIsLoading(true);
-        setSkills([]);
+        setAuthors([]);
       }
 
       try {
-        const data = await loadCatalogSkills(
+        const data = await loadCatalogAuthors(
           {
             mode: filters.mode,
             gender: filters.gender,
@@ -197,7 +179,9 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
           return;
         }
 
-        setSkills((prev) => (append ? [...prev, ...data.skills] : data.skills));
+        setAuthors((prev) =>
+          append ? [...prev, ...data.authors] : data.authors
+        );
         setTotalAuthors(data.totalAuthors);
         setPage(nextPage);
         setError(null);
@@ -211,16 +195,15 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
         console.error('[Catalog] Failed to load catalog data', err);
         setError('Не удалось загрузить данные каталога');
       } finally {
-        if (!isCurrentRequest()) {
-          return;
-        }
-        if (searchAbortRef.current === controller) {
-          searchAbortRef.current = null;
-        }
-        if (append) {
-          setIsLoadingMore(false);
-        } else {
-          setIsLoading(false);
+        if (isCurrentRequest()) {
+          if (searchAbortRef.current === controller) {
+            searchAbortRef.current = null;
+          }
+          if (append) {
+            setIsLoadingMore(false);
+          } else {
+            setIsLoading(false);
+          }
         }
       }
     },
@@ -250,8 +233,8 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   }, []);
 
   useEffect(() => {
-    fetchSkills(1, false);
-  }, [fetchSkills]);
+    fetchAuthors(1, false);
+  }, [fetchAuthors]);
 
   useEffect(() => {
     const skillParam = searchParams.get('skills');
@@ -306,98 +289,58 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
 
   const filtersCount = useMemo(() => countActiveFilters(filters), [filters]);
 
-  const filteredSkills = useMemo(() => skills, [skills]);
+  const filteredAuthors = useMemo(() => authors, [authors]);
 
-  const skillsByAuthor = useMemo(() => {
-    const map = new Map<string, CatalogSkill[]>();
-    skills.forEach((skill) => {
-      const list = map.get(skill.authorId) ?? [];
-      list.push(skill);
-      map.set(skill.authorId, list);
-    });
-    return map;
-  }, [skills]);
-
-  const getAuthorSkills = useCallback(
-    (subset: CatalogSkill[]) => {
-      if (!subset.length) return [];
-      const authorOrder = Array.from(
-        new Set(subset.map((skill) => skill.authorId))
-      );
-      return authorOrder.flatMap(
-        (authorId) => skillsByAuthor.get(authorId) ?? []
-      );
-    },
-    [skillsByAuthor]
-  );
-
-  const listSkills = useMemo(
-    () => getAuthorSkills(filteredSkills),
-    [filteredSkills, getAuthorSkills]
-  );
+  const listAuthors = useMemo(() => filteredAuthors, [filteredAuthors]);
 
   const visibleAuthorsCount = useMemo(() => {
     if (variant !== 'catalog') return null;
     return totalAuthors;
   }, [totalAuthors, variant]);
 
-  const authorOrder = useMemo(
-    () => Array.from(new Set(filteredSkills.map((skill) => skill.authorId))),
-    [filteredSkills]
-  );
-
-  const loadedAuthorsCount = useMemo(
-    () => new Set(skills.map((skill) => skill.authorId)).size,
-    [skills]
-  );
+  const loadedAuthorsCount = useMemo(() => authors.length, [authors]);
 
   const hasMore = variant === 'catalog' && loadedAuthorsCount < totalAuthors;
 
-  const buildSectionSkills = useCallback(
-    (authorIds: string[]) =>
-      filteredSkills.filter((skill) => authorIds.includes(skill.authorId)),
-    [filteredSkills]
-  );
-
   const sections = useMemo<SectionConfig[]>(() => {
-    if (variant !== 'home' || !filteredSkills.length) return [];
+    if (variant !== 'home' || !filteredAuthors.length) return [];
 
-    const popularIds = authorOrder.slice(0, SECTION_SIZE);
-    const newIds = authorOrder.slice(SECTION_SIZE, SECTION_SIZE * 2);
-    const recommendedIds = authorOrder.slice(SECTION_SIZE * 2);
+    const popularAuthors = filteredAuthors.slice(0, SECTION_SIZE);
+    const newAuthors = filteredAuthors.slice(SECTION_SIZE, SECTION_SIZE * 2);
+    const recommendedAuthors = filteredAuthors.slice(SECTION_SIZE * 2);
 
     return [
       {
         key: 'popular',
         title: SECTION_META.popular,
-        skills: buildSectionSkills(popularIds)
+        authors: popularAuthors
       },
       {
         key: 'new',
         title: SECTION_META.new,
-        skills: buildSectionSkills(newIds)
+        authors: newAuthors
       },
       {
         key: 'recommended',
         title: SECTION_META.recommended,
-        skills: buildSectionSkills(recommendedIds)
+        authors: recommendedAuthors
       }
-    ].filter((section) => section.skills.length);
-  }, [authorOrder, buildSectionSkills, filteredSkills.length, variant]);
+    ].filter((section) => section.authors.length);
+  }, [filteredAuthors, variant]);
 
-  const sectionsWithFullSkills = useMemo(() => {
+  const sectionsWithFullAuthors = useMemo(() => {
     return sections.map((section) => {
-      const displaySkills = getAuthorSkills(section.skills);
-      const previewSkills = limitSkillsByAuthors(displaySkills, SECTION_SIZE);
+      const displayAuthors = section.authors;
+      const previewAuthors = limitAuthors(displayAuthors, SECTION_SIZE);
       return {
         ...section,
-        displaySkills,
-        previewSkills,
-        totalAuthors: countAuthors(displaySkills),
-        previewAuthors: countAuthors(previewSkills)
+        displayAuthors,
+        previewAuthors,
+        totalAuthors: displayAuthors.length,
+        previewAuthorsCount: previewAuthors.length
       };
     });
-  }, [sections, getAuthorSkills]);
+  }, [sections]);
 
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
@@ -459,12 +402,10 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
       return activeFilterLabels[0];
     }
 
-    const resultCount =
-      visibleAuthorsCount ??
-      new Set(listSkills.map((skill) => skill.authorId)).size;
+    const resultCount = visibleAuthorsCount ?? listAuthors.length;
 
     return `Результатов: ${resultCount}`;
-  }, [activeFilterLabels, defaultHeading, listSkills, visibleAuthorsCount]);
+  }, [activeFilterLabels, defaultHeading, listAuthors, visibleAuthorsCount]);
 
   const shouldShowHeading =
     Boolean(heading) || variant === 'catalog' || activeFilterLabels.length > 0;
@@ -504,8 +445,8 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
 
   const handleLoadMore = useCallback(() => {
     if (isLoadingMore || isLoading || !hasMore) return;
-    fetchSkills(page + 1, true);
-  }, [fetchSkills, hasMore, isLoading, isLoadingMore, page]);
+    fetchAuthors(page + 1, true);
+  }, [fetchAuthors, hasMore, isLoading, isLoadingMore, page]);
 
   const handleToggleFavorite = useCallback(
     (authorId: string) => {
@@ -526,8 +467,8 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
 
       try {
         await adminApi.deleteUser(authorId, accessToken);
-        setSkills((prevSkills) =>
-          prevSkills.filter((item) => item.authorId !== authorId)
+        setAuthors((prevAuthors) =>
+          prevAuthors.filter((item) => item.id !== authorId)
         );
       } catch (err) {
         console.error('[Catalog] Failed to delete user', err);
@@ -576,7 +517,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
       )}
 
       <SkillsList
-        skills={mapSkillsWithFavorites(listSkills)}
+        authors={mapAuthorsWithFavorites(listAuthors)}
         onToggleFavorite={handleToggleFavorite}
         onDetailsClick={handleDetailsClick}
         moderation={moderationControls}
@@ -597,13 +538,14 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
 
   const renderSections = () => (
     <div className={styles.sections}>
-      {sectionsWithFullSkills.map((section) => {
+      {sectionsWithFullAuthors.map((section) => {
         const isExpanded = Boolean(expandedSections[section.key]);
-        const hasMore = section.totalAuthors > section.previewAuthors;
-        const sectionSkills =
-          isExpanded || !hasMore
-            ? section.displaySkills
-            : section.previewSkills;
+        const hasMoreInSection =
+          section.totalAuthors > section.previewAuthorsCount;
+        const sectionAuthors =
+          isExpanded || !hasMoreInSection
+            ? section.displayAuthors
+            : section.previewAuthors;
 
         return (
           <div key={section.key} className={styles.section}>
@@ -611,7 +553,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
               <Title tag='h2' variant='lg'>
                 {section.title}
               </Title>
-              {hasMore && (
+              {hasMoreInSection && (
                 <Button
                   variant='secondary'
                   onClick={() => toggleSectionExpansion(section.key)}
@@ -622,7 +564,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
             </div>
 
             <SkillsList
-              skills={mapSkillsWithFavorites(sectionSkills)}
+              authors={mapAuthorsWithFavorites(sectionAuthors)}
               onToggleFavorite={handleToggleFavorite}
               onDetailsClick={handleDetailsClick}
               moderation={moderationControls}

@@ -14,6 +14,8 @@ import { loadFiltersBaseData } from '@/features/Filter/model/filterBaseDataStore
 import { usersApi } from '@/shared/api/users';
 import type { ApiCatalogUser } from '@/shared/api/users';
 import type {
+  ApiCatalogAuthor,
+  ApiCatalogAuthorSkill,
   CatalogSearchParams as ApiCatalogSearchParams,
   CatalogSearchResponse as ApiCatalogSearchResponse
 } from '@/shared/api/catalog';
@@ -28,6 +30,12 @@ export interface CatalogSkill extends Skill {
   authorAge: number;
   authorAbout?: string;
   categoryId?: number | null;
+}
+
+export type CatalogAuthorSkill = ApiCatalogAuthorSkill;
+
+export interface CatalogAuthor extends ApiCatalogAuthor {
+  isFavorite?: boolean;
 }
 
 export interface CatalogBaseData {
@@ -47,7 +55,7 @@ export const DEFAULT_FILTERS: Filters = {
 export type CatalogSearchParams = ApiCatalogSearchParams;
 export type CatalogSearchResponse = ApiCatalogSearchResponse;
 
-export const loadCatalogSkills = async (
+export const loadCatalogAuthors = async (
   params: CatalogSearchParams,
   options?: RequestOptions
 ): Promise<CatalogSearchResponse> => catalogApi.search(params, options);

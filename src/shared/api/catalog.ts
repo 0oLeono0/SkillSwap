@@ -9,7 +9,7 @@ export interface CatalogFilterBaseData {
   }>;
 }
 
-export interface ApiCatalogSkill {
+export interface ApiCatalogAuthorSkill {
   id: string;
   title: string;
   description: string;
@@ -20,18 +20,23 @@ export interface ApiCatalogSkill {
   imageUrls?: string[];
   authorAvatarUrl?: string;
   tags: string[];
-  authorId: string;
-  isFavorite?: boolean;
   originalSkillId: number;
   userSkillId: string;
-  authorName: string;
-  authorCity: string;
-  authorAge: number;
-  authorAbout?: string;
+}
+
+export interface ApiCatalogAuthor {
+  id: string;
+  name: string;
+  avatarUrl?: string;
+  city: string;
+  age: number;
+  about?: string;
+  canTeach: ApiCatalogAuthorSkill[];
+  wantsToLearn: ApiCatalogAuthorSkill[];
 }
 
 export interface CatalogSearchResponse {
-  skills: ApiCatalogSkill[];
+  authors: ApiCatalogAuthor[];
   page: number;
   pageSize: number;
   totalAuthors: number;

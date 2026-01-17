@@ -1,5 +1,4 @@
 ﻿import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { Skill } from '@/entities/Skill/types';
 import { SkillsList } from '@/widgets/SkillsList';
 import { SkillCategories } from '@/shared/lib/constants';
 
@@ -7,77 +6,81 @@ const meta: Meta<typeof SkillsList> = {
   title: 'Widget/SkillsList',
   component: SkillsList,
   parameters: {
-    layout: 'fullscreen',
+    layout: 'fullscreen'
   },
-  tags: ['autodocs'],
+  tags: ['autodocs']
 };
 
 export default meta;
 type Story = StoryObj<typeof SkillsList>;
 
-const mockSkills: Skill[] = [
+const mockAuthors = [
   {
-    id: '11',
-    title: 'Игра на барабанах',
-    description: '',
-    type: 'teach',
-    category: SkillCategories.ART,
-    tags: ['music'],
-    authorId: '1',
-    isFavorite: false,
-  },
-  {
-    id: '64',
-    title: 'Английский язык',
-    description: '',
-    type: 'learn',
-    category: SkillCategories.LANGUAGES,
-    tags: ['language'],
-    authorId: '1',
+    id: '1',
+    name: 'Анна',
+    city: 'Минск',
+    age: 28,
+    about: 'Люблю музыку и языки.',
     isFavorite: true,
+    canTeach: [
+      {
+        id: '11',
+        title: 'Игра на барабанах',
+        category: SkillCategories.ART
+      }
+    ],
+    wantsToLearn: [
+      {
+        id: '64',
+        title: 'Английский язык',
+        category: SkillCategories.LANGUAGES
+      }
+    ]
   },
   {
-    id: '36',
-    title: 'Маркетинг',
-    description: '',
-    type: 'learn',
-    category: SkillCategories.BUSINESS,
-    tags: ['business'],
-    authorId: '2',
+    id: '2',
+    name: 'Сергей',
+    city: 'Вильнюс',
+    age: 31,
+    about: 'Работаю в маркетинге.',
     isFavorite: false,
-  },
-  {
-    id: '24',
-    title: 'Рисование акварелью',
-    description: '',
-    type: 'teach',
-    category: SkillCategories.ART,
-    tags: ['art'],
-    authorId: '2',
-    isFavorite: false,
-  },
+    canTeach: [
+      {
+        id: '24',
+        title: 'Рисование акварелью',
+        category: SkillCategories.ART
+      }
+    ],
+    wantsToLearn: [
+      {
+        id: '36',
+        title: 'Маркетинг',
+        category: SkillCategories.BUSINESS
+      }
+    ]
+  }
 ];
 
 export const Default: Story = {
   args: {
-    skills: mockSkills,
+    authors: mockAuthors,
     onToggleFavorite: (authorId: string) => {
       alert(`Избранное: authorId=${authorId}`);
     },
     onDetailsClick: (authorId: string) => {
       alert(`Подробнее: authorId=${authorId}`);
-    },
-  },
+    }
+  }
 };
 
 export const Empty: Story = {
   args: {
-    skills: [],
+    authors: [],
     onToggleFavorite: (authorId: string) => {
       alert(`Избранное: authorId=${authorId}`);
     },
     onDetailsClick: (authorId: string) => {
       alert(`Подробнее: authorId=${authorId}`);
-    },
-  },
+    }
+  }
 };

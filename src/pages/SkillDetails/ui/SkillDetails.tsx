@@ -8,8 +8,9 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import styles from './skillDetails.module.scss';
 import {
-  loadCatalogSkills,
-  type CatalogSkill
+  loadCatalogAuthors,
+  type CatalogAuthor,
+  type CatalogAuthorSkill
 } from '@/pages/Catalog/model/catalogData';
 import { useAuth } from '@/app/providers/auth';
 
@@ -44,8 +45,8 @@ const SkillDetails = (): ReactElement => {
 
   const { toggleFavorite, isFavorite } = useFavorites();
 
-  const [skills, setSkills] = useState<CatalogSkill[]>([]);
-  const [relatedSkills, setRelatedSkills] = useState<CatalogSkill[]>([]);
+  const [authors, setAuthors] = useState<CatalogAuthor[]>([]);
+  const [relatedAuthors, setRelatedAuthors] = useState<CatalogAuthor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
@@ -64,13 +65,13 @@ const SkillDetails = (): ReactElement => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const data = await loadCatalogSkills({
+        const data = await loadCatalogAuthors({
           authorIds: [authorId],
           page: 1,
           pageSize: 1
         });
         if (!isMounted) return;
-        setSkills(data.skills);
+        setAuthors(data.authors);
         setError(null);
       } catch (err) {
         if (!isMounted) return;
@@ -98,31 +99,30 @@ const SkillDetails = (): ReactElement => {
     setIsSuccessModalOpen(false);
   }, [selectedSkillId, authorId]);
 
-  const authorInfo = useMemo(() => {
-    const firstSkill = skills.find((skill) => skill.authorId === authorId);
-    if (!firstSkill) return null;
-    return {
-      name: firstSkill.authorName,
-      avatarUrl: firstSkill.authorAvatarUrl,
-      bio: firstSkill.authorAbout,
-      city: firstSkill.authorCity,
-      age: firstSkill.authorAge
-    };
-  }, [skills, authorId]);
-
-  const authorSkills = useMemo(
-    () => skills.filter((skill) => skill.authorId === authorId),
-    [skills, authorId]
+  const currentAuthor = useMemo(
+    () => authors.find((author) => author.id === authorId) ?? null,
+    [authors, authorId]
   );
 
+  const authorInfo = useMemo(() => {
+    if (!currentAuthor) return null;
+    return {
+      name: currentAuthor.name,
+      avatarUrl: currentAuthor.avatarUrl,
+      bio: currentAuthor.about,
+      city: currentAuthor.city,
+      age: currentAuthor.age
+    };
+  }, [currentAuthor]);
+
   const teachSkills = useMemo(
-    () => authorSkills.filter((skill) => skill.type === 'teach'),
-    [authorSkills]
+    () => currentAuthor?.canTeach ?? [],
+    [currentAuthor]
   );
 
   const learnSkills = useMemo(
-    () => authorSkills.filter((skill) => skill.type === 'learn'),
-    [authorSkills]
+    () => currentAuthor?.wantsToLearn ?? [],
+    [currentAuthor]
   );
 
   useEffect(() => {
@@ -131,7 +131,7 @@ const SkillDetails = (): ReactElement => {
     }
   }, [teachSkills, selectedSkillId]);
 
-  const selectedSkill = useMemo(
+  const selectedSkill = useMemo<CatalogAuthorSkill | null>(
     () =>
       teachSkills.find((skill) => skill.id === selectedSkillId) ??
       teachSkills[0] ??
@@ -160,12 +160,12 @@ const SkillDetails = (): ReactElement => {
 
     const fetchRelated = async () => {
       if (!selectedSkill || typeof selectedSkill.categoryId !== 'number') {
-        setRelatedSkills([]);
+        setRelatedAuthors([]);
         return;
       }
 
       try {
-        const data = await loadCatalogSkills({
+        const data = await loadCatalogAuthors({
           categoryIds: [selectedSkill.categoryId],
           mode: 'wantToLearn',
           excludeAuthorId: authorId,
@@ -174,11 +174,11 @@ const SkillDetails = (): ReactElement => {
         });
 
         if (!isMounted) return;
-        setRelatedSkills(data.skills);
+        setRelatedAuthors(data.authors);
       } catch (err) {
         if (!isMounted) return;
         console.error('[SkillDetails] Failed to load related skills', err);
-        setRelatedSkills([]);
+        setRelatedAuthors([]);
       }
     };
 
@@ -189,16 +189,16 @@ const SkillDetails = (): ReactElement => {
     };
   }, [authorId, selectedSkill]);
 
-  const relatedSkillsWithFavorites = useMemo(
+  const relatedAuthorsWithFavorites = useMemo(
     () =>
-      relatedSkills.map((skill) => {
-        const shouldBeFavorite = isFavorite(skill.authorId);
-        if (skill.isFavorite === shouldBeFavorite) {
-          return skill;
+      relatedAuthors.map((author) => {
+        const shouldBeFavorite = isFavorite(author.id);
+        if (author.isFavorite === shouldBeFavorite) {
+          return author;
         }
-        return { ...skill, isFavorite: shouldBeFavorite };
+        return { ...author, isFavorite: shouldBeFavorite };
       }),
-    [relatedSkills, isFavorite]
+    [relatedAuthors, isFavorite]
   );
   const handleToggleFavorite = useCallback(
     (targetAuthorId: string) => {
@@ -233,7 +233,7 @@ const SkillDetails = (): ReactElement => {
   );
 
   const handleProposeExchange = useCallback(async () => {
-    if (!selectedSkill) {
+    if (!selectedSkill || !currentAuthor) {
       return;
     }
 
@@ -244,7 +244,7 @@ const SkillDetails = (): ReactElement => {
 
     try {
       await createRequest(accessToken, {
-        toUserId: selectedSkill.authorId,
+        toUserId: currentAuthor.id,
         skillId: selectedSkill.id
       });
       setIsProposalSent(true);
@@ -252,7 +252,7 @@ const SkillDetails = (): ReactElement => {
     } catch (err) {
       console.error('[SkillDetails] Failed to create request', err);
     }
-  }, [accessToken, isAuthenticated, selectedSkill, user]);
+  }, [accessToken, currentAuthor, isAuthenticated, selectedSkill, user]);
 
   const handleCloseAuthModal = useCallback(() => {
     setIsAuthModalOpen(false);
@@ -322,7 +322,7 @@ const SkillDetails = (): ReactElement => {
             </div>
           </div>
           <p className={styles.authorBio}>
-            {selectedSkill.authorAbout ?? authorInfo.bio ?? ''}
+            {authorInfo.bio ?? selectedSkill.description ?? ''}
           </p>
 
           <div className={styles.authorSkills}>
@@ -412,9 +412,9 @@ const SkillDetails = (): ReactElement => {
             Похожие предложения
           </Title>
         </div>
-        {relatedSkills.length ? (
+        {relatedAuthors.length ? (
           <SkillsList
-            skills={relatedSkillsWithFavorites}
+            authors={relatedAuthorsWithFavorites}
             onToggleFavorite={handleToggleFavorite}
             onDetailsClick={handleDetailsClick}
           />

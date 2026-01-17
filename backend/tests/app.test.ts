@@ -203,7 +203,7 @@ describe('Catalog routes', () => {
 
   it('returns catalog search results', async () => {
     mockCatalogService.searchCatalogSkills.mockResolvedValue({
-      skills: [],
+      authors: [],
       page: 1,
       pageSize: 12,
       totalAuthors: 0
@@ -212,7 +212,7 @@ describe('Catalog routes', () => {
     const response = await request(app).get('/api/catalog/search?mode=all');
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
-      skills: [],
+      authors: [],
       page: 1,
       pageSize: 12,
       totalAuthors: 0

@@ -105,7 +105,8 @@ const AuthStepThree = () => {
     }
 
     const groupId = typeof stepTwoData.categoryId === 'number' ? stepTwoData.categoryId : null;
-    const title = 'Навык для обучения';
+    const subskillName = findSkillName(groupId, stepTwoData.subskillId);
+    const title = subskillName ?? '';
 
     return {
       id: generateSkillId(),
