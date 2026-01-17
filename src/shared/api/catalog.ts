@@ -1,4 +1,4 @@
-import { request } from '@/shared/api/request';
+import { request, type RequestOptions } from '@/shared/api/request';
 
 export interface CatalogFilterBaseData {
   cities: Array<{ id: number; name: string }>;
@@ -99,9 +99,9 @@ export const catalogApi = {
     return request<CatalogFilterBaseData>('/catalog/filters');
   },
 
-  search(params: CatalogSearchParams) {
+  search(params: CatalogSearchParams, options?: RequestOptions) {
     const query = buildCatalogSearchQuery(params);
     const path = query.length ? `/catalog/search?${query}` : '/catalog/search';
-    return request<CatalogSearchResponse>(path);
+    return request<CatalogSearchResponse>(path, options);
   }
 };

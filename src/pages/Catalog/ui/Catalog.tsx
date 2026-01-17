@@ -3,6 +3,7 @@
   useEffect,
   useMemo,
   useReducer,
+  useRef,
   useState,
   type ReactNode
 } from 'react';
@@ -36,6 +37,7 @@ import { ROUTES } from '@/shared/constants';
 import { useAuth } from '@/app/providers/auth';
 import { useFavorites } from '@/app/providers/favorites';
 import { adminApi } from '@/shared/api/admin';
+import { ApiError } from '@/shared/api/request';
 import { isElevatedRole } from '@/shared/types/userRole';
 import { loadFiltersBaseData } from '@/features/Filter/model/filterBaseDataStore';
 
@@ -121,6 +123,8 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   const [deletingAuthorIds, setDeletingAuthorIds] = useState<string[]>([]);
   const { user: authUser, accessToken } = useAuth();
   const { toggleFavorite, favoriteAuthorIds } = useFavorites();
+  const searchAbortRef = useRef<AbortController | null>(null);
+  const requestIdRef = useRef(0);
   const favoriteAuthorSet = useMemo(
     () => new Set(favoriteAuthorIds),
     [favoriteAuthorIds]
@@ -142,11 +146,26 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   const pageSize =
     variant === 'catalog' ? CATALOG_PAGE_SIZE : HOME_AUTHORS_LIMIT;
 
+  useEffect(() => {
+    return () => {
+      requestIdRef.current += 1;
+      searchAbortRef.current?.abort();
+      searchAbortRef.current = null;
+    };
+  }, []);
+
   const fetchSkills = useCallback(
     async (nextPage: number, append: boolean) => {
       if (filters.cities.length && cityOptions.length === 0) {
         return;
       }
+
+      const requestId = ++requestIdRef.current;
+      searchAbortRef.current?.abort();
+      const controller = new AbortController();
+      searchAbortRef.current = controller;
+
+      const isCurrentRequest = () => requestId === requestIdRef.current;
 
       const cityIds = filters.cities.length
         ? mapCityNamesToCityIds(cityOptions, filters.cities)
@@ -160,25 +179,44 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
       }
 
       try {
-        const data = await loadCatalogSkills({
-          mode: filters.mode,
-          gender: filters.gender,
-          cityIds,
-          skillIds: filters.skillIds,
-          search: searchQuery,
-          page: nextPage,
-          pageSize,
-          excludeAuthorId: currentUserId ?? undefined
-        });
+        const data = await loadCatalogSkills(
+          {
+            mode: filters.mode,
+            gender: filters.gender,
+            cityIds,
+            skillIds: filters.skillIds,
+            search: searchQuery,
+            page: nextPage,
+            pageSize,
+            excludeAuthorId: currentUserId ?? undefined
+          },
+          { signal: controller.signal }
+        );
+
+        if (!isCurrentRequest()) {
+          return;
+        }
 
         setSkills((prev) => (append ? [...prev, ...data.skills] : data.skills));
         setTotalAuthors(data.totalAuthors);
         setPage(nextPage);
         setError(null);
       } catch (err) {
+        if (!isCurrentRequest()) {
+          return;
+        }
+        if (err instanceof ApiError && err.status === 499) {
+          return;
+        }
         console.error('[Catalog] Failed to load catalog data', err);
         setError('Не удалось загрузить данные каталога');
       } finally {
+        if (!isCurrentRequest()) {
+          return;
+        }
+        if (searchAbortRef.current === controller) {
+          searchAbortRef.current = null;
+        }
         if (append) {
           setIsLoadingMore(false);
         } else {

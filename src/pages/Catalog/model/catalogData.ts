@@ -18,6 +18,7 @@ import type {
   CatalogSearchResponse as ApiCatalogSearchResponse
 } from '@/shared/api/catalog';
 import { catalogApi } from '@/shared/api/catalog';
+import type { RequestOptions } from '@/shared/api/request';
 
 export interface CatalogSkill extends Skill {
   originalSkillId: number;
@@ -47,8 +48,9 @@ export type CatalogSearchParams = ApiCatalogSearchParams;
 export type CatalogSearchResponse = ApiCatalogSearchResponse;
 
 export const loadCatalogSkills = async (
-  params: CatalogSearchParams
-): Promise<CatalogSearchResponse> => catalogApi.search(params);
+  params: CatalogSearchParams,
+  options?: RequestOptions
+): Promise<CatalogSearchResponse> => catalogApi.search(params, options);
 
 const categoryNameToConstant = new Map<string, SkillCategory>(
   Object.values(SkillCategories).map((value) => [value, value])
