@@ -213,7 +213,7 @@ const mapCatalogSkill = (record: CatalogSkillRecord): CatalogSkill | null => {
   const categoryId =
     typeof record.categoryId === 'number'
       ? record.categoryId
-      : record.subcategory?.groupId ?? null;
+      : (record.subcategory?.groupId ?? null);
 
   const imageUrls = parseImageUrls(record.imageUrls);
   const imageUrl = resolvePrimaryImage(imageUrls, user.avatarUrl);
@@ -398,8 +398,8 @@ export const catalogService = {
 
     const skills = await prisma.userSkill.findMany({
       where: {
-        userId: { in: pageAuthorIds },
-        subcategoryId: { not: null }
+        ...skillFilters,
+        userId: { in: pageAuthorIds }
       },
       include: {
         user: {
