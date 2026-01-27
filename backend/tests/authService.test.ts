@@ -36,6 +36,22 @@ const mockUserRepository: {
   findRefreshToken: jest.MockedFunction<
     (id: string) => Promise<RefreshTokenRecord | null>
   >;
+  deleteRefreshTokenIfValid: jest.MockedFunction<
+    (
+      id: string,
+      tokenHash: string,
+      rawToken: string,
+      now: Date
+    ) => Promise<{ count: number }>
+  >;
+  deleteRefreshTokenIfExpired: jest.MockedFunction<
+    (
+      id: string,
+      tokenHash: string,
+      rawToken: string,
+      now: Date
+    ) => Promise<{ count: number }>
+  >;
   deleteRefreshTokenById: jest.MockedFunction<(id: string) => Promise<void>>;
   deleteRefreshTokenByToken: jest.MockedFunction<
     (token: string) => Promise<void>
@@ -49,6 +65,8 @@ const mockUserRepository: {
   saveRefreshToken: jest.fn(),
   findById: jest.fn(),
   findRefreshToken: jest.fn(),
+  deleteRefreshTokenIfValid: jest.fn(),
+  deleteRefreshTokenIfExpired: jest.fn(),
   deleteRefreshTokenById: jest.fn(),
   deleteRefreshTokenByToken: jest.fn(),
   updateById: jest.fn()
@@ -158,7 +176,8 @@ describe('authService', () => {
             subcategoryId: 1,
             imageUrls: '[]'
           })
-        ])
+        ]),
+        expect.anything()
       );
       expect(result).toMatchObject({
         user: expect.objectContaining({ email: 'user@example.com' }),
@@ -230,7 +249,8 @@ describe('authService', () => {
         '123e4567-e89b-12d3-a456-426614174000',
         'user-1',
         hashToken('refresh-token'),
-        expect.any(Date)
+        expect.any(Date),
+        undefined
       );
 
       (
@@ -251,16 +271,17 @@ describe('authService', () => {
         name: 'User',
         role: 'user'
       });
-      mockUserRepository.findRefreshToken.mockResolvedValue({
-        token: 'refresh-token',
-        expiresAt: new Date('2999-01-01'),
-        id: 'token-id'
+      mockUserRepository.deleteRefreshTokenIfValid.mockResolvedValue({
+        count: 1
       });
 
       await authService.refreshSession('refresh-token');
 
-      expect(mockUserRepository.deleteRefreshTokenById).toHaveBeenCalledWith(
-        'token-id'
+      expect(mockUserRepository.deleteRefreshTokenIfValid).toHaveBeenCalledWith(
+        'token-id',
+        hashToken('refresh-token'),
+        'refresh-token',
+        expect.any(Date)
       );
       expect(mockUserRepository.saveRefreshToken).toHaveBeenCalled();
     });
@@ -276,18 +297,25 @@ describe('authService', () => {
         name: 'User',
         role: 'user'
       });
-      mockUserRepository.findRefreshToken.mockResolvedValue({
-        token: 'refresh-token',
-        expiresAt: new Date('2000-01-01'),
-        id: 'token-id'
+      mockUserRepository.deleteRefreshTokenIfValid.mockResolvedValue({
+        count: 0
+      });
+      mockUserRepository.deleteRefreshTokenIfExpired.mockResolvedValue({
+        count: 1
       });
 
       await expect(authService.refreshSession('refresh-token')).rejects.toThrow(
         'Unauthorized'
       );
-      expect(mockUserRepository.deleteRefreshTokenById).toHaveBeenCalledWith(
-        'token-id'
+      expect(
+        mockUserRepository.deleteRefreshTokenIfExpired
+      ).toHaveBeenCalledWith(
+        'token-id',
+        hashToken('refresh-token'),
+        'refresh-token',
+        expect.any(Date)
       );
+      expect(mockUserRepository.saveRefreshToken).not.toHaveBeenCalled();
     });
   });
 
@@ -329,7 +357,8 @@ describe('authService', () => {
       expect(updatePayload.gender).toBe('Мужской');
       expect(mockUserSkillRepository.deleteByUserAndType).toHaveBeenCalledWith(
         'user',
-        'teach'
+        'teach',
+        expect.anything()
       );
       expect(mockUserSkillRepository.createMany).toHaveBeenCalledWith(
         expect.arrayContaining([
@@ -342,7 +371,8 @@ describe('authService', () => {
             subcategoryId: null,
             imageUrls: '[]'
           })
-        ])
+        ]),
+        expect.anything()
       );
       expect(result).not.toBeNull();
       if (!result) {

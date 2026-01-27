@@ -41,6 +41,9 @@ const sampleUser = {
   learningSkills: []
 };
 
+const createApiError = (status: number) =>
+  new (jest.requireMock('@/shared/api/auth').ApiError)(status);
+
 const createJwtWithExp = (expMs: number) => {
   const toBase64Url = (data: object) =>
     btoa(JSON.stringify(data))
@@ -83,10 +86,13 @@ describe('AuthProvider', () => {
       user: sampleUser,
       accessToken: 'token'
     });
+    mockAuthApi.refresh.mockRejectedValue(createApiError(401));
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: ({ children }) => <AuthProvider>{children}</AuthProvider>
     });
+
+    await waitFor(() => expect(result.current.isInitializing).toBe(false));
 
     await act(async () => {
       await result.current.login({ email: 'user@test.io', password: 'pass' });
@@ -101,7 +107,7 @@ describe('AuthProvider', () => {
   });
 
   it('handles refresh failure by clearing session', async () => {
-    mockAuthApi.refresh.mockRejectedValue({ status: 401 });
+    mockAuthApi.refresh.mockRejectedValue(createApiError(401));
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: ({ children }) => <AuthProvider>{children}</AuthProvider>

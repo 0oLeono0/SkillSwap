@@ -1,4 +1,10 @@
-import { act, render, renderHook, screen, waitFor } from '@testing-library/react';
+import {
+  act,
+  render,
+  renderHook,
+  screen,
+  waitFor
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FavoritesProvider } from './FavoritesProvider';
 import { useFavorites } from './useFavorites';
@@ -6,7 +12,7 @@ import { useFavorites } from './useFavorites';
 const mockUseAuth = jest.fn();
 
 jest.mock('@/app/providers/auth', () => ({
-  useAuth: () => mockUseAuth(),
+  useAuth: () => mockUseAuth()
 }));
 
 jest.mock('@/shared/api/favorites', () => ({
@@ -14,19 +20,21 @@ jest.mock('@/shared/api/favorites', () => ({
     list: jest.fn(),
     add: jest.fn(),
     remove: jest.fn(),
-    clear: jest.fn(),
-  },
+    clear: jest.fn()
+  }
 }));
 
 const mockFavoritesApi = jest.requireMock('@/shared/api/favorites')
-  .favoritesApi as jest.Mocked<Awaited<typeof import('@/shared/api/favorites')>['favoritesApi']>;
+  .favoritesApi as jest.Mocked<
+  Awaited<typeof import('@/shared/api/favorites')>['favoritesApi']
+>;
 
 const Consumer = () => {
   const { favoriteAuthorIds, toggleFavorite, clearFavorites } = useFavorites();
 
   return (
     <div>
-      <div data-testid="favorites">{favoriteAuthorIds.join(',')}</div>
+      <div data-testid='favorites'>{favoriteAuthorIds.join(',')}</div>
       <button onClick={() => toggleFavorite('u1')}>toggle-u1</button>
       <button onClick={() => toggleFavorite('u2')}>toggle-u2</button>
       <button onClick={clearFavorites}>clear</button>
@@ -46,7 +54,7 @@ describe('FavoritesProvider', () => {
     render(
       <FavoritesProvider>
         <Consumer />
-      </FavoritesProvider>,
+      </FavoritesProvider>
     );
 
     await waitFor(() => {
@@ -57,15 +65,15 @@ describe('FavoritesProvider', () => {
 
   it('optimistically toggles favorites and syncs with API', async () => {
     mockFavoritesApi.list.mockResolvedValue({ favorites: [] });
-    mockFavoritesApi.add.mockResolvedValue({ favorite: { targetUserId: 'u1' } });
+    mockFavoritesApi.add.mockResolvedValue({
+      favorite: { targetUserId: 'u1' }
+    });
     mockFavoritesApi.remove.mockResolvedValue(undefined);
 
     const { result } = renderHook(() => useFavorites(), {
       wrapper: ({ children }) => (
-        <FavoritesProvider>
-          {children}
-        </FavoritesProvider>
-      ),
+        <FavoritesProvider>{children}</FavoritesProvider>
+      )
     });
 
     await waitFor(() => expect(mockFavoritesApi.list).toHaveBeenCalled());
@@ -89,10 +97,12 @@ describe('FavoritesProvider', () => {
     render(
       <FavoritesProvider>
         <Consumer />
-      </FavoritesProvider>,
+      </FavoritesProvider>
     );
 
-    await waitFor(() => expect(screen.getByTestId('favorites')).toHaveTextContent('u1'));
+    await waitFor(() =>
+      expect(screen.getByTestId('favorites')).toHaveTextContent('u1')
+    );
 
     await user.click(screen.getByRole('button', { name: 'clear' }));
     expect(screen.getByTestId('favorites')).toHaveTextContent('');
@@ -101,16 +111,21 @@ describe('FavoritesProvider', () => {
 
   it('keeps latest state when earlier optimistic update fails', async () => {
     mockFavoritesApi.list.mockResolvedValue({ favorites: [] });
-    mockFavoritesApi.add.mockResolvedValueOnce({ favorite: { targetUserId: 'u1' } });
+    mockFavoritesApi.add.mockResolvedValueOnce({
+      favorite: { targetUserId: 'u1' }
+    });
     mockFavoritesApi.remove.mockRejectedValueOnce(new Error('network'));
-    mockFavoritesApi.add.mockResolvedValueOnce({ favorite: { targetUserId: 'u2' } });
+    mockFavoritesApi.add.mockResolvedValueOnce({
+      favorite: { targetUserId: 'u2' }
+    });
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
 
     const { result } = renderHook(() => useFavorites(), {
       wrapper: ({ children }) => (
-        <FavoritesProvider>
-          {children}
-        </FavoritesProvider>
-      ),
+        <FavoritesProvider>{children}</FavoritesProvider>
+      )
     });
 
     await waitFor(() => expect(mockFavoritesApi.list).toHaveBeenCalled());
@@ -121,7 +136,12 @@ describe('FavoritesProvider', () => {
       result.current.toggleFavorite('u2'); // optimistic add u2
     });
 
-    await waitFor(() => expect(mockFavoritesApi.remove).toHaveBeenCalledWith('token', 'u1'));
-    await waitFor(() => expect(result.current.favoriteAuthorIds).toEqual(['u2']));
+    await waitFor(() =>
+      expect(mockFavoritesApi.remove).toHaveBeenCalledWith('token', 'u1')
+    );
+    await waitFor(() =>
+      expect(result.current.favoriteAuthorIds).toEqual(['u2'])
+    );
+    consoleErrorSpy.mockRestore();
   });
 });

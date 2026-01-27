@@ -258,26 +258,24 @@ export const authService = {
       throw createUnauthorized();
     }
 
-    const existingToken = await userRepository.findRefreshToken(
-      payload.tokenId
-    );
     const providedTokenHash = hashToken(refreshToken);
-    const tokenMatches =
-      existingToken &&
-      (existingToken.token === providedTokenHash ||
-        existingToken.token === refreshToken);
-    const isExpired = existingToken?.expiresAt
-      ? existingToken.expiresAt.getTime() <= Date.now()
-      : false;
+    const now = new Date();
+    const deleted = await userRepository.deleteRefreshTokenIfValid(
+      payload.tokenId,
+      providedTokenHash,
+      refreshToken,
+      now
+    );
 
-    if (!tokenMatches || isExpired) {
-      if (existingToken && isExpired) {
-        await userRepository.deleteRefreshTokenById(existingToken.id);
-      }
+    if (deleted.count === 0) {
+      await userRepository.deleteRefreshTokenIfExpired(
+        payload.tokenId,
+        providedTokenHash,
+        refreshToken,
+        now
+      );
       throw createUnauthorized();
     }
-
-    await userRepository.deleteRefreshTokenById(payload.tokenId);
 
     const tokens = await authService.issueTokens({
       id: user.id,

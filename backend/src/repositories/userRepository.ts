@@ -73,6 +73,42 @@ export const userRepository = {
     return getClient(client).refreshToken.findUnique({ where: { id } });
   },
 
+  deleteRefreshTokenIfValid(
+    id: string,
+    tokenHash: string,
+    rawToken: string,
+    now: Date,
+    client?: DbClient
+  ) {
+    return getClient(client).refreshToken.deleteMany({
+      where: {
+        id,
+        expiresAt: { gt: now },
+        token: {
+          in: [tokenHash, rawToken]
+        }
+      }
+    });
+  },
+
+  deleteRefreshTokenIfExpired(
+    id: string,
+    tokenHash: string,
+    rawToken: string,
+    now: Date,
+    client?: DbClient
+  ) {
+    return getClient(client).refreshToken.deleteMany({
+      where: {
+        id,
+        expiresAt: { lte: now },
+        token: {
+          in: [tokenHash, rawToken]
+        }
+      }
+    });
+  },
+
   deleteRefreshTokenById(id: string, client?: DbClient) {
     return getClient(client).refreshToken.deleteMany({ where: { id } });
   },
