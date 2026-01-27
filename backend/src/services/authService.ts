@@ -1,10 +1,11 @@
 import crypto from 'node:crypto';
-import type { Prisma } from '@prisma/client';
+import type { Prisma, PrismaClient } from '@prisma/client';
 import { hashPassword, verifyPassword } from '../utils/password.js';
 import { createConflict, createUnauthorized } from '../utils/httpErrors.js';
 import { tokenService } from './tokenService.js';
 import { userRepository } from '../repositories/userRepository.js';
 import { userSkillRepository } from '../repositories/userSkillRepository.js';
+import { prisma } from '../lib/prisma.js';
 import { sanitizeUser } from './userService.js';
 import {
   normalizeUserSkillList,
@@ -14,6 +15,8 @@ import {
 } from '../types/userSkill.js';
 import { isUserRole, type UserRole } from '../types/userRole.js';
 import { hashToken } from '../utils/tokenHash.js';
+
+type DbClient = PrismaClient | Prisma.TransactionClient;
 
 interface RegisterInput {
   email: string;
@@ -137,30 +140,39 @@ export const authService = {
       userData.bio = bio;
     }
 
-    const user = await userRepository.create(userData);
+    const { user: userWithSkills, tokens } = await prisma.$transaction(
+      async (tx) => {
+        const user = await userRepository.create(userData, tx);
 
-    const skillRows = [
-      ...normalizedTeachableSkills.map((skill) =>
-        toSkillCreateInput(user.id, 'teach', skill)
-      ),
-      ...normalizedLearningSkills.map((skill) =>
-        toSkillCreateInput(user.id, 'learn', skill)
-      )
-    ];
+        const skillRows = [
+          ...normalizedTeachableSkills.map((skill) =>
+            toSkillCreateInput(user.id, 'teach', skill)
+          ),
+          ...normalizedLearningSkills.map((skill) =>
+            toSkillCreateInput(user.id, 'learn', skill)
+          )
+        ];
 
-    await userSkillRepository.createMany(skillRows);
+        await userSkillRepository.createMany(skillRows, tx);
 
-    const userWithSkills = await userRepository.findById(user.id);
-    if (!userWithSkills) {
-      throw createUnauthorized();
-    }
+        const userWithSkills = await userRepository.findById(user.id, tx);
+        if (!userWithSkills) {
+          throw createUnauthorized();
+        }
 
-    const tokens = await authService.issueTokens({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: resolveUserRole(user.role)
-    });
+        const tokens = await authService.issueTokens(
+          {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: resolveUserRole(user.role)
+          },
+          tx
+        );
+
+        return { user: userWithSkills, tokens };
+      }
+    );
 
     return {
       user: sanitizeUser(userWithSkills),
@@ -192,17 +204,20 @@ export const authService = {
     };
   },
 
-  async issueTokens({
-    id,
-    email,
-    name,
-    role
-  }: {
-    id: string;
-    email: string;
-    name: string;
-    role: UserRole;
-  }) {
+  async issueTokens(
+    {
+      id,
+      email,
+      name,
+      role
+    }: {
+      id: string;
+      email: string;
+      name: string;
+      role: UserRole;
+    },
+    client?: DbClient
+  ) {
     const jti = crypto.randomUUID();
     const accessToken = tokenService.createAccessToken({
       sub: id,
@@ -216,7 +231,13 @@ export const authService = {
     });
 
     const refreshTokenHash = hashToken(refreshToken);
-    await userRepository.saveRefreshToken(jti, id, refreshTokenHash, expiresAt);
+    await userRepository.saveRefreshToken(
+      jti,
+      id,
+      refreshTokenHash,
+      expiresAt,
+      client
+    );
 
     return {
       accessToken,
@@ -272,82 +293,89 @@ export const authService = {
   },
 
   async updateProfile(userId: string, updates: UpdateProfileInput) {
-    const existingUser = await userRepository.findById(userId);
-    if (!existingUser) {
-      throw createUnauthorized();
-    }
-
-    if (updates.email && updates.email !== existingUser.email) {
-      const conflict = await userRepository.findByEmail(updates.email);
-      if (conflict) {
-        throw createConflict('User with this email already exists');
-      }
-    }
-
-    const data: Prisma.UserUpdateInput = {};
-
-    if (updates.email) {
-      data.email = updates.email;
-    }
-    if (updates.name) {
-      data.name = updates.name;
-    }
-    if ('avatarUrl' in updates) {
-      data.avatarUrl = updates.avatarUrl ?? null;
-    }
-    if ('cityId' in updates) {
-      if (typeof updates.cityId === 'number') {
-        data.city = { connect: { id: updates.cityId } };
-      } else {
-        data.city = { disconnect: true };
-      }
-    }
-    if ('birthDate' in updates) {
-      if (updates.birthDate) {
-        const parsed = parseBirthDate(updates.birthDate);
-        data.birthDate = parsed ?? null;
-      } else {
-        data.birthDate = null;
-      }
-    }
-    if ('gender' in updates) {
-      data.gender = updates.gender ?? null;
-    }
-    if ('bio' in updates) {
-      data.bio = updates.bio ?? null;
-    }
-
     const shouldUpdateSkills =
       'teachableSkills' in updates || 'learningSkills' in updates;
 
-    let updatedUser = existingUser;
-    if (Object.keys(data).length > 0) {
-      updatedUser = await userRepository.updateById(userId, data);
-    }
+    const user = await prisma.$transaction(async (tx) => {
+      const existingUser = await userRepository.findById(userId, tx);
+      if (!existingUser) {
+        throw createUnauthorized();
+      }
 
-    if ('teachableSkills' in updates) {
-      await userSkillRepository.deleteByUserAndType(userId, 'teach');
-      const normalized = normalizeSkills(updates.teachableSkills);
-      const rows = normalized.map((skill) =>
-        toSkillCreateInput(userId, 'teach', skill)
-      );
-      await userSkillRepository.createMany(rows);
-    }
+      if (updates.email && updates.email !== existingUser.email) {
+        const conflict = await userRepository.findByEmail(updates.email, tx);
+        if (conflict) {
+          throw createConflict('User with this email already exists');
+        }
+      }
 
-    if ('learningSkills' in updates) {
-      await userSkillRepository.deleteByUserAndType(userId, 'learn');
-      const normalized = normalizeSkills(updates.learningSkills);
-      const rows = normalized.map((skill) =>
-        toSkillCreateInput(userId, 'learn', skill)
-      );
-      await userSkillRepository.createMany(rows);
-    }
+      const data: Prisma.UserUpdateInput = {};
 
-    if (shouldUpdateSkills) {
-      const userWithSkills = await userRepository.findById(userId);
-      return sanitizeUser(userWithSkills);
-    }
+      if (updates.email) {
+        data.email = updates.email;
+      }
+      if (updates.name) {
+        data.name = updates.name;
+      }
+      if ('avatarUrl' in updates) {
+        data.avatarUrl = updates.avatarUrl ?? null;
+      }
+      if ('cityId' in updates) {
+        if (typeof updates.cityId === 'number') {
+          data.city = { connect: { id: updates.cityId } };
+        } else {
+          data.city = { disconnect: true };
+        }
+      }
+      if ('birthDate' in updates) {
+        if (updates.birthDate) {
+          const parsed = parseBirthDate(updates.birthDate);
+          data.birthDate = parsed ?? null;
+        } else {
+          data.birthDate = null;
+        }
+      }
+      if ('gender' in updates) {
+        data.gender = updates.gender ?? null;
+      }
+      if ('bio' in updates) {
+        data.bio = updates.bio ?? null;
+      }
 
-    return sanitizeUser(updatedUser);
+      let updatedUser = existingUser;
+      if (Object.keys(data).length > 0) {
+        updatedUser = await userRepository.updateById(userId, data, tx);
+      }
+
+      if ('teachableSkills' in updates) {
+        await userSkillRepository.deleteByUserAndType(userId, 'teach', tx);
+        const normalized = normalizeSkills(updates.teachableSkills);
+        const rows = normalized.map((skill) =>
+          toSkillCreateInput(userId, 'teach', skill)
+        );
+        await userSkillRepository.createMany(rows, tx);
+      }
+
+      if ('learningSkills' in updates) {
+        await userSkillRepository.deleteByUserAndType(userId, 'learn', tx);
+        const normalized = normalizeSkills(updates.learningSkills);
+        const rows = normalized.map((skill) =>
+          toSkillCreateInput(userId, 'learn', skill)
+        );
+        await userSkillRepository.createMany(rows, tx);
+      }
+
+      if (shouldUpdateSkills) {
+        const userWithSkills = await userRepository.findById(userId, tx);
+        if (!userWithSkills) {
+          throw createUnauthorized();
+        }
+        return userWithSkills;
+      }
+
+      return updatedUser;
+    });
+
+    return sanitizeUser(user);
   }
 };

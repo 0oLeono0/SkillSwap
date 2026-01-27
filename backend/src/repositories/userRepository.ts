@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma, PrismaClient } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { hashToken } from '../utils/tokenHash.js';
 
@@ -6,13 +6,20 @@ const includeSkills = {
   userSkills: true
 };
 
+type DbClient = PrismaClient | Prisma.TransactionClient;
+
+const getClient = (client?: DbClient) => client ?? prisma;
+
 export const userRepository = {
-  findByEmail(email: string) {
-    return prisma.user.findUnique({ where: { email }, include: includeSkills });
+  findByEmail(email: string, client?: DbClient) {
+    return getClient(client).user.findUnique({
+      where: { email },
+      include: includeSkills
+    });
   },
 
-  findAll() {
-    return prisma.user.findMany({
+  findAll(client?: DbClient) {
+    return getClient(client).user.findMany({
       orderBy: {
         createdAt: 'desc'
       },
@@ -20,24 +27,27 @@ export const userRepository = {
     });
   },
 
-  findById(id: string) {
-    return prisma.user.findUnique({ where: { id }, include: includeSkills });
+  findById(id: string, client?: DbClient) {
+    return getClient(client).user.findUnique({
+      where: { id },
+      include: includeSkills
+    });
   },
 
-  create(data: Prisma.UserCreateInput) {
-    return prisma.user.create({ data, include: includeSkills });
+  create(data: Prisma.UserCreateInput, client?: DbClient) {
+    return getClient(client).user.create({ data, include: includeSkills });
   },
 
-  updateById(id: string, data: Prisma.UserUpdateInput) {
-    return prisma.user.update({
+  updateById(id: string, data: Prisma.UserUpdateInput, client?: DbClient) {
+    return getClient(client).user.update({
       where: { id },
       data,
       include: includeSkills
     });
   },
 
-  deleteById(id: string) {
-    return prisma.user.delete({
+  deleteById(id: string, client?: DbClient) {
+    return getClient(client).user.delete({
       where: { id }
     });
   },
@@ -46,9 +56,10 @@ export const userRepository = {
     id: string,
     userId: string,
     tokenHash: string,
-    expiresAt: Date
+    expiresAt: Date,
+    client?: DbClient
   ) {
-    return prisma.refreshToken.create({
+    return getClient(client).refreshToken.create({
       data: {
         id,
         userId,
@@ -58,17 +69,17 @@ export const userRepository = {
     });
   },
 
-  findRefreshToken(id: string) {
-    return prisma.refreshToken.findUnique({ where: { id } });
+  findRefreshToken(id: string, client?: DbClient) {
+    return getClient(client).refreshToken.findUnique({ where: { id } });
   },
 
-  deleteRefreshTokenById(id: string) {
-    return prisma.refreshToken.deleteMany({ where: { id } });
+  deleteRefreshTokenById(id: string, client?: DbClient) {
+    return getClient(client).refreshToken.deleteMany({ where: { id } });
   },
 
-  deleteRefreshTokenByToken(token: string) {
+  deleteRefreshTokenByToken(token: string, client?: DbClient) {
     const tokenHash = hashToken(token);
-    return prisma.refreshToken.deleteMany({
+    return getClient(client).refreshToken.deleteMany({
       where: {
         token: {
           in: [tokenHash, token]
