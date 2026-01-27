@@ -5,7 +5,7 @@ import { Title } from '@/shared/ui/Title';
 import type { FilterPanelProps, SearchMode } from '../types.ts';
 import CrossIcon from '@/shared/assets/icons/actions/cross.svg?react';
 import { MultiSelectCheckboxList } from '@/shared/ui/MultiSelectCheckboxList/MultiSelectCheckboxList';
-import type { Gender } from '@/api/types.ts';
+import type { Gender } from '@/shared/types/gender';
 import { mapCityNamesToCityIds, selectedSkillsByGroup } from '../utils.ts';
 import { GroupedMultiSelect } from '@/shared/ui/GroupedMultiSelect/GroupedMultiSelect';
 import { ToggleMore } from '@/features/Filter/ui/ToggleMore/ToggleMore.tsx';
@@ -26,7 +26,9 @@ export const FilterPanel: FC<FilterPanelProps> = (props: FilterPanelProps) => {
   const [showAllCities, setShowAllCities] = useState(false);
   const visibleCities = showAllCities ? cities : cities.slice(0, 5);
   const [showAllCategories, setShowAllCategories] = useState(false);
-  const visibleCategories = showAllCategories ? skillGroups : skillGroups.slice(0, 5);
+  const visibleCategories = showAllCategories
+    ? skillGroups
+    : skillGroups.slice(0, 5);
 
   return (
     <>
@@ -36,9 +38,11 @@ export const FilterPanel: FC<FilterPanelProps> = (props: FilterPanelProps) => {
             Фильтры
             {filtersCount > 0 && <span> ({filtersCount})</span>}
           </Title>
-          {filtersCount > 0 &&
-            <span className={styles.reset} onClick={onFilterReset}>Сбросить <CrossIcon /></span>
-          }
+          {filtersCount > 0 && (
+            <span className={styles.reset} onClick={onFilterReset}>
+              Сбросить <CrossIcon />
+            </span>
+          )}
         </div>
         <RadioGroup
           name={'mode'}
@@ -50,9 +54,11 @@ export const FilterPanel: FC<FilterPanelProps> = (props: FilterPanelProps) => {
           <Radio title={'Могу научить'} value={'canTeach'}></Radio>
         </RadioGroup>
         <div className={styles.filter}>
-          <Title tag={'h3'} variant={'md'}>Навыки</Title>
+          <Title tag={'h3'} variant={'md'}>
+            Навыки
+          </Title>
           <div>
-            {visibleCategories.map(group => (
+            {visibleCategories.map((group) => (
               <GroupedMultiSelect
                 key={group.id}
                 parentOption={{
@@ -68,13 +74,15 @@ export const FilterPanel: FC<FilterPanelProps> = (props: FilterPanelProps) => {
               <ToggleMore
                 isOpen={showAllCategories}
                 onToggle={() => setShowAllCategories(!showAllCategories)}
-                labelClosed="Все категории"
+                labelClosed='Все категории'
               />
             )}
           </div>
         </div>
         <div className={styles.filter}>
-          <Title tag={'h3'} variant={'md'}>Пол автора</Title>
+          <Title tag={'h3'} variant={'md'}>
+            Пол автора
+          </Title>
           <RadioGroup
             name={'gender'}
             value={filters.gender}
@@ -86,7 +94,9 @@ export const FilterPanel: FC<FilterPanelProps> = (props: FilterPanelProps) => {
           </RadioGroup>
         </div>
         <div className={styles.filter}>
-          <Title tag={'h3'} variant={'md'}>Город</Title>
+          <Title tag={'h3'} variant={'md'}>
+            Город
+          </Title>
           <div>
             <MultiSelectCheckboxList
               options={visibleCities}
@@ -97,7 +107,7 @@ export const FilterPanel: FC<FilterPanelProps> = (props: FilterPanelProps) => {
               <ToggleMore
                 isOpen={showAllCities}
                 onToggle={() => setShowAllCities(!showAllCities)}
-                labelClosed="Все города"
+                labelClosed='Все города'
               />
             )}
           </div>
