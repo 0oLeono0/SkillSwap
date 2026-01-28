@@ -4,7 +4,7 @@ import {
   useEffect,
   useState,
   type ChangeEvent,
-  type ReactElement,
+  type ReactElement
 } from 'react';
 import clsx from 'clsx';
 import styles from './profileExchanges.module.scss';
@@ -16,10 +16,11 @@ import type {
   Exchange,
   ExchangeMessage,
   ExchangeStatus,
-  ExchangeWithMessages,
+  ExchangeWithMessages
 } from '@/entities/Exchange/types';
 import { getSubskillNameMap } from '@/entities/Skill/mappers';
 import { loadFiltersBaseData } from '@/features/Filter/model/filterBaseDataStore';
+import { parseCatalogSkillId } from '@/shared/lib/skills/parseCatalogSkillId';
 
 interface SkillMeta {
   title: string;
@@ -30,12 +31,14 @@ const UNKNOWN_SKILL_TITLE = 'Неизвестный навык';
 
 const STATUS_LABELS: Record<ExchangeStatus, string> = {
   active: 'Активный обмен',
-  completed: 'Обмен завершён',
+  completed: 'Обмен завершён'
 };
 
 const STATUS_HINTS: Record<ExchangeStatus, string> = {
-  active: 'Вы можете общаться и обмениваться навыками, пока обмен в статусе “Активный”.',
-  completed: 'Обмен завершён. Подтвердите результат и договоритесь, если хотите продолжить.',
+  active:
+    'Вы можете общаться и обмениваться навыками, пока обмен в статусе “Активный”.',
+  completed:
+    'Обмен завершён. Подтвердите результат и договоритесь, если хотите продолжить.'
 };
 
 export const formatDateTime = (value?: string | null): string => {
@@ -52,24 +55,25 @@ export const formatDateTime = (value?: string | null): string => {
     day: '2-digit',
     month: 'short',
     hour: '2-digit',
-    minute: '2-digit',
+    minute: '2-digit'
   });
 };
 
-export const parseSkillMeta = (skillId: string, titleById: Map<number, string>): SkillMeta => {
-  const parts = skillId.split('-');
-  if (parts.length < 3) {
+export const parseSkillMeta = (
+  skillId: string,
+  titleById: Map<number, string>
+): SkillMeta => {
+  const parsed = parseCatalogSkillId(skillId);
+  const subskillId = parsed?.subskillId;
+  if (!parsed || typeof subskillId !== 'number') {
     return { title: UNKNOWN_SKILL_TITLE };
   }
-
-  parts.shift(); // remove user id
-  parts.shift(); // remove skill direction
-  const subskillIdRaw = parts.shift();
-  const subskillId = Number(subskillIdRaw);
   const fallbackTitle = Number.isFinite(subskillId)
     ? `${UNKNOWN_SKILL_TITLE} #${subskillId}`
     : UNKNOWN_SKILL_TITLE;
-  const title = Number.isFinite(subskillId) ? titleById.get(subskillId) ?? fallbackTitle : fallbackTitle;
+  const title = Number.isFinite(subskillId)
+    ? (titleById.get(subskillId) ?? fallbackTitle)
+    : fallbackTitle;
 
   return { title };
 };
@@ -80,8 +84,11 @@ export const getRoleLabel = (isInitiator: boolean) =>
 export function ProfileExchanges(): ReactElement {
   const { isAuthenticated, accessToken, isInitializing, user } = useAuth();
   const [exchanges, setExchanges] = useState<Exchange[]>([]);
-  const [selectedExchangeId, setSelectedExchangeId] = useState<string | null>(null);
-  const [selectedExchange, setSelectedExchange] = useState<ExchangeWithMessages | null>(null);
+  const [selectedExchangeId, setSelectedExchangeId] = useState<string | null>(
+    null
+  );
+  const [selectedExchange, setSelectedExchange] =
+    useState<ExchangeWithMessages | null>(null);
   const [isListLoading, setIsListLoading] = useState(false);
   const [isDetailsLoading, setIsDetailsLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
@@ -114,18 +121,22 @@ export function ProfileExchanges(): ReactElement {
       try {
         const data = await exchangesApi.fetchAll(effectiveToken);
         const sorted = [...data.exchanges].sort(
-          (a, b) => new Date(b.confirmedAt).getTime() - new Date(a.confirmedAt).getTime(),
+          (a, b) =>
+            new Date(b.confirmedAt).getTime() -
+            new Date(a.confirmedAt).getTime()
         );
         setExchanges(sorted);
         setListError(null);
       } catch (err) {
         console.error('[ProfileExchanges] Failed to load exchanges', err);
-        setListError('Не удалось загрузить подтверждённые обмены. Попробуйте обновить вкладку позднее.');
+        setListError(
+          'Не удалось загрузить подтверждённые обмены. Попробуйте обновить вкладку позднее.'
+        );
       } finally {
         setIsListLoading(false);
       }
     },
-    [accessToken],
+    [accessToken]
   );
 
   const loadExchangeDetails = useCallback(
@@ -141,13 +152,16 @@ export function ProfileExchanges(): ReactElement {
         setSelectedExchange(data.exchange);
         setDetailsError(null);
       } catch (err) {
-        console.error('[ProfileExchanges] Failed to load exchange details', err);
+        console.error(
+          '[ProfileExchanges] Failed to load exchange details',
+          err
+        );
         setDetailsError('Не удалось загрузить детали обмена.');
       } finally {
         setIsDetailsLoading(false);
       }
     },
-    [accessToken],
+    [accessToken]
   );
 
   useEffect(() => {
@@ -175,7 +189,10 @@ export function ProfileExchanges(): ReactElement {
     }
 
     setSelectedExchangeId((currentId) => {
-      if (currentId && exchanges.some((exchange) => exchange.id === currentId)) {
+      if (
+        currentId &&
+        exchanges.some((exchange) => exchange.id === currentId)
+      ) {
         return currentId;
       }
       return exchanges[0]?.id ?? null;
@@ -203,14 +220,18 @@ export function ProfileExchanges(): ReactElement {
 
     setIsSendingMessage(true);
     try {
-      const { message } = await exchangesApi.sendMessage(accessToken, selectedExchange.id, text);
+      const { message } = await exchangesApi.sendMessage(
+        accessToken,
+        selectedExchange.id,
+        text
+      );
       setSelectedExchange((current) =>
         current
           ? {
               ...current,
-              messages: [...current.messages, message],
+              messages: [...current.messages, message]
             }
-          : current,
+          : current
       );
       setMessageDraft('');
       setChatError(null);
@@ -223,21 +244,28 @@ export function ProfileExchanges(): ReactElement {
   }, [accessToken, messageDraft, selectedExchange]);
 
   const handleCompleteExchange = useCallback(async () => {
-    if (!selectedExchange || !accessToken || selectedExchange.status === 'completed') {
+    if (
+      !selectedExchange ||
+      !accessToken ||
+      selectedExchange.status === 'completed'
+    ) {
       return;
     }
 
     setIsCompleting(true);
     try {
-      const { exchange } = await exchangesApi.complete(accessToken, selectedExchange.id);
+      const { exchange } = await exchangesApi.complete(
+        accessToken,
+        selectedExchange.id
+      );
       setSelectedExchange((current) =>
         current
           ? {
               ...current,
               status: exchange.status as ExchangeStatus,
-              completedAt: exchange.completedAt,
+              completedAt: exchange.completedAt
             }
-          : current,
+          : current
       );
       await loadExchanges(accessToken);
     } catch (err) {
@@ -253,11 +281,18 @@ export function ProfileExchanges(): ReactElement {
     return (
       <li
         key={message.id}
-        className={clsx(styles.message, isOwn ? styles.messageOwn : styles.messagePeer)}
+        className={clsx(
+          styles.message,
+          isOwn ? styles.messageOwn : styles.messagePeer
+        )}
       >
         <div className={styles.messageMeta}>
-          <span className={styles.messageAuthor}>{message.sender?.name ?? 'Участник'}</span>
-          <span className={styles.messageTime}>{formatDateTime(message.createdAt)}</span>
+          <span className={styles.messageAuthor}>
+            {message.sender?.name ?? 'Участник'}
+          </span>
+          <span className={styles.messageTime}>
+            {formatDateTime(message.createdAt)}
+          </span>
         </div>
         <p className={styles.messageBody}>{message.content}</p>
       </li>
@@ -286,7 +321,8 @@ export function ProfileExchanges(): ReactElement {
           Мои обмены
         </Title>
         <p className={styles.subtitle}>
-          Авторизуйтесь, чтобы видеть подтверждённые обмены, историю переписки и завершать сессии.
+          Авторизуйтесь, чтобы видеть подтверждённые обмены, историю переписки и
+          завершать сессии.
         </p>
       </section>
     );
@@ -300,8 +336,8 @@ export function ProfileExchanges(): ReactElement {
             Мои обмены
           </Title>
           <p className={styles.subtitle}>
-            Здесь хранятся все обмены, подтверждённые обеими сторонами. Выберите карточку, чтобы
-            открыть чат и завершить сессию при необходимости.
+            Здесь хранятся все обмены, подтверждённые обеими сторонами. Выберите
+            карточку, чтобы открыть чат и завершить сессию при необходимости.
           </p>
         </div>
         <Button
@@ -320,20 +356,30 @@ export function ProfileExchanges(): ReactElement {
           {exchanges.length ? (
             <ul className={styles.list}>
               {exchanges.map((exchange) => {
-                const skillMeta = parseSkillMeta(exchange.request.skillId, skillNames);
+                const skillMeta = parseSkillMeta(
+                  exchange.request.skillId,
+                  skillNames
+                );
                 const statusClass = clsx(
                   styles.statusBadge,
-                  styles[`status-${exchange.status}`],
+                  styles[`status-${exchange.status}`]
                 );
                 const isActive = exchange.id === selectedExchangeId;
                 const counterpart =
-                  exchange.initiator.id === user?.id ? exchange.recipient : exchange.initiator;
-                const roleLabel = getRoleLabel(exchange.initiator.id === user?.id);
+                  exchange.initiator.id === user?.id
+                    ? exchange.recipient
+                    : exchange.initiator;
+                const roleLabel = getRoleLabel(
+                  exchange.initiator.id === user?.id
+                );
                 return (
                   <li key={exchange.id}>
                     <button
                       type='button'
-                      className={clsx(styles.listItem, isActive && styles.listItemActive)}
+                      className={clsx(
+                        styles.listItem,
+                        isActive && styles.listItemActive
+                      )}
                       onClick={() => handleSelectExchange(exchange.id)}
                     >
                       <div className={styles.listItemHeader}>
@@ -341,14 +387,20 @@ export function ProfileExchanges(): ReactElement {
                           <span className={styles.skillType}>{roleLabel}</span>
                           <p className={styles.skillTitle}>{skillMeta.title}</p>
                         </div>
-                        <span className={statusClass}>{STATUS_LABELS[exchange.status]}</span>
+                        <span className={statusClass}>
+                          {STATUS_LABELS[exchange.status]}
+                        </span>
                       </div>
                       <div className={styles.listMeta}>
                         <span>
-                          Партнёр: <strong>{counterpart?.name ?? 'Участник'}</strong>
+                          Партнёр:{' '}
+                          <strong>{counterpart?.name ?? 'Участник'}</strong>
                         </span>
                         <span>
-                          Подтверждён: <strong>{formatDateTime(exchange.confirmedAt)}</strong>
+                          Подтверждён:{' '}
+                          <strong>
+                            {formatDateTime(exchange.confirmedAt)}
+                          </strong>
                         </span>
                       </div>
                     </button>
@@ -358,8 +410,9 @@ export function ProfileExchanges(): ReactElement {
             </ul>
           ) : (
             <p className={styles.empty}>
-              Здесь появятся обмены после того, как обе стороны подтвердят участие. Пока вы ещё не
-              подтвердили ни одной заявки или ждёте ответа от партнёров.
+              Здесь появятся обмены после того, как обе стороны подтвердят
+              участие. Пока вы ещё не подтвердили ни одной заявки или ждёте
+              ответа от партнёров.
             </p>
           )}
         </div>
@@ -384,12 +437,15 @@ export function ProfileExchanges(): ReactElement {
                   <p className={styles.detailsEyebrow}>
                     {getRoleLabel(selectedExchange.initiator.id === user?.id)}
                   </p>
-                  <h3 className={styles.detailsTitle}>{selectedSkillMeta.title}</h3>
+                  <h3 className={styles.detailsTitle}>
+                    {selectedSkillMeta.title}
+                  </h3>
                   <p className={styles.detailsMeta}>
                     Подтверждён: {formatDateTime(selectedExchange.confirmedAt)}
                     {selectedExchange.completedAt && (
                       <>
-                        {' · '}Завершён: {formatDateTime(selectedExchange.completedAt)}
+                        {' · '}Завершён:{' '}
+                        {formatDateTime(selectedExchange.completedAt)}
                       </>
                     )}
                   </p>
@@ -398,7 +454,7 @@ export function ProfileExchanges(): ReactElement {
                   <span
                     className={clsx(
                       styles.statusBadge,
-                      styles[`status-${selectedExchange.status}`],
+                      styles[`status-${selectedExchange.status}`]
                     )}
                   >
                     {STATUS_LABELS[selectedExchange.status]}
@@ -407,7 +463,9 @@ export function ProfileExchanges(): ReactElement {
                     variant='primary'
                     onClick={handleCompleteExchange}
                     disabled={
-                      selectedExchange.status === 'completed' || isCompleting || !selectedExchangeId
+                      selectedExchange.status === 'completed' ||
+                      isCompleting ||
+                      !selectedExchangeId
                     }
                   >
                     {selectedExchange.status === 'completed'
@@ -419,7 +477,9 @@ export function ProfileExchanges(): ReactElement {
                 </div>
               </header>
 
-              <p className={styles.detailsHint}>{STATUS_HINTS[selectedExchange.status]}</p>
+              <p className={styles.detailsHint}>
+                {STATUS_HINTS[selectedExchange.status]}
+              </p>
 
               {detailsError && <p className={styles.error}>{detailsError}</p>}
 
@@ -428,7 +488,9 @@ export function ProfileExchanges(): ReactElement {
                   {selectedExchange.messages.length ? (
                     selectedExchange.messages.map(renderMessage)
                   ) : (
-                    <li className={styles.messagesEmpty}>Переписка пока пустая.</li>
+                    <li className={styles.messagesEmpty}>
+                      Переписка пока пустая.
+                    </li>
                   )}
                 </ul>
 
@@ -442,7 +504,9 @@ export function ProfileExchanges(): ReactElement {
                         : 'Напишите сообщение партнёру…'
                     }
                     disabled={
-                      selectedExchange.status === 'completed' || isSendingMessage || !selectedExchangeId
+                      selectedExchange.status === 'completed' ||
+                      isSendingMessage ||
+                      !selectedExchangeId
                     }
                   />
                   <div className={styles.chatActions}>
@@ -468,4 +532,3 @@ export function ProfileExchanges(): ReactElement {
     </section>
   );
 }
-

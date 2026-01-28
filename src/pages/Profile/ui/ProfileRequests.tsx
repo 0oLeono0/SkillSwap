@@ -1,9 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useState,
-  type ReactElement,
-} from 'react';
+import { useCallback, useEffect, useState, type ReactElement } from 'react';
 import clsx from 'clsx';
 import styles from './profileRequests.module.scss';
 import { Title } from '@/shared/ui/Title';
@@ -13,7 +8,11 @@ import type { Request, RequestStatus } from '@/entities/Request/types';
 import { getSubskillNameMap } from '@/entities/Skill/mappers';
 import { loadFiltersBaseData } from '@/features/Filter/model/filterBaseDataStore';
 import { requestsApi } from '@/shared/api/requests';
-import { acceptRequest, rejectRequest } from '@/features/requests/model/actions';
+import {
+  acceptRequest,
+  rejectRequest
+} from '@/features/requests/model/actions';
+import { parseCatalogSkillId } from '@/shared/lib/skills/parseCatalogSkillId';
 
 type RequestDirection = 'incoming' | 'outgoing';
 
@@ -25,18 +24,18 @@ interface SkillMeta {
 const STATUS_LABELS: Record<RequestStatus, string> = {
   pending: 'В ожидании',
   accepted: 'Одобрена',
-  rejected: 'Отклонена',
+  rejected: 'Отклонена'
 };
 
 const STATUS_HINTS: Record<RequestStatus, string> = {
   pending: 'Ждёт решения другой стороны.',
   accepted: 'Можно переходить к деталям обмена.',
-  rejected: 'Эта заявка закрыта.',
+  rejected: 'Эта заявка закрыта.'
 };
 
 const SKILL_TYPE_LABEL: Record<SkillMeta['type'], string> = {
   teach: 'Навык, который готовы передать',
-  learn: 'Навык, которому ищут наставника',
+  learn: 'Навык, которому ищут наставника'
 };
 
 const formatDateTime = (value?: string | null): string => {
@@ -53,19 +52,23 @@ const formatDateTime = (value?: string | null): string => {
     day: '2-digit',
     month: 'short',
     hour: '2-digit',
-    minute: '2-digit',
+    minute: '2-digit'
   });
 };
 
-const parseSkillMeta = (skillId: string, titleById: Map<number, string>): SkillMeta => {
-  const parts = skillId.split('-');
-  const subskillIdRaw = parts.pop();
-  const typeRaw = parts.pop();
-  const type = typeRaw === 'learn' ? 'learn' : 'teach';
-  const subskillId = Number(subskillIdRaw);
-  const fallbackTitle = Number.isFinite(subskillId) ? `Навык #${subskillId}` : 'Навык';
-  const title = Number.isFinite(subskillId)
-    ? titleById.get(subskillId) ?? fallbackTitle
+const parseSkillMeta = (
+  skillId: string,
+  titleById: Map<number, string>
+): SkillMeta => {
+  const parsed = parseCatalogSkillId(skillId);
+  const type = parsed?.type ?? 'teach';
+  const subskillId = parsed?.subskillId;
+  const hasSubskillId = typeof subskillId === 'number';
+  const fallbackTitle = hasSubskillId
+    ? `Навык #${subskillId}`
+    : 'Навык';
+  const title = hasSubskillId
+    ? (titleById.get(subskillId) ?? fallbackTitle)
     : fallbackTitle;
 
   return { title, type };
@@ -111,7 +114,7 @@ export function ProfileRequests(): ReactElement {
         setIsLoading(false);
       }
     },
-    [accessToken],
+    [accessToken]
   );
 
   useEffect(() => {
@@ -137,20 +140,19 @@ export function ProfileRequests(): ReactElement {
         await loadRequests(accessToken);
       } catch (err) {
         console.error('[ProfileRequests] Failed to update status', err);
-        setError('Не удалось обновить статус заявки. Попробуйте повторить позже.');
+        setError(
+          'Не удалось обновить статус заявки. Попробуйте повторить позже.'
+        );
       }
     },
-    [accessToken, loadRequests],
+    [accessToken, loadRequests]
   );
 
-  const renderRequestCard = (
-    request: Request,
-    direction: RequestDirection,
-  ) => {
+  const renderRequestCard = (request: Request, direction: RequestDirection) => {
     const skillMeta = parseSkillMeta(request.skillId, skillNames);
     const statusClass = clsx(
       styles.statusBadge,
-      styles[`status-${request.status}`],
+      styles[`status-${request.status}`]
     );
 
     const counterpart =
@@ -271,12 +273,14 @@ export function ProfileRequests(): ReactElement {
 
           {incoming.length ? (
             <ul className={styles.list}>
-              {incoming.map((request) => renderRequestCard(request, 'incoming'))}
+              {incoming.map((request) =>
+                renderRequestCard(request, 'incoming')
+              )}
             </ul>
           ) : (
             <p className={styles.empty}>
-              Пока никто не оставил откликов. Как только появятся запросы,
-              они появятся здесь.
+              Пока никто не оставил откликов. Как только появятся запросы, они
+              появятся здесь.
             </p>
           )}
         </div>
@@ -291,7 +295,9 @@ export function ProfileRequests(): ReactElement {
 
           {outgoing.length ? (
             <ul className={styles.list}>
-              {outgoing.map((request) => renderRequestCard(request, 'outgoing'))}
+              {outgoing.map((request) =>
+                renderRequestCard(request, 'outgoing')
+              )}
             </ul>
           ) : (
             <p className={styles.empty}>

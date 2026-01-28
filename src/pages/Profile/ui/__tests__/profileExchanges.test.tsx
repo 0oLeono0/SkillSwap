@@ -34,11 +34,11 @@ describe('ProfileExchanges helpers', () => {
     });
 
     it('returns known title when map has entry', () => {
-      expect(parseSkillMeta('123-teach-10', titles).title).toBe('Игра на гитаре');
+      expect(parseSkillMeta('123-teach-10-skill', titles).title).toBe('Игра на гитаре');
     });
 
     it('returns fallback with id when title is missing', () => {
-      expect(parseSkillMeta('123-teach-99', titles).title).toBe('Неизвестный навык #99');
+      expect(parseSkillMeta('123-teach-99-skill', titles).title).toBe('Неизвестный навык #99');
     });
   });
 
