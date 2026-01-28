@@ -73,6 +73,59 @@ const toSkillCreateInput = (
   imageUrls: serializeImageUrls(skill.imageUrls)
 });
 
+const toSkillUpdateInput = (
+  skill: UserSkill
+): Prisma.UserSkillUncheckedUpdateInput => ({
+  title: skill.title.trim(),
+  description: skill.description.trim(),
+  categoryId: skill.categoryId ?? null,
+  subcategoryId: skill.subcategoryId ?? null,
+  imageUrls: serializeImageUrls(skill.imageUrls)
+});
+
+const syncUserSkills = async (
+  userId: string,
+  type: UserSkillType,
+  input: UserSkillInput[] | undefined,
+  client: DbClient
+) => {
+  const normalized = normalizeSkills(input);
+  const existing = await userSkillRepository.findByUserAndType(
+    userId,
+    type,
+    client
+  );
+  const existingById = new Map(existing.map((skill) => [skill.id, skill]));
+  const incomingIds = new Set(normalized.map((skill) => skill.id));
+
+  const toCreate = normalized.filter((skill) => !existingById.has(skill.id));
+  const toUpdate = normalized.filter((skill) => existingById.has(skill.id));
+  const toDeleteIds = existing
+    .filter((skill) => !incomingIds.has(skill.id))
+    .map((skill) => skill.id);
+
+  if (toDeleteIds.length > 0) {
+    await userSkillRepository.deleteByIds(toDeleteIds, client);
+  }
+
+  if (toUpdate.length > 0) {
+    await Promise.all(
+      toUpdate.map((skill) =>
+        userSkillRepository.updateById(
+          skill.id,
+          toSkillUpdateInput(skill),
+          client
+        )
+      )
+    );
+  }
+
+  const createRows = toCreate.map((skill) =>
+    toSkillCreateInput(userId, type, skill)
+  );
+  await userSkillRepository.createMany(createRows, client);
+};
+
 const parseBirthDate = (value?: string) => {
   if (!value) {
     return null;
@@ -345,29 +398,21 @@ export const authService = {
       }
 
       if ('teachableSkills' in updates) {
-        await userSkillRepository.deleteByUserAndType(
+        await syncUserSkills(
           userId,
           USER_SKILL_TYPE.teach,
+          updates.teachableSkills,
           tx
         );
-        const normalized = normalizeSkills(updates.teachableSkills);
-        const rows = normalized.map((skill) =>
-          toSkillCreateInput(userId, USER_SKILL_TYPE.teach, skill)
-        );
-        await userSkillRepository.createMany(rows, tx);
       }
 
       if ('learningSkills' in updates) {
-        await userSkillRepository.deleteByUserAndType(
+        await syncUserSkills(
           userId,
           USER_SKILL_TYPE.learn,
+          updates.learningSkills,
           tx
         );
-        const normalized = normalizeSkills(updates.learningSkills);
-        const rows = normalized.map((skill) =>
-          toSkillCreateInput(userId, USER_SKILL_TYPE.learn, skill)
-        );
-        await userSkillRepository.createMany(rows, tx);
       }
 
       if (shouldUpdateSkills) {

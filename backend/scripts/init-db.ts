@@ -56,21 +56,6 @@ const statements = [
       FOREIGN KEY ("userId") REFERENCES "User" ("id")
       ON DELETE CASCADE ON UPDATE CASCADE
   );`,
-  `CREATE TABLE IF NOT EXISTS "Request" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "skillId" TEXT NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'pending' CHECK ("status" IN ('pending', 'accepted', 'rejected')),
-    "fromUserId" TEXT NOT NULL,
-    "toUserId" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "Request_fromUserId_fkey"
-      FOREIGN KEY ("fromUserId") REFERENCES "User" ("id")
-      ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "Request_toUserId_fkey"
-      FOREIGN KEY ("toUserId") REFERENCES "User" ("id")
-      ON DELETE CASCADE ON UPDATE CASCADE
-  );`,
   `CREATE TABLE IF NOT EXISTS "Favorite" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "userId" TEXT NOT NULL,
@@ -81,6 +66,49 @@ const statements = [
       ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "Favorite_targetUserId_fkey"
       FOREIGN KEY ("targetUserId") REFERENCES "User" ("id")
+      ON DELETE CASCADE ON UPDATE CASCADE
+  );`,
+  `CREATE TABLE IF NOT EXISTS "UserSkill" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "userId" TEXT NOT NULL,
+    "type" TEXT NOT NULL CHECK ("type" IN ('teach', 'learn')),
+    "title" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "categoryId" INTEGER,
+    "subcategoryId" INTEGER,
+    "imageUrls" TEXT NOT NULL DEFAULT '[]',
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "UserSkill_userId_fkey"
+      FOREIGN KEY ("userId") REFERENCES "User" ("id")
+      ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "UserSkill_categoryId_fkey"
+      FOREIGN KEY ("categoryId") REFERENCES "SkillGroup" ("id")
+      ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "UserSkill_subcategoryId_fkey"
+      FOREIGN KEY ("subcategoryId") REFERENCES "Skill" ("id")
+      ON DELETE SET NULL ON UPDATE CASCADE
+  );`,
+  `CREATE TABLE IF NOT EXISTS "Request" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "userSkillId" TEXT,
+    "skillTitle" TEXT NOT NULL,
+    "skillType" TEXT NOT NULL,
+    "skillSubcategoryId" INTEGER,
+    "skillCategoryId" INTEGER,
+    "status" TEXT NOT NULL DEFAULT 'pending' CHECK ("status" IN ('pending', 'accepted', 'rejected')),
+    "fromUserId" TEXT NOT NULL,
+    "toUserId" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Request_userSkillId_fkey"
+      FOREIGN KEY ("userSkillId") REFERENCES "UserSkill" ("id")
+      ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "Request_fromUserId_fkey"
+      FOREIGN KEY ("fromUserId") REFERENCES "User" ("id")
+      ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "Request_toUserId_fkey"
+      FOREIGN KEY ("toUserId") REFERENCES "User" ("id")
       ON DELETE CASCADE ON UPDATE CASCADE
   );`,
   `CREATE TABLE IF NOT EXISTS "Exchange" (
@@ -116,27 +144,6 @@ const statements = [
       FOREIGN KEY ("senderId") REFERENCES "User" ("id")
       ON DELETE CASCADE ON UPDATE CASCADE
   );`,
-  `CREATE TABLE IF NOT EXISTS "UserSkill" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "userId" TEXT NOT NULL,
-    "type" TEXT NOT NULL CHECK ("type" IN ('teach', 'learn')),
-    "title" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
-    "categoryId" INTEGER,
-    "subcategoryId" INTEGER,
-    "imageUrls" TEXT NOT NULL DEFAULT '[]',
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "UserSkill_userId_fkey"
-      FOREIGN KEY ("userId") REFERENCES "User" ("id")
-      ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "UserSkill_categoryId_fkey"
-      FOREIGN KEY ("categoryId") REFERENCES "SkillGroup" ("id")
-      ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT "UserSkill_subcategoryId_fkey"
-      FOREIGN KEY ("subcategoryId") REFERENCES "Skill" ("id")
-      ON DELETE SET NULL ON UPDATE CASCADE
-  );`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "RefreshToken_token_key" ON "RefreshToken"("token");`,
   `CREATE INDEX IF NOT EXISTS "RefreshToken_userId_idx" ON "RefreshToken"("userId");`,
@@ -144,6 +151,7 @@ const statements = [
   `CREATE INDEX IF NOT EXISTS "Skill_groupId_idx" ON "Skill"("groupId");`,
   `CREATE INDEX IF NOT EXISTS "Request_fromUserId_idx" ON "Request"("fromUserId");`,
   `CREATE INDEX IF NOT EXISTS "Request_toUserId_idx" ON "Request"("toUserId");`,
+  `CREATE INDEX IF NOT EXISTS "Request_userSkillId_idx" ON "Request"("userSkillId");`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "Favorite_userId_targetUserId_key" ON "Favorite"("userId", "targetUserId");`,
   `CREATE INDEX IF NOT EXISTS "Favorite_userId_idx" ON "Favorite"("userId");`,
   `CREATE INDEX IF NOT EXISTS "Favorite_targetUserId_idx" ON "Favorite"("targetUserId");`,

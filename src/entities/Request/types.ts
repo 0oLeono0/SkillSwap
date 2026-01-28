@@ -6,9 +6,18 @@ export interface RequestParticipant {
   avatarUrl?: string | null;
 }
 
+export interface RequestSkillInfo {
+  id: string | null;
+  title: string;
+  type: 'teach' | 'learn';
+  subcategoryId: number | null;
+  categoryId: number | null;
+}
+
 export interface Request {
   id: string;
-  skillId: string;
+  userSkillId: string | null;
+  skill: RequestSkillInfo;
   fromUserId: string;
   toUserId: string;
   status: RequestStatus;

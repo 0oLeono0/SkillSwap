@@ -6,9 +6,18 @@ export interface ExchangeParticipant {
   avatarUrl?: string | null;
 }
 
+export interface ExchangeRequestSkillInfo {
+  id: string | null;
+  title: string;
+  type: 'teach' | 'learn';
+  subcategoryId: number | null;
+  categoryId: number | null;
+}
+
 export interface ExchangeRequestInfo {
   id: string;
-  skillId: string;
+  userSkillId: string | null;
+  skill: ExchangeRequestSkillInfo;
   createdAt: string;
 }
 

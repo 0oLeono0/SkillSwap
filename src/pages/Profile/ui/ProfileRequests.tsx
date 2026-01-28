@@ -12,7 +12,6 @@ import {
   acceptRequest,
   rejectRequest
 } from '@/features/requests/model/actions';
-import { parseCatalogSkillId } from '@/shared/lib/skills/parseCatalogSkillId';
 
 type RequestDirection = 'incoming' | 'outgoing';
 
@@ -57,19 +56,18 @@ const formatDateTime = (value?: string | null): string => {
 };
 
 const parseSkillMeta = (
-  skillId: string,
+  skill: Request['skill'] | undefined,
   titleById: Map<number, string>
 ): SkillMeta => {
-  const parsed = parseCatalogSkillId(skillId);
-  const type = parsed?.type ?? 'teach';
-  const subskillId = parsed?.subskillId;
+  const type = skill?.type ?? 'teach';
+  const subskillId = skill?.subcategoryId;
   const hasSubskillId = typeof subskillId === 'number';
-  const fallbackTitle = hasSubskillId
-    ? `Навык #${subskillId}`
-    : 'Навык';
-  const title = hasSubskillId
+  const fallbackTitle = hasSubskillId ? `Навык #${subskillId}` : 'Навык';
+  const mappedTitle = hasSubskillId
     ? (titleById.get(subskillId) ?? fallbackTitle)
     : fallbackTitle;
+  const explicitTitle = skill?.title?.trim() ?? '';
+  const title = explicitTitle.length > 0 ? explicitTitle : mappedTitle;
 
   return { title, type };
 };
@@ -149,7 +147,7 @@ export function ProfileRequests(): ReactElement {
   );
 
   const renderRequestCard = (request: Request, direction: RequestDirection) => {
-    const skillMeta = parseSkillMeta(request.skillId, skillNames);
+    const skillMeta = parseSkillMeta(request.skill, skillNames);
     const statusClass = clsx(
       styles.statusBadge,
       styles[`status-${request.status}`]

@@ -8,7 +8,7 @@ export interface RequestsListResponse {
 
 export interface CreateRequestPayload {
   toUserId: string;
-  skillId: string;
+  userSkillId: string;
 }
 
 export const requestsApi = {
@@ -19,14 +19,18 @@ export const requestsApi = {
   create(accessToken: string, payload: CreateRequestPayload) {
     return authorizedRequest<{ request: Request }>('/requests', accessToken, {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload)
     });
   },
 
   updateStatus(accessToken: string, requestId: string, status: RequestStatus) {
-    return authorizedRequest<{ request: Request }>(`/requests/${requestId}`, accessToken, {
-      method: 'PATCH',
-      body: JSON.stringify({ status }),
-    });
-  },
+    return authorizedRequest<{ request: Request }>(
+      `/requests/${requestId}`,
+      accessToken,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ status })
+      }
+    );
+  }
 };

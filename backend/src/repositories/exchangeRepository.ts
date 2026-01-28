@@ -10,11 +10,26 @@ const participantSelect = {
   }
 } as const;
 
+const userSkillSelect = {
+  select: {
+    id: true,
+    title: true,
+    type: true,
+    subcategoryId: true,
+    categoryId: true
+  }
+} as const;
+
 const requestSelect = {
   select: {
     id: true,
-    skillId: true,
-    createdAt: true
+    userSkillId: true,
+    skillTitle: true,
+    skillType: true,
+    skillSubcategoryId: true,
+    skillCategoryId: true,
+    createdAt: true,
+    userSkill: userSkillSelect
   }
 } as const;
 

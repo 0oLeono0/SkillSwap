@@ -10,9 +10,20 @@ const participantSelect = {
   }
 } as const;
 
+const userSkillSelect = {
+  select: {
+    id: true,
+    title: true,
+    type: true,
+    subcategoryId: true,
+    categoryId: true
+  }
+} as const;
+
 const defaultInclude = {
   fromUser: participantSelect,
-  toUser: participantSelect
+  toUser: participantSelect,
+  userSkill: userSkillSelect
 } satisfies Prisma.RequestInclude;
 
 export const requestRepository = {
@@ -35,12 +46,16 @@ export const requestRepository = {
     });
   },
 
-  findPendingDuplicate(fromUserId: string, toUserId: string, skillId: string) {
+  findPendingDuplicate(
+    fromUserId: string,
+    toUserId: string,
+    userSkillId: string
+  ) {
     return prisma.request.findFirst({
       where: {
         fromUserId,
         toUserId,
-        skillId,
+        userSkillId,
         status: REQUEST_STATUS.pending
       },
       include: defaultInclude

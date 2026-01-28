@@ -49,10 +49,15 @@ model RefreshToken {
 
 model Request {
   id         String        @id @default(cuid())
-  skillId    String
+  userSkillId String?
+  skillTitle String
+  skillType  String
+  skillSubcategoryId Int?
+  skillCategoryId   Int?
   status     String        @default("pending")
   fromUserId String
   toUserId   String
+  userSkill UserSkill? @relation(fields: [userSkillId], references: [id], onDelete: SetNull)
   fromUser   User          @relation("RequestFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
   toUser     User          @relation("RequestTo", fields: [toUserId], references: [id], onDelete: Cascade)
   createdAt  DateTime      @default(now())
@@ -61,6 +66,7 @@ model Request {
 
   @@index([fromUserId])
   @@index([toUserId])
+  @@index([userSkillId])
 }
 
 model Favorite {
@@ -150,6 +156,7 @@ model UserSkill {
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   category    SkillGroup? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   subcategory Skill?      @relation(fields: [subcategoryId], references: [id], onDelete: SetNull)
+  requests    Request[]
 
   @@index([userId])
   @@index([type])

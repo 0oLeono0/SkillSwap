@@ -37,7 +37,11 @@ const mockTokenService = {
 const mockRequestService: {
   listForUser: jest.MockedFunction<(userId: string) => Promise<unknown>>;
   createRequest: jest.MockedFunction<
-    (userId: string, targetUserId: string, skillId: string) => Promise<unknown>
+    (
+      userId: string,
+      targetUserId: string,
+      userSkillId: string
+    ) => Promise<unknown>
   >;
   updateStatus: jest.MockedFunction<
     (requestId: string, userId: string, status: string) => Promise<unknown>
@@ -304,7 +308,7 @@ describe('Requests routes', () => {
     const response = await request(app)
       .post('/api/requests')
       .set('Authorization', 'Bearer token')
-      .send({ toUserId: 'target', skillId: 'skill-1' });
+      .send({ toUserId: 'target', userSkillId: 'skill-1' });
 
     expect(mockRequestService.createRequest).toHaveBeenCalledWith(
       'user-1',

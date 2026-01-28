@@ -6,7 +6,7 @@ import { requestService } from '../services/requestService.js';
 
 const createRequestSchema = z.object({
   toUserId: z.string().min(1),
-  skillId: z.string().min(1)
+  userSkillId: z.string().min(1)
 });
 
 const updateStatusSchema = z.object({
@@ -37,7 +37,7 @@ export const createRequest = asyncHandler(async (req, res) => {
   const request = await requestService.createRequest(
     currentUser.sub,
     parseResult.data.toUserId,
-    parseResult.data.skillId
+    parseResult.data.userSkillId
   );
   return res.status(201).json({ request });
 });

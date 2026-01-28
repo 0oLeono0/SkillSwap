@@ -4,7 +4,11 @@ import type { RequestStatus } from '../src/types/requestStatus.js';
 const mockRequestRepository: {
   findForUser: jest.MockedFunction<(userId: string) => Promise<unknown>>;
   findPendingDuplicate: jest.MockedFunction<
-    (fromUserId: string, toUserId: string, skillId: string) => Promise<unknown>
+    (
+      fromUserId: string,
+      toUserId: string,
+      userSkillId: string
+    ) => Promise<unknown>
   >;
   create: jest.MockedFunction<(data: unknown) => Promise<unknown>>;
   findById: jest.MockedFunction<(id: string) => Promise<unknown>>;
@@ -20,6 +24,12 @@ const mockRequestRepository: {
 };
 
 const mockUserRepository: {
+  findById: jest.MockedFunction<(id: string) => Promise<unknown>>;
+} = {
+  findById: jest.fn()
+};
+
+const mockUserSkillRepository: {
   findById: jest.MockedFunction<(id: string) => Promise<unknown>>;
 } = {
   findById: jest.fn()
@@ -41,11 +51,30 @@ jest.unstable_mockModule('../src/repositories/userRepository.js', () => ({
   userRepository: mockUserRepository
 }));
 
+jest.unstable_mockModule('../src/repositories/userSkillRepository.js', () => ({
+  userSkillRepository: mockUserSkillRepository
+}));
+
 jest.unstable_mockModule('../src/services/exchangeService.js', () => ({
   exchangeService: mockExchangeService
 }));
 
 const { requestService } = await import('../src/services/requestService.js');
+
+const buildRequestRecord = (overrides: Record<string, unknown> = {}) => ({
+  id: 'req',
+  userSkillId: 'skill',
+  skillTitle: 'Skill',
+  skillType: 'teach',
+  skillSubcategoryId: 10,
+  skillCategoryId: 1,
+  status: 'pending',
+  fromUserId: 'me',
+  toUserId: 'other',
+  createdAt: new Date(0),
+  updatedAt: new Date(0),
+  ...overrides
+});
 
 describe('requestService', () => {
   beforeEach(() => {
@@ -55,15 +84,25 @@ describe('requestService', () => {
   describe('listForUser', () => {
     it('splits requests into incoming and outgoing', async () => {
       mockRequestRepository.findForUser.mockResolvedValue([
-        { id: '1', toUserId: 'me', fromUserId: 'u1' },
-        { id: '2', toUserId: 'u2', fromUserId: 'me' }
+        buildRequestRecord({ id: '1', toUserId: 'me', fromUserId: 'u1' }),
+        buildRequestRecord({ id: '2', toUserId: 'u2', fromUserId: 'me' })
       ]);
 
       const result = await requestService.listForUser('me');
 
-      expect(result).toEqual({
-        incoming: [{ id: '1', toUserId: 'me', fromUserId: 'u1' }],
-        outgoing: [{ id: '2', toUserId: 'u2', fromUserId: 'me' }]
+      expect(result.incoming).toHaveLength(1);
+      expect(result.outgoing).toHaveLength(1);
+      expect(result.incoming[0]).toMatchObject({
+        id: '1',
+        toUserId: 'me',
+        fromUserId: 'u1',
+        skill: { id: 'skill', title: 'Skill', type: 'teach' }
+      });
+      expect(result.outgoing[0]).toMatchObject({
+        id: '2',
+        toUserId: 'u2',
+        fromUserId: 'me',
+        skill: { id: 'skill', title: 'Skill', type: 'teach' }
       });
     });
   });
@@ -83,28 +122,59 @@ describe('requestService', () => {
       ).rejects.toMatchObject({ status: 404 });
     });
 
+    it('throws when skill missing', async () => {
+      mockUserRepository.findById.mockResolvedValue({ id: 'other' });
+      mockUserSkillRepository.findById.mockResolvedValue(null);
+
+      await expect(
+        requestService.createRequest('me', 'other', 'skill')
+      ).rejects.toMatchObject({ status: 400 });
+    });
+
     it('returns existing pending duplicate', async () => {
       mockUserRepository.findById.mockResolvedValue({ id: 'other' });
-      const existing = { id: 'req' };
+      mockUserSkillRepository.findById.mockResolvedValue({
+        id: 'skill',
+        userId: 'other',
+        title: 'Skill',
+        type: 'teach',
+        subcategoryId: 10,
+        categoryId: 1
+      });
+      const existing = buildRequestRecord({ id: 'req-1' });
       mockRequestRepository.findPendingDuplicate.mockResolvedValue(existing);
 
       const result = await requestService.createRequest('me', 'other', 'skill');
-      expect(result).toBe(existing);
+      expect(result).toMatchObject({ id: 'req-1', userSkillId: 'skill' });
       expect(mockRequestRepository.create).not.toHaveBeenCalled();
     });
 
     it('creates new request when none exists', async () => {
       mockUserRepository.findById.mockResolvedValue({ id: 'other' });
+      mockUserSkillRepository.findById.mockResolvedValue({
+        id: 'skill',
+        userId: 'other',
+        title: 'Skill',
+        type: 'teach',
+        subcategoryId: 10,
+        categoryId: 1
+      });
       mockRequestRepository.findPendingDuplicate.mockResolvedValue(null);
-      mockRequestRepository.create.mockResolvedValue({ id: 'new' });
+      mockRequestRepository.create.mockResolvedValue(
+        buildRequestRecord({ id: 'new' })
+      );
 
       const result = await requestService.createRequest('me', 'other', 'skill');
       expect(mockRequestRepository.create).toHaveBeenCalledWith({
         fromUserId: 'me',
         toUserId: 'other',
-        skillId: 'skill'
+        userSkillId: 'skill',
+        skillTitle: 'Skill',
+        skillType: 'teach',
+        skillSubcategoryId: 10,
+        skillCategoryId: 1
       });
-      expect(result).toEqual({ id: 'new' });
+      expect(result).toMatchObject({ id: 'new', userSkillId: 'skill' });
     });
   });
 
@@ -124,50 +194,40 @@ describe('requestService', () => {
     });
 
     it('throws when user is not participant', async () => {
-      mockRequestRepository.findById.mockResolvedValue({
-        id: 'req',
-        fromUserId: 'a',
-        toUserId: 'b',
-        status: 'pending'
-      });
+      mockRequestRepository.findById.mockResolvedValue(
+        buildRequestRecord({ fromUserId: 'a', toUserId: 'b' })
+      );
       await expect(
         requestService.updateStatus('req', 'outsider', 'rejected')
       ).rejects.toMatchObject({ status: 403 });
     });
 
     it('throws when accepting and current user is not recipient', async () => {
-      mockRequestRepository.findById.mockResolvedValue({
-        id: 'req',
-        fromUserId: 'me',
-        toUserId: 'other',
-        status: 'pending'
-      });
+      mockRequestRepository.findById.mockResolvedValue(
+        buildRequestRecord({ fromUserId: 'me', toUserId: 'other' })
+      );
       await expect(
         requestService.updateStatus('req', 'me', 'accepted')
       ).rejects.toMatchObject({ status: 403 });
     });
 
     it('returns early when status unchanged', async () => {
-      const request = {
-        id: 'req',
-        fromUserId: 'me',
-        toUserId: 'other',
-        status: 'pending'
-      };
-      mockRequestRepository.findById.mockResolvedValue(request);
+      mockRequestRepository.findById.mockResolvedValue(
+        buildRequestRecord({ status: 'pending' })
+      );
 
       const result = await requestService.updateStatus('req', 'me', 'pending');
-      expect(result).toBe(request);
+      expect(result).toMatchObject({ status: 'pending' });
       expect(mockRequestRepository.updateStatus).not.toHaveBeenCalled();
     });
 
     it('updates status and ensures exchange when accepted', async () => {
-      const request = {
+      const request = buildRequestRecord({
         id: 'req',
         fromUserId: 'me',
         toUserId: 'other',
         status: 'pending'
-      };
+      });
       mockRequestRepository.findById.mockResolvedValue(request);
       mockRequestRepository.updateStatus.mockResolvedValue({
         ...request,

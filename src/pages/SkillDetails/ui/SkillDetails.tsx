@@ -245,7 +245,7 @@ const SkillDetails = (): ReactElement => {
     try {
       await createRequest(accessToken, {
         toUserId: currentAuthor.id,
-        skillId: selectedSkill.id
+        userSkillId: selectedSkill.userSkillId
       });
       setIsProposalSent(true);
       setIsSuccessModalOpen(true);

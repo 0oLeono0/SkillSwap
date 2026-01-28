@@ -6,22 +6,22 @@ import { Button } from '@/shared/ui/button/Button';
 interface SkillExchangeButtonProps {
   accessToken: string;
   toUserId: string;
-  skillId: string;
+  userSkillId: string;
   onSuccess?: () => void;
 }
 
 export const SkillExchangeButton = ({
   accessToken,
   toUserId,
-  skillId,
-  onSuccess,
+  userSkillId,
+  onSuccess
 }: SkillExchangeButtonProps) => {
   const [isShow, setIsShow] = useState(false);
   const [isHide, setIsHide] = useState(false);
 
   const handleClick = async () => {
     try {
-      await createRequest(accessToken, { toUserId, skillId });
+      await createRequest(accessToken, { toUserId, userSkillId });
       setIsShow(true);
       setIsHide(false);
       onSuccess?.();

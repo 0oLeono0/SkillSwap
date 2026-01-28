@@ -1,4 +1,8 @@
-import { formatDateTime, getRoleLabel, parseSkillMeta } from '../ProfileExchanges';
+import {
+  formatDateTime,
+  getRoleLabel,
+  parseSkillMeta
+} from '../ProfileExchanges';
 
 describe('ProfileExchanges helpers', () => {
   describe('formatDateTime', () => {
@@ -8,7 +12,9 @@ describe('ProfileExchanges helpers', () => {
     });
 
     it('delegates to Date#toLocaleString for valid values', () => {
-      const spy = jest.spyOn(Date.prototype, 'toLocaleString').mockReturnValue('05 янв., 12:30');
+      const spy = jest
+        .spyOn(Date.prototype, 'toLocaleString')
+        .mockReturnValue('05 янв., 12:30');
       const result = formatDateTime('2024-01-05T12:30:00.000Z');
 
       expect(result).toBe('05 янв., 12:30');
@@ -16,7 +22,7 @@ describe('ProfileExchanges helpers', () => {
         day: '2-digit',
         month: 'short',
         hour: '2-digit',
-        minute: '2-digit',
+        minute: '2-digit'
       });
 
       spy.mockRestore();
@@ -26,19 +32,56 @@ describe('ProfileExchanges helpers', () => {
   describe('parseSkillMeta', () => {
     const titles = new Map<number, string>([
       [10, 'Игра на гитаре'],
-      [20, 'Frontend'],
+      [20, 'Frontend']
     ]);
 
-    it('returns fallback when skill id is malformed', () => {
-      expect(parseSkillMeta('invalid', titles).title).toBe('Неизвестный навык');
+    it('returns fallback when skill is missing', () => {
+      expect(parseSkillMeta(undefined, titles).title).toBe('Неизвестный навык');
+    });
+
+    it('returns explicit title when provided', () => {
+      expect(
+        parseSkillMeta(
+          {
+            id: 'skill-1',
+            title: 'Custom title',
+            type: 'teach',
+            subcategoryId: 10,
+            categoryId: 1
+          },
+          titles
+        ).title
+      ).toBe('Custom title');
     });
 
     it('returns known title when map has entry', () => {
-      expect(parseSkillMeta('123-teach-10-skill', titles).title).toBe('Игра на гитаре');
+      expect(
+        parseSkillMeta(
+          {
+            id: 'skill-2',
+            title: '',
+            type: 'teach',
+            subcategoryId: 10,
+            categoryId: 1
+          },
+          titles
+        ).title
+      ).toBe('Игра на гитаре');
     });
 
     it('returns fallback with id when title is missing', () => {
-      expect(parseSkillMeta('123-teach-99-skill', titles).title).toBe('Неизвестный навык #99');
+      expect(
+        parseSkillMeta(
+          {
+            id: 'skill-3',
+            title: '',
+            type: 'teach',
+            subcategoryId: 99,
+            categoryId: 1
+          },
+          titles
+        ).title
+      ).toBe('Неизвестный навык #99');
     });
   });
 
@@ -52,4 +95,3 @@ describe('ProfileExchanges helpers', () => {
     });
   });
 });
-

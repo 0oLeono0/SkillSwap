@@ -20,7 +20,6 @@ import type {
 } from '@/entities/Exchange/types';
 import { getSubskillNameMap } from '@/entities/Skill/mappers';
 import { loadFiltersBaseData } from '@/features/Filter/model/filterBaseDataStore';
-import { parseCatalogSkillId } from '@/shared/lib/skills/parseCatalogSkillId';
 
 interface SkillMeta {
   title: string;
@@ -60,12 +59,15 @@ export const formatDateTime = (value?: string | null): string => {
 };
 
 export const parseSkillMeta = (
-  skillId: string,
+  skill: Exchange['request']['skill'] | undefined,
   titleById: Map<number, string>
 ): SkillMeta => {
-  const parsed = parseCatalogSkillId(skillId);
-  const subskillId = parsed?.subskillId;
-  if (!parsed || typeof subskillId !== 'number') {
+  const subskillId = skill?.subcategoryId;
+  const explicitTitle = skill?.title?.trim() ?? '';
+  if (explicitTitle.length > 0) {
+    return { title: explicitTitle };
+  }
+  if (typeof subskillId !== 'number') {
     return { title: UNKNOWN_SKILL_TITLE };
   }
   const fallbackTitle = Number.isFinite(subskillId)
@@ -300,7 +302,7 @@ export function ProfileExchanges(): ReactElement {
   };
 
   const selectedSkillMeta = selectedExchange
-    ? parseSkillMeta(selectedExchange.request.skillId, skillNames)
+    ? parseSkillMeta(selectedExchange.request.skill, skillNames)
     : null;
 
   if (isInitializing) {
@@ -357,7 +359,7 @@ export function ProfileExchanges(): ReactElement {
             <ul className={styles.list}>
               {exchanges.map((exchange) => {
                 const skillMeta = parseSkillMeta(
-                  exchange.request.skillId,
+                  exchange.request.skill,
                   skillNames
                 );
                 const statusClass = clsx(

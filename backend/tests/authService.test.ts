@@ -76,12 +76,20 @@ const mockUserSkillRepository: {
   createMany: jest.MockedFunction<
     (data: Prisma.UserSkillCreateManyInput[]) => Promise<{ count: number }>
   >;
-  deleteByUserAndType: jest.MockedFunction<
-    (userId: string, type: string) => Promise<{ count: number }>
+  findByUserAndType: jest.MockedFunction<
+    (userId: string, type: string) => Promise<Array<{ id: string }>>
+  >;
+  updateById: jest.MockedFunction<
+    (id: string, data: Prisma.UserSkillUpdateInput) => Promise<{ id: string }>
+  >;
+  deleteByIds: jest.MockedFunction<
+    (ids: string[]) => Promise<{ count: number }>
   >;
 } = {
   createMany: jest.fn(),
-  deleteByUserAndType: jest.fn()
+  findByUserAndType: jest.fn(),
+  updateById: jest.fn(),
+  deleteByIds: jest.fn()
 };
 
 const mockTokenService = {
@@ -341,6 +349,7 @@ describe('authService', () => {
         name: 'User',
         role: 'user'
       });
+      mockUserSkillRepository.findByUserAndType.mockResolvedValue([]);
 
       const result = await authService.updateProfile('user', {
         email: 'new@example.com',
@@ -355,7 +364,7 @@ describe('authService', () => {
       expect(updatePayload.email).toBe('new@example.com');
       expect(updatePayload.name).toBe('New Name');
       expect(updatePayload.gender).toBe('Мужской');
-      expect(mockUserSkillRepository.deleteByUserAndType).toHaveBeenCalledWith(
+      expect(mockUserSkillRepository.findByUserAndType).toHaveBeenCalledWith(
         'user',
         'teach',
         expect.anything()
