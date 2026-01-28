@@ -3,9 +3,10 @@ import { asyncHandler } from '../middleware/asyncHandler.js';
 import { adminService } from '../services/adminService.js';
 import { createBadRequest } from '../utils/httpErrors.js';
 import { userService } from '../services/userService.js';
+import { USER_ROLE } from '../types/userRole.js';
 
 const updateRoleSchema = z.object({
-  role: z.enum(['user', 'admin']),
+  role: z.enum([USER_ROLE.user, USER_ROLE.admin])
 });
 
 export const deleteUserAccount = asyncHandler(async (req, res) => {
@@ -34,7 +35,10 @@ export const updateUserRole = asyncHandler(async (req, res) => {
     throw createBadRequest('You cannot change your own role');
   }
 
-  const updatedUser = await adminService.updateUserRole(userId, payloadResult.data.role);
+  const updatedUser = await adminService.updateUserRole(
+    userId,
+    payloadResult.data.role
+  );
   return res.status(200).json({ user: updatedUser });
 });
 

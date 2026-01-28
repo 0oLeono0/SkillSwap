@@ -1,15 +1,25 @@
 import type { Request } from '@prisma/client';
 import { exchangeRepository } from '../repositories/exchangeRepository.js';
-import { createBadRequest, createForbidden, createNotFound } from '../utils/httpErrors.js';
+import {
+  createBadRequest,
+  createForbidden,
+  createNotFound
+} from '../utils/httpErrors.js';
+import { EXCHANGE_STATUS } from '../types/exchangeStatus.js';
 
-const ensureParticipant = (exchange: { initiatorId: string; recipientId: string }, userId: string) => {
+const ensureParticipant = (
+  exchange: { initiatorId: string; recipientId: string },
+  userId: string
+) => {
   if (exchange.initiatorId !== userId && exchange.recipientId !== userId) {
     throw createForbidden('Недостаточно прав для работы с этим обменом');
   }
 };
 
 export const exchangeService = {
-  async ensureCreatedFromRequest(request: Pick<Request, 'id' | 'fromUserId' | 'toUserId'>) {
+  async ensureCreatedFromRequest(
+    request: Pick<Request, 'id' | 'fromUserId' | 'toUserId'>
+  ) {
     const existing = await exchangeRepository.findByRequestId(request.id);
     if (existing) {
       return existing;
@@ -18,7 +28,7 @@ export const exchangeService = {
     return exchangeRepository.createFromRequest({
       requestId: request.id,
       initiatorId: request.fromUserId,
-      recipientId: request.toUserId,
+      recipientId: request.toUserId
     });
   },
 
@@ -43,8 +53,10 @@ export const exchangeService = {
     }
 
     ensureParticipant(exchange, userId);
-    if (exchange.status === 'completed') {
-      throw createBadRequest('Нельзя отправлять сообщения в завершенном обмене');
+    if (exchange.status === EXCHANGE_STATUS.completed) {
+      throw createBadRequest(
+        'Нельзя отправлять сообщения в завершенном обмене'
+      );
     }
 
     const trimmed = content.trim();
@@ -62,10 +74,10 @@ export const exchangeService = {
     }
 
     ensureParticipant(exchange, userId);
-    if (exchange.status === 'completed') {
+    if (exchange.status === EXCHANGE_STATUS.completed) {
       return exchange;
     }
 
     return exchangeRepository.markCompleted(exchangeId);
-  },
+  }
 };

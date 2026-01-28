@@ -1,6 +1,11 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { parseImageUrls } from '../types/userSkill.js';
+import {
+  USER_SKILL_TYPE,
+  type UserSkillType,
+  isUserSkillType
+} from '../types/userSkillType.js';
 
 export interface CityOption {
   id: number;
@@ -38,7 +43,7 @@ export interface CatalogAuthorSkill {
   id: string;
   title: string;
   description: string;
-  type: 'teach' | 'learn';
+  type: UserSkillType;
   category: string;
   categoryId: number | null;
   imageUrl?: string;
@@ -146,7 +151,7 @@ const getAge = (birthDate?: Date | null): number => {
 
 const buildCatalogSkillId = (
   userId: string,
-  type: string,
+  type: UserSkillType,
   subcategoryId: number,
   userSkillId: string
 ) => `${userId}-${type}-${subcategoryId}-${userSkillId}`;
@@ -238,16 +243,20 @@ const mapCatalogSkill = (
   const imageUrls = parseImageUrls(record.imageUrls);
   const imageUrl = resolvePrimaryImage(imageUrls, user.avatarUrl);
 
+  const resolvedType = isUserSkillType(record.type)
+    ? record.type
+    : USER_SKILL_TYPE.teach;
+
   const payload: CatalogAuthorSkill = {
     id: buildCatalogSkillId(
       user.id,
-      record.type,
+      resolvedType,
       record.subcategoryId,
       record.id
     ),
     title: resolveSkillTitle(record.title, subcategoryName),
     description: record.description.trim() || user.bio?.trim() || '',
-    type: record.type === 'learn' ? 'learn' : 'teach',
+    type: resolvedType,
     category: categoryName,
     categoryId,
     imageUrls: resolveGalleryImages(imageUrls, user.avatarUrl),
@@ -272,7 +281,7 @@ const mapCatalogAuthor = (user: CatalogAuthorRecord): CatalogAuthor => {
     if (!mapped) {
       return;
     }
-    if (mapped.type === 'learn') {
+    if (mapped.type === USER_SKILL_TYPE.learn) {
       wantsToLearn.push(mapped);
       return;
     }
@@ -349,7 +358,11 @@ export const catalogService = {
 
     const mode = options.mode ?? 'all';
     const skillType =
-      mode === 'wantToLearn' ? 'teach' : mode === 'canTeach' ? 'learn' : null;
+      mode === 'wantToLearn'
+        ? USER_SKILL_TYPE.teach
+        : mode === 'canTeach'
+          ? USER_SKILL_TYPE.learn
+          : null;
 
     const skillFilters: Prisma.UserSkillWhereInput = {
       subcategoryId: { not: null }

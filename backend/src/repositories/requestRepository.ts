@@ -1,17 +1,18 @@
 import type { Prisma } from '@prisma/client';
+import { REQUEST_STATUS, type RequestStatus } from '../types/requestStatus.js';
 import { prisma } from '../lib/prisma.js';
 
 const participantSelect = {
   select: {
     id: true,
     name: true,
-    avatarUrl: true,
-  },
+    avatarUrl: true
+  }
 } as const;
 
 const defaultInclude = {
   fromUser: participantSelect,
-  toUser: participantSelect,
+  toUser: participantSelect
 } satisfies Prisma.RequestInclude;
 
 export const requestRepository = {
@@ -20,13 +21,17 @@ export const requestRepository = {
       where: {
         OR: [{ fromUserId: userId }, { toUserId: userId }],
         status: {
-          in: ['pending', 'accepted', 'rejected'],
-        },
+          in: [
+            REQUEST_STATUS.pending,
+            REQUEST_STATUS.accepted,
+            REQUEST_STATUS.rejected
+          ]
+        }
       },
       include: defaultInclude,
       orderBy: {
-        createdAt: 'desc',
-      },
+        createdAt: 'desc'
+      }
     });
   },
 
@@ -36,31 +41,31 @@ export const requestRepository = {
         fromUserId,
         toUserId,
         skillId,
-        status: 'pending',
+        status: REQUEST_STATUS.pending
       },
-      include: defaultInclude,
+      include: defaultInclude
     });
   },
 
   create(data: Prisma.RequestUncheckedCreateInput) {
     return prisma.request.create({
       data,
-      include: defaultInclude,
+      include: defaultInclude
     });
   },
 
   findById(id: string) {
     return prisma.request.findUnique({
       where: { id },
-      include: defaultInclude,
+      include: defaultInclude
     });
   },
 
-  updateStatus(id: string, status: string) {
+  updateStatus(id: string, status: RequestStatus) {
     return prisma.request.update({
       where: { id },
       data: { status },
-      include: defaultInclude,
+      include: defaultInclude
     });
-  },
+  }
 };

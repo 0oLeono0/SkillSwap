@@ -34,7 +34,7 @@ const statements = [
     "email" TEXT NOT NULL,
     "passwordHash" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "role" TEXT NOT NULL DEFAULT 'user',
+    "role" TEXT NOT NULL DEFAULT 'user' CHECK ("role" IN ('user', 'admin', 'owner')),
     "avatarUrl" TEXT DEFAULT '',
     "cityId" INTEGER,
     "birthDate" DATETIME,
@@ -56,10 +56,70 @@ const statements = [
       FOREIGN KEY ("userId") REFERENCES "User" ("id")
       ON DELETE CASCADE ON UPDATE CASCADE
   );`,
+  `CREATE TABLE IF NOT EXISTS "Request" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "skillId" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'pending' CHECK ("status" IN ('pending', 'accepted', 'rejected')),
+    "fromUserId" TEXT NOT NULL,
+    "toUserId" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Request_fromUserId_fkey"
+      FOREIGN KEY ("fromUserId") REFERENCES "User" ("id")
+      ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "Request_toUserId_fkey"
+      FOREIGN KEY ("toUserId") REFERENCES "User" ("id")
+      ON DELETE CASCADE ON UPDATE CASCADE
+  );`,
+  `CREATE TABLE IF NOT EXISTS "Favorite" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "userId" TEXT NOT NULL,
+    "targetUserId" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Favorite_userId_fkey"
+      FOREIGN KEY ("userId") REFERENCES "User" ("id")
+      ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "Favorite_targetUserId_fkey"
+      FOREIGN KEY ("targetUserId") REFERENCES "User" ("id")
+      ON DELETE CASCADE ON UPDATE CASCADE
+  );`,
+  `CREATE TABLE IF NOT EXISTS "Exchange" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "requestId" TEXT NOT NULL,
+    "initiatorId" TEXT NOT NULL,
+    "recipientId" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'active' CHECK ("status" IN ('active', 'completed')),
+    "confirmedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "completedAt" DATETIME,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Exchange_requestId_fkey"
+      FOREIGN KEY ("requestId") REFERENCES "Request" ("id")
+      ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "Exchange_initiatorId_fkey"
+      FOREIGN KEY ("initiatorId") REFERENCES "User" ("id")
+      ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "Exchange_recipientId_fkey"
+      FOREIGN KEY ("recipientId") REFERENCES "User" ("id")
+      ON DELETE CASCADE ON UPDATE CASCADE
+  );`,
+  `CREATE TABLE IF NOT EXISTS "ExchangeMessage" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "exchangeId" TEXT NOT NULL,
+    "senderId" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "ExchangeMessage_exchangeId_fkey"
+      FOREIGN KEY ("exchangeId") REFERENCES "Exchange" ("id")
+      ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "ExchangeMessage_senderId_fkey"
+      FOREIGN KEY ("senderId") REFERENCES "User" ("id")
+      ON DELETE CASCADE ON UPDATE CASCADE
+  );`,
   `CREATE TABLE IF NOT EXISTS "UserSkill" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "userId" TEXT NOT NULL,
-    "type" TEXT NOT NULL,
+    "type" TEXT NOT NULL CHECK ("type" IN ('teach', 'learn')),
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "categoryId" INTEGER,
@@ -82,6 +142,19 @@ const statements = [
   `CREATE INDEX IF NOT EXISTS "RefreshToken_userId_idx" ON "RefreshToken"("userId");`,
   `CREATE INDEX IF NOT EXISTS "RefreshToken_token_idx" ON "RefreshToken"("token");`,
   `CREATE INDEX IF NOT EXISTS "Skill_groupId_idx" ON "Skill"("groupId");`,
+  `CREATE INDEX IF NOT EXISTS "Request_fromUserId_idx" ON "Request"("fromUserId");`,
+  `CREATE INDEX IF NOT EXISTS "Request_toUserId_idx" ON "Request"("toUserId");`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "Favorite_userId_targetUserId_key" ON "Favorite"("userId", "targetUserId");`,
+  `CREATE INDEX IF NOT EXISTS "Favorite_userId_idx" ON "Favorite"("userId");`,
+  `CREATE INDEX IF NOT EXISTS "Favorite_targetUserId_idx" ON "Favorite"("targetUserId");`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "Exchange_requestId_key" ON "Exchange"("requestId");`,
+  `CREATE INDEX IF NOT EXISTS "Exchange_initiatorId_idx" ON "Exchange"("initiatorId");`,
+  `CREATE INDEX IF NOT EXISTS "Exchange_recipientId_idx" ON "Exchange"("recipientId");`,
+  `CREATE INDEX IF NOT EXISTS "Exchange_status_idx" ON "Exchange"("status");`,
+  `CREATE INDEX IF NOT EXISTS "Exchange_confirmedAt_idx" ON "Exchange"("confirmedAt");`,
+  `CREATE INDEX IF NOT EXISTS "ExchangeMessage_exchangeId_idx" ON "ExchangeMessage"("exchangeId");`,
+  `CREATE INDEX IF NOT EXISTS "ExchangeMessage_senderId_idx" ON "ExchangeMessage"("senderId");`,
+  `CREATE INDEX IF NOT EXISTS "ExchangeMessage_createdAt_idx" ON "ExchangeMessage"("createdAt");`,
   `CREATE INDEX IF NOT EXISTS "UserSkill_userId_idx" ON "UserSkill"("userId");`,
   `CREATE INDEX IF NOT EXISTS "UserSkill_type_idx" ON "UserSkill"("type");`,
   `CREATE INDEX IF NOT EXISTS "UserSkill_categoryId_idx" ON "UserSkill"("categoryId");`,

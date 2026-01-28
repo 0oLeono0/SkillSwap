@@ -1,15 +1,16 @@
 import { z } from 'zod';
+import { REQUEST_STATUSES } from '../types/requestStatus.js';
 import { asyncHandler } from '../middleware/asyncHandler.js';
 import { createBadRequest, createUnauthorized } from '../utils/httpErrors.js';
 import { requestService } from '../services/requestService.js';
 
 const createRequestSchema = z.object({
   toUserId: z.string().min(1),
-  skillId: z.string().min(1),
+  skillId: z.string().min(1)
 });
 
 const updateStatusSchema = z.object({
-  status: z.enum(['pending', 'accepted', 'rejected']),
+  status: z.enum(REQUEST_STATUSES)
 });
 
 export const getRequests = asyncHandler(async (req, res) => {
@@ -36,7 +37,7 @@ export const createRequest = asyncHandler(async (req, res) => {
   const request = await requestService.createRequest(
     currentUser.sub,
     parseResult.data.toUserId,
-    parseResult.data.skillId,
+    parseResult.data.skillId
   );
   return res.status(201).json({ request });
 });
@@ -57,6 +58,10 @@ export const updateRequestStatus = asyncHandler(async (req, res) => {
     throw createBadRequest('Request id is required');
   }
 
-  const request = await requestService.updateStatus(requestId, currentUser.sub, parseResult.data.status);
+  const request = await requestService.updateStatus(
+    requestId,
+    currentUser.sub,
+    parseResult.data.status
+  );
   return res.status(200).json({ request });
 });

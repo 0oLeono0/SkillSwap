@@ -1,9 +1,18 @@
+import {
+  REQUEST_STATUS,
+  REQUEST_STATUSES,
+  type RequestStatus
+} from '../types/requestStatus.js';
 import { requestRepository } from '../repositories/requestRepository.js';
 import { userRepository } from '../repositories/userRepository.js';
 import { exchangeService } from './exchangeService.js';
-import { createBadRequest, createForbidden, createNotFound } from '../utils/httpErrors.js';
+import {
+  createBadRequest,
+  createForbidden,
+  createNotFound
+} from '../utils/httpErrors.js';
 
-const allowedStatuses = new Set(['pending', 'accepted', 'rejected']);
+const allowedStatuses = new Set<RequestStatus>(REQUEST_STATUSES);
 
 export const requestService = {
   async listForUser(userId: string) {
@@ -33,7 +42,11 @@ export const requestService = {
       throw createNotFound('Пользователь не найден');
     }
 
-    const existing = await requestRepository.findPendingDuplicate(fromUserId, toUserId, skillId);
+    const existing = await requestRepository.findPendingDuplicate(
+      fromUserId,
+      toUserId,
+      skillId
+    );
     if (existing) {
       return existing;
     }
@@ -41,11 +54,11 @@ export const requestService = {
     return requestRepository.create({
       fromUserId,
       toUserId,
-      skillId,
+      skillId
     });
   },
 
-  async updateStatus(requestId: string, userId: string, status: string) {
+  async updateStatus(requestId: string, userId: string, status: RequestStatus) {
     if (!allowedStatuses.has(status)) {
       throw createBadRequest('Неверный статус заявки');
     }
@@ -59,7 +72,7 @@ export const requestService = {
       throw createForbidden('Недостаточно прав для изменения статуса заявки');
     }
 
-    if (status === 'accepted' && request.toUserId !== userId) {
+    if (status === REQUEST_STATUS.accepted && request.toUserId !== userId) {
       throw createForbidden('Только получатель может подтвердить обмен');
     }
 
@@ -67,12 +80,15 @@ export const requestService = {
       return request;
     }
 
-    const updatedRequest = await requestRepository.updateStatus(requestId, status);
+    const updatedRequest = await requestRepository.updateStatus(
+      requestId,
+      status
+    );
 
-    if (status === 'accepted') {
+    if (status === REQUEST_STATUS.accepted) {
       await exchangeService.ensureCreatedFromRequest(updatedRequest);
     }
 
     return updatedRequest;
-  },
+  }
 };

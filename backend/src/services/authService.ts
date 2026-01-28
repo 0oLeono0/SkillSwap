@@ -13,7 +13,8 @@ import {
   type UserSkill,
   serializeImageUrls
 } from '../types/userSkill.js';
-import { isUserRole, type UserRole } from '../types/userRole.js';
+import { isUserRole, type UserRole, USER_ROLE } from '../types/userRole.js';
+import { USER_SKILL_TYPE, type UserSkillType } from '../types/userSkillType.js';
 import { hashToken } from '../utils/tokenHash.js';
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
@@ -57,11 +58,9 @@ const normalizeSkills = (skills?: UserSkillInput[]): UserSkill[] => {
   }));
 };
 
-type SkillType = 'teach' | 'learn';
-
 const toSkillCreateInput = (
   userId: string,
-  type: SkillType,
+  type: UserSkillType,
   skill: UserSkill
 ): Prisma.UserSkillCreateManyInput => ({
   id: skill.id,
@@ -93,7 +92,7 @@ const resolveUserRole = (value: unknown): UserRole => {
   if (isUserRole(value)) {
     return value;
   }
-  return 'user';
+  return USER_ROLE.user;
 };
 
 export const authService = {
@@ -146,10 +145,10 @@ export const authService = {
 
         const skillRows = [
           ...normalizedTeachableSkills.map((skill) =>
-            toSkillCreateInput(user.id, 'teach', skill)
+            toSkillCreateInput(user.id, USER_SKILL_TYPE.teach, skill)
           ),
           ...normalizedLearningSkills.map((skill) =>
-            toSkillCreateInput(user.id, 'learn', skill)
+            toSkillCreateInput(user.id, USER_SKILL_TYPE.learn, skill)
           )
         ];
 
@@ -346,19 +345,27 @@ export const authService = {
       }
 
       if ('teachableSkills' in updates) {
-        await userSkillRepository.deleteByUserAndType(userId, 'teach', tx);
+        await userSkillRepository.deleteByUserAndType(
+          userId,
+          USER_SKILL_TYPE.teach,
+          tx
+        );
         const normalized = normalizeSkills(updates.teachableSkills);
         const rows = normalized.map((skill) =>
-          toSkillCreateInput(userId, 'teach', skill)
+          toSkillCreateInput(userId, USER_SKILL_TYPE.teach, skill)
         );
         await userSkillRepository.createMany(rows, tx);
       }
 
       if ('learningSkills' in updates) {
-        await userSkillRepository.deleteByUserAndType(userId, 'learn', tx);
+        await userSkillRepository.deleteByUserAndType(
+          userId,
+          USER_SKILL_TYPE.learn,
+          tx
+        );
         const normalized = normalizeSkills(updates.learningSkills);
         const rows = normalized.map((skill) =>
-          toSkillCreateInput(userId, 'learn', skill)
+          toSkillCreateInput(userId, USER_SKILL_TYPE.learn, skill)
         );
         await userSkillRepository.createMany(rows, tx);
       }

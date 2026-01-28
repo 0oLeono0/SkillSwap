@@ -1,83 +1,89 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
+import { EXCHANGE_STATUS } from '../types/exchangeStatus.js';
 
 const participantSelect = {
   select: {
     id: true,
     name: true,
-    avatarUrl: true,
-  },
+    avatarUrl: true
+  }
 } as const;
 
 const requestSelect = {
   select: {
     id: true,
     skillId: true,
-    createdAt: true,
-  },
+    createdAt: true
+  }
 } as const;
 
 const defaultInclude = {
   request: requestSelect,
   initiator: participantSelect,
-  recipient: participantSelect,
+  recipient: participantSelect
 } satisfies Prisma.ExchangeInclude;
 
 const detailInclude = {
   ...defaultInclude,
   messages: {
     orderBy: {
-      createdAt: 'asc',
+      createdAt: 'asc'
     },
     include: {
-      sender: participantSelect,
-    },
-  },
+      sender: participantSelect
+    }
+  }
 } satisfies Prisma.ExchangeInclude;
 
 export const exchangeRepository = {
   findByRequestId(requestId: string) {
     return prisma.exchange.findUnique({
       where: { requestId },
-      include: defaultInclude,
+      include: defaultInclude
     });
   },
 
-  createFromRequest(data: { requestId: string; initiatorId: string; recipientId: string; confirmedAt?: Date }) {
+  createFromRequest(data: {
+    requestId: string;
+    initiatorId: string;
+    recipientId: string;
+    confirmedAt?: Date;
+  }) {
     return prisma.exchange.create({
       data: {
         requestId: data.requestId,
         initiatorId: data.initiatorId,
         recipientId: data.recipientId,
-        confirmedAt: data.confirmedAt ?? new Date(),
+        confirmedAt: data.confirmedAt ?? new Date()
       },
-      include: defaultInclude,
+      include: defaultInclude
     });
   },
 
   listForUser(userId: string) {
     return prisma.exchange.findMany({
       where: {
-        OR: [{ initiatorId: userId }, { recipientId: userId }],
+        OR: [{ initiatorId: userId }, { recipientId: userId }]
       },
       include: defaultInclude,
       orderBy: {
-        confirmedAt: 'desc',
-      },
+        confirmedAt: 'desc'
+      }
     });
   },
 
   findSummaryById(id: string) {
     return prisma.exchange.findUnique({
       where: { id },
-      include: defaultInclude,
+      include: defaultInclude
     });
   },
 
   findDetailedById(id: string) {
     return prisma.exchange.findUnique({
       where: { id },
-      include: detailInclude,
+      include: detailInclude
     });
   },
 
@@ -85,10 +91,10 @@ export const exchangeRepository = {
     return prisma.exchange.update({
       where: { id },
       data: {
-        status: 'completed',
-        completedAt: new Date(),
+        status: EXCHANGE_STATUS.completed,
+        completedAt: new Date()
       },
-      include: defaultInclude,
+      include: defaultInclude
     });
   },
 
@@ -97,11 +103,11 @@ export const exchangeRepository = {
       data: {
         exchangeId,
         senderId,
-        content,
+        content
       },
       include: {
-        sender: participantSelect,
-      },
+        sender: participantSelect
+      }
     });
-  },
+  }
 };

@@ -4,7 +4,8 @@ import type {
 } from '@prisma/client';
 import { userRepository } from '../repositories/userRepository.js';
 import { parseImageUrls, type UserSkill } from '../types/userSkill.js';
-import { isUserRole, type UserRole } from '../types/userRole.js';
+import { isUserRole, type UserRole, USER_ROLE } from '../types/userRole.js';
+import { USER_SKILL_TYPE } from '../types/userSkillType.js';
 
 type UserRecord = PrismaUser & { userSkills?: PrismaUserSkill[] | null };
 
@@ -39,7 +40,7 @@ export const sanitizeUser = (user: UserRecord | null): SanitizedUser | null => {
   const learningSkills: UserSkill[] = [];
 
   for (const skill of normalizedSkills) {
-    if (skill.type === 'learn') {
+    if (skill.type === USER_SKILL_TYPE.learn) {
       learningSkills.push(mapSkillRecord(skill));
     } else {
       teachableSkills.push(mapSkillRecord(skill));
@@ -49,7 +50,7 @@ export const sanitizeUser = (user: UserRecord | null): SanitizedUser | null => {
   return {
     ...rest,
     avatarUrl: normalizeNullableString(avatarUrl),
-    role: isUserRole(user.role) ? user.role : 'user',
+    role: isUserRole(user.role) ? user.role : USER_ROLE.user,
     teachableSkills,
     learningSkills
   };

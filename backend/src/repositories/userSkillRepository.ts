@@ -1,4 +1,5 @@
 import type { Prisma, PrismaClient } from '@prisma/client';
+import type { UserSkillType } from '../types/userSkillType.js';
 import { prisma } from '../lib/prisma.js';
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
@@ -13,7 +14,7 @@ export const userSkillRepository = {
     return getClient(client).userSkill.createMany({ data });
   },
 
-  deleteByUserAndType(userId: string, type: string, client?: DbClient) {
+  deleteByUserAndType(userId: string, type: UserSkillType, client?: DbClient) {
     return getClient(client).userSkill.deleteMany({ where: { userId, type } });
   }
 };
