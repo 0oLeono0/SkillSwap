@@ -7,6 +7,7 @@ import { requestRepository } from '../repositories/requestRepository.js';
 import { userRepository } from '../repositories/userRepository.js';
 import { userSkillRepository } from '../repositories/userSkillRepository.js';
 import { exchangeService } from './exchangeService.js';
+import { prisma } from '../lib/prisma.js';
 import {
   createBadRequest,
   createForbidden,
@@ -145,14 +146,24 @@ export const requestService = {
       return mapRequest(request);
     }
 
+    if (status === REQUEST_STATUS.accepted) {
+      const updatedRequest = await prisma.$transaction(async (tx) => {
+        const request = await requestRepository.updateStatus(
+          requestId,
+          status,
+          tx
+        );
+        await exchangeService.ensureCreatedFromRequest(request, tx);
+        return request;
+      });
+
+      return mapRequest(updatedRequest as RequestRecord);
+    }
+
     const updatedRequest = await requestRepository.updateStatus(
       requestId,
       status
     );
-
-    if (status === REQUEST_STATUS.accepted) {
-      await exchangeService.ensureCreatedFromRequest(updatedRequest);
-    }
 
     return mapRequest(updatedRequest as RequestRecord);
   }

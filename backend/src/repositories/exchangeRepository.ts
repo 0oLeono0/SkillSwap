@@ -1,6 +1,10 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma, PrismaClient } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { EXCHANGE_STATUS } from '../types/exchangeStatus.js';
+
+type DbClient = PrismaClient | Prisma.TransactionClient;
+
+const getClient = (client?: DbClient) => client ?? prisma;
 
 const participantSelect = {
   select: {
@@ -52,20 +56,23 @@ const detailInclude = {
 } satisfies Prisma.ExchangeInclude;
 
 export const exchangeRepository = {
-  findByRequestId(requestId: string) {
-    return prisma.exchange.findUnique({
+  findByRequestId(requestId: string, client?: DbClient) {
+    return getClient(client).exchange.findUnique({
       where: { requestId },
       include: defaultInclude
     });
   },
 
-  createFromRequest(data: {
-    requestId: string;
-    initiatorId: string;
-    recipientId: string;
-    confirmedAt?: Date;
-  }) {
-    return prisma.exchange.create({
+  createFromRequest(
+    data: {
+      requestId: string;
+      initiatorId: string;
+      recipientId: string;
+      confirmedAt?: Date;
+    },
+    client?: DbClient
+  ) {
+    return getClient(client).exchange.create({
       data: {
         requestId: data.requestId,
         initiatorId: data.initiatorId,
@@ -76,8 +83,8 @@ export const exchangeRepository = {
     });
   },
 
-  listForUser(userId: string) {
-    return prisma.exchange.findMany({
+  listForUser(userId: string, client?: DbClient) {
+    return getClient(client).exchange.findMany({
       where: {
         OR: [{ initiatorId: userId }, { recipientId: userId }]
       },
@@ -88,22 +95,22 @@ export const exchangeRepository = {
     });
   },
 
-  findSummaryById(id: string) {
-    return prisma.exchange.findUnique({
+  findSummaryById(id: string, client?: DbClient) {
+    return getClient(client).exchange.findUnique({
       where: { id },
       include: defaultInclude
     });
   },
 
-  findDetailedById(id: string) {
-    return prisma.exchange.findUnique({
+  findDetailedById(id: string, client?: DbClient) {
+    return getClient(client).exchange.findUnique({
       where: { id },
       include: detailInclude
     });
   },
 
-  markCompleted(id: string) {
-    return prisma.exchange.update({
+  markCompleted(id: string, client?: DbClient) {
+    return getClient(client).exchange.update({
       where: { id },
       data: {
         status: EXCHANGE_STATUS.completed,
@@ -113,8 +120,13 @@ export const exchangeRepository = {
     });
   },
 
-  createMessage(exchangeId: string, senderId: string, content: string) {
-    return prisma.exchangeMessage.create({
+  createMessage(
+    exchangeId: string,
+    senderId: string,
+    content: string,
+    client?: DbClient
+  ) {
+    return getClient(client).exchangeMessage.create({
       data: {
         exchangeId,
         senderId,

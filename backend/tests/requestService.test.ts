@@ -1,6 +1,15 @@
 import { jest } from '@jest/globals';
 import type { RequestStatus } from '../src/types/requestStatus.js';
 
+type TransactionCallback = (tx: unknown) => unknown | Promise<unknown>;
+type TransactionMock = jest.MockedFunction<
+  (fn: TransactionCallback) => Promise<unknown>
+>;
+
+const mockPrisma: { $transaction: TransactionMock } = {
+  $transaction: jest.fn()
+};
+
 const mockRequestRepository: {
   findForUser: jest.MockedFunction<(userId: string) => Promise<unknown>>;
   findPendingDuplicate: jest.MockedFunction<
@@ -59,6 +68,10 @@ jest.unstable_mockModule('../src/services/exchangeService.js', () => ({
   exchangeService: mockExchangeService
 }));
 
+jest.unstable_mockModule('../src/lib/prisma.js', () => ({
+  prisma: mockPrisma
+}));
+
 const { requestService } = await import('../src/services/requestService.js');
 
 const buildRequestRecord = (overrides: Record<string, unknown> = {}) => ({
@@ -79,6 +92,9 @@ const buildRequestRecord = (overrides: Record<string, unknown> = {}) => ({
 describe('requestService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockPrisma.$transaction.mockImplementation(async (fn: TransactionCallback) =>
+      fn({})
+    );
   });
 
   describe('listForUser', () => {
@@ -242,10 +258,12 @@ describe('requestService', () => {
 
       expect(mockRequestRepository.updateStatus).toHaveBeenCalledWith(
         'req',
-        'accepted'
+        'accepted',
+        expect.anything()
       );
       expect(mockExchangeService.ensureCreatedFromRequest).toHaveBeenCalledWith(
-        { ...request, status: 'accepted' }
+        { ...request, status: 'accepted' },
+        expect.anything()
       );
       expect(result.status).toBe('accepted');
     });

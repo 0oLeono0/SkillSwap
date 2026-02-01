@@ -1,4 +1,4 @@
-import type { Request } from '@prisma/client';
+import { Prisma, type PrismaClient, type Request } from '@prisma/client';
 import { exchangeRepository } from '../repositories/exchangeRepository.js';
 import {
   createBadRequest,
@@ -13,6 +13,8 @@ import {
   mapRequestSkill,
   type RequestSkillRecord
 } from '../mappers/requestSkill.js';
+
+type DbClient = PrismaClient | Prisma.TransactionClient;
 
 type ExchangeParticipant = {
   id: string;
@@ -86,18 +88,45 @@ const ensureParticipant = (
 
 export const exchangeService = {
   async ensureCreatedFromRequest(
-    request: Pick<Request, 'id' | 'fromUserId' | 'toUserId'>
+    request: Pick<Request, 'id' | 'fromUserId' | 'toUserId'>,
+    client?: DbClient
   ) {
-    const existing = await exchangeRepository.findByRequestId(request.id);
+    const findByRequestId = (requestId: string) =>
+      client
+        ? exchangeRepository.findByRequestId(requestId, client)
+        : exchangeRepository.findByRequestId(requestId);
+    const createFromRequest = (data: {
+      requestId: string;
+      initiatorId: string;
+      recipientId: string;
+    }) =>
+      client
+        ? exchangeRepository.createFromRequest(data, client)
+        : exchangeRepository.createFromRequest(data);
+
+    const existing = await findByRequestId(request.id);
     if (existing) {
       return existing;
     }
 
-    return exchangeRepository.createFromRequest({
-      requestId: request.id,
-      initiatorId: request.fromUserId,
-      recipientId: request.toUserId
-    });
+    try {
+      return await createFromRequest({
+        requestId: request.id,
+        initiatorId: request.fromUserId,
+        recipientId: request.toUserId
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        const fallback = await findByRequestId(request.id);
+        if (fallback) {
+          return fallback;
+        }
+      }
+      throw error;
+    }
   },
 
   async listForUser(userId: string) {

@@ -1,6 +1,10 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma, PrismaClient } from '@prisma/client';
 import { REQUEST_STATUS, type RequestStatus } from '../types/requestStatus.js';
 import { prisma } from '../lib/prisma.js';
+
+type DbClient = PrismaClient | Prisma.TransactionClient;
+
+const getClient = (client?: DbClient) => client ?? prisma;
 
 const participantSelect = {
   select: {
@@ -27,8 +31,8 @@ const defaultInclude = {
 } satisfies Prisma.RequestInclude;
 
 export const requestRepository = {
-  findForUser(userId: string) {
-    return prisma.request.findMany({
+  findForUser(userId: string, client?: DbClient) {
+    return getClient(client).request.findMany({
       where: {
         OR: [{ fromUserId: userId }, { toUserId: userId }],
         status: {
@@ -49,9 +53,10 @@ export const requestRepository = {
   findPendingDuplicate(
     fromUserId: string,
     toUserId: string,
-    userSkillId: string
+    userSkillId: string,
+    client?: DbClient
   ) {
-    return prisma.request.findFirst({
+    return getClient(client).request.findFirst({
       where: {
         fromUserId,
         toUserId,
@@ -62,22 +67,22 @@ export const requestRepository = {
     });
   },
 
-  create(data: Prisma.RequestUncheckedCreateInput) {
-    return prisma.request.create({
+  create(data: Prisma.RequestUncheckedCreateInput, client?: DbClient) {
+    return getClient(client).request.create({
       data,
       include: defaultInclude
     });
   },
 
-  findById(id: string) {
-    return prisma.request.findUnique({
+  findById(id: string, client?: DbClient) {
+    return getClient(client).request.findUnique({
       where: { id },
       include: defaultInclude
     });
   },
 
-  updateStatus(id: string, status: RequestStatus) {
-    return prisma.request.update({
+  updateStatus(id: string, status: RequestStatus, client?: DbClient) {
+    return getClient(client).request.update({
       where: { id },
       data: { status },
       include: defaultInclude
