@@ -16,6 +16,7 @@ import {
 import { isUserRole, type UserRole, USER_ROLE } from '../types/userRole.js';
 import { USER_SKILL_TYPE, type UserSkillType } from '../types/userSkillType.js';
 import { hashToken } from '../utils/tokenHash.js';
+import { normalizeEmail } from '../utils/normalizeEmail.js';
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
 
@@ -161,7 +162,8 @@ export const authService = {
     teachableSkills,
     learningSkills
   }: RegisterInput) {
-    const existing = await userRepository.findByEmail(email);
+    const normalizedEmail = normalizeEmail(email);
+    const existing = await userRepository.findByEmail(normalizedEmail);
     if (existing) {
       throw createConflict('User with this email already exists');
     }
@@ -171,7 +173,7 @@ export const authService = {
     const normalizedTeachableSkills = normalizeSkills(teachableSkills);
     const normalizedLearningSkills = normalizeSkills(learningSkills);
     const userData: Prisma.UserCreateInput = {
-      email,
+      email: normalizedEmail,
       passwordHash,
       name
     };
@@ -233,7 +235,8 @@ export const authService = {
   },
 
   async login({ email, password }: LoginInput) {
-    const user = await userRepository.findByEmail(email);
+    const normalizedEmail = normalizeEmail(email);
+    const user = await userRepository.findByEmail(normalizedEmail);
     if (!user) {
       throw createUnauthorized('Invalid email or password');
     }
@@ -352,8 +355,13 @@ export const authService = {
         throw createUnauthorized();
       }
 
-      if (updates.email && updates.email !== existingUser.email) {
-        const conflict = await userRepository.findByEmail(updates.email, tx);
+      const normalizedEmail =
+        typeof updates.email === 'string'
+          ? normalizeEmail(updates.email)
+          : null;
+
+      if (normalizedEmail && normalizedEmail !== existingUser.email) {
+        const conflict = await userRepository.findByEmail(normalizedEmail, tx);
         if (conflict) {
           throw createConflict('User with this email already exists');
         }
@@ -361,8 +369,8 @@ export const authService = {
 
       const data: Prisma.UserUpdateInput = {};
 
-      if (updates.email) {
-        data.email = updates.email;
+      if (normalizedEmail) {
+        data.email = normalizedEmail;
       }
       if (updates.name) {
         data.name = updates.name;

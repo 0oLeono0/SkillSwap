@@ -10,8 +10,8 @@ const navigateMock = jest.fn();
 
 jest.mock('@/app/providers/auth', () => ({
   useAuth: () => ({
-    login: loginMock,
-  }),
+    login: loginMock
+  })
 }));
 
 jest.mock('@/pages/Auth/model/RegistrationContext', () => ({
@@ -19,15 +19,15 @@ jest.mock('@/pages/Auth/model/RegistrationContext', () => ({
     setCredentials: setCredentialsMock,
     clear: clearMock,
     credentials: null,
-    stepTwo: null,
-  }),
+    stepTwo: null
+  })
 }));
 
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
   return {
     ...actual,
-    useNavigate: () => navigateMock,
+    useNavigate: () => navigateMock
   };
 });
 
@@ -43,13 +43,13 @@ describe('AuthStepOne', () => {
 
     render(<AuthStepOne />);
 
-    await user.type(screen.getByTestId('email-input'), 'test@example.com');
+    await user.type(screen.getByTestId('email-input'), 'Test@Example.com  ');
     await user.type(screen.getByTestId('password-input'), 'password123');
     await user.click(screen.getByTestId('submit-button'));
 
     expect(setCredentialsMock).toHaveBeenCalledWith({
       email: 'test@example.com',
-      password: 'password123',
+      password: 'password123'
     });
     expect(navigateMock).toHaveBeenCalledWith(ROUTES.REGISTER_STEP_TWO);
     expect(setItemSpy).not.toHaveBeenCalled();
@@ -60,14 +60,14 @@ describe('AuthStepOne', () => {
 
     render(<AuthStepOne isRegistered />);
 
-    await user.type(screen.getByTestId('email-input'), 'user@example.com');
+    await user.type(screen.getByTestId('email-input'), 'User@Example.com ');
     await user.type(screen.getByTestId('password-input'), 'secret');
     await user.click(screen.getByTestId('submit-button'));
 
     await waitFor(() => {
       expect(loginMock).toHaveBeenCalledWith({
         email: 'user@example.com',
-        password: 'secret',
+        password: 'secret'
       });
     });
     expect(clearMock).toHaveBeenCalled();

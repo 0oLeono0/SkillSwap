@@ -16,6 +16,8 @@ interface AuthStepOneProps {
   isRegistered?: boolean;
 }
 
+const normalizeEmail = (value: string) => value.trim().toLowerCase();
+
 export const AuthStepOne = ({ isRegistered = false }: AuthStepOneProps) => {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -29,11 +31,12 @@ export const AuthStepOne = ({ isRegistered = false }: AuthStepOneProps) => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+    const normalizedEmail = normalizeEmail(email);
 
     if (isRegistered) {
       try {
         setIsSubmitting(true);
-        await login({ email, password });
+        await login({ email: normalizedEmail, password });
         clear();
         navigate(ROUTES.HOME);
       } catch (loginError) {
@@ -48,7 +51,7 @@ export const AuthStepOne = ({ isRegistered = false }: AuthStepOneProps) => {
       return;
     }
 
-    setCredentials({ email, password });
+    setCredentials({ email: normalizedEmail, password });
     navigate(ROUTES.REGISTER_STEP_TWO);
   };
 
@@ -98,7 +101,8 @@ export const AuthStepOne = ({ isRegistered = false }: AuthStepOneProps) => {
               type='submit'
               variant='primary'
               disabled={isRegistered && isSubmitting}
-              data-testid='submit-button'>
+              data-testid='submit-button'
+            >
               Войти
             </Button>
           </form>

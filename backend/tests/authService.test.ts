@@ -156,7 +156,7 @@ describe('authService', () => {
       });
 
       const result = await authService.register({
-        email: 'user@example.com',
+        email: 'User@Example.com  ',
         password: 'pass123',
         name: 'User',
         teachableSkills: [{ id: '1', title: ' Skill ', description: ' Desc ' }],
@@ -165,6 +165,9 @@ describe('authService', () => {
 
       const payload = mockUserRepository.create.mock.calls[0][0];
       expect(payload.email).toBe('user@example.com');
+      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(
+        'user@example.com'
+      );
       expect(mockUserSkillRepository.createMany).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
@@ -204,7 +207,7 @@ describe('authService', () => {
 
       await expect(
         authService.register({
-          email: 'duplicate@example.com',
+          email: 'Duplicate@Example.com',
           password: '123',
           name: 'User'
         })
@@ -224,12 +227,15 @@ describe('authService', () => {
       mockVerifyPassword.mockResolvedValue(true);
 
       const result = await authService.login({
-        email: 'user@example.com',
+        email: 'User@Example.com',
         password: 'secret'
       });
 
       expect(result.accessToken).toBe('access-token');
       expect(result.refreshToken).toBe('refresh-token');
+      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(
+        'user@example.com'
+      );
     });
 
     it('throws when user not found', async () => {
@@ -352,7 +358,7 @@ describe('authService', () => {
       mockUserSkillRepository.findByUserAndType.mockResolvedValue([]);
 
       const result = await authService.updateProfile('user', {
-        email: 'new@example.com',
+        email: 'New@Example.com ',
         name: 'New Name',
         gender: 'Мужской',
         teachableSkills: [

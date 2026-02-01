@@ -144,7 +144,6 @@ const statements = [
       FOREIGN KEY ("senderId") REFERENCES "User" ("id")
       ON DELETE CASCADE ON UPDATE CASCADE
   );`,
-  `CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "RefreshToken_token_key" ON "RefreshToken"("token");`,
   `CREATE INDEX IF NOT EXISTS "RefreshToken_userId_idx" ON "RefreshToken"("userId");`,
   `CREATE INDEX IF NOT EXISTS "RefreshToken_token_idx" ON "RefreshToken"("token");`,
@@ -169,6 +168,11 @@ const statements = [
   `CREATE INDEX IF NOT EXISTS "UserSkill_subcategoryId_idx" ON "UserSkill"("subcategoryId");`,
   `CREATE INDEX IF NOT EXISTS "UserSkill_userId_type_idx" ON "UserSkill"("userId", "type");`
 ];
+
+type EmailDuplicateRow = {
+  normalized: string | null;
+  count: number;
+};
 
 const seedReferenceData = async (client: PrismaClient) => {
   const cityCount = await client.city.count();
@@ -276,10 +280,44 @@ const migrateLegacySkills = async (client: PrismaClient) => {
   }
 };
 
+const normalizeUserEmails = async (client: PrismaClient) => {
+  const duplicates = await client.$queryRawUnsafe<EmailDuplicateRow[]>(
+    `SELECT LOWER(TRIM("email")) AS normalized, COUNT(*) AS count
+     FROM "User"
+     GROUP BY normalized
+     HAVING count > 1;`
+  );
+
+  if (duplicates.length > 0) {
+    const list = duplicates
+      .map((row) => `${row.normalized ?? 'null'} (${row.count})`)
+      .join(', ');
+    throw new Error(
+      `[db:init] Duplicate emails after normalization detected: ${list}`
+    );
+  }
+
+  await client.$executeRawUnsafe(
+    `UPDATE "User" SET "email" = LOWER(TRIM("email")) WHERE "email" IS NOT NULL;`
+  );
+};
+
+const ensureEmailIndexes = async (client: PrismaClient) => {
+  await client.$executeRawUnsafe(
+    `CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");`
+  );
+  await client.$executeRawUnsafe(
+    `CREATE UNIQUE INDEX IF NOT EXISTS "User_email_normalized_key" ON "User"(LOWER(TRIM("email")));`
+  );
+};
+
 async function main() {
   for (const sql of statements) {
     await prisma.$executeRawUnsafe(sql);
   }
+
+  await normalizeUserEmails(prisma);
+  await ensureEmailIndexes(prisma);
 
   await seedReferenceData(prisma);
   await migrateLegacySkills(prisma);

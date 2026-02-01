@@ -1,6 +1,7 @@
 import type { Prisma, PrismaClient } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { hashToken } from '../utils/tokenHash.js';
+import { normalizeEmail } from '../utils/normalizeEmail.js';
 
 const includeSkills = {
   userSkills: true
@@ -13,7 +14,7 @@ const getClient = (client?: DbClient) => client ?? prisma;
 export const userRepository = {
   findByEmail(email: string, client?: DbClient) {
     return getClient(client).user.findUnique({
-      where: { email },
+      where: { email: normalizeEmail(email) },
       include: includeSkills
     });
   },

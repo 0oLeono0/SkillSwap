@@ -4,7 +4,7 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState,
+  useState
 } from 'react';
 import styles from './profilePersonalData.module.scss';
 import fallbackAvatar from '@/shared/assets/images/avatars/avatar.jpg';
@@ -17,7 +17,7 @@ import { useFiltersBaseData } from '@/features/Filter/model/useFiltersBaseData';
 import {
   formatBirthDate,
   normalizeGenderInput,
-  toISODate,
+  toISODate
 } from './profilePersonalData.helpers';
 
 interface PersonalDataForm {
@@ -55,15 +55,25 @@ export function ProfilePersonalData() {
       birthDate: formatBirthDate(user?.birthDate),
       gender: user?.gender ?? '',
       city: cityName,
-      bio: user?.bio ?? '',
+      bio: user?.bio ?? ''
     }),
-    [user?.email, user?.name, user?.birthDate, user?.gender, user?.bio, cityName],
+    [
+      user?.email,
+      user?.name,
+      user?.birthDate,
+      user?.gender,
+      user?.bio,
+      cityName
+    ]
   );
 
   const [formState, setFormState] = useState<PersonalDataForm>(profileDefaults);
-  const [savedState, setSavedState] = useState<PersonalDataForm>(profileDefaults);
+  const [savedState, setSavedState] =
+    useState<PersonalDataForm>(profileDefaults);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string>(user?.avatarUrl || fallbackAvatar);
+  const [avatarPreview, setAvatarPreview] = useState<string>(
+    user?.avatarUrl || fallbackAvatar
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
@@ -89,15 +99,15 @@ export function ProfilePersonalData() {
         URL.revokeObjectURL(objectUrlRef.current);
       }
     },
-    [],
+    []
   );
 
-  const updateFormField = (field: keyof PersonalDataForm) => (
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { value } = event.target;
-    setFormState((prev) => ({ ...prev, [field]: value }));
-  };
+  const updateFormField =
+    (field: keyof PersonalDataForm) =>
+    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const { value } = event.target;
+      setFormState((prev) => ({ ...prev, [field]: value }));
+    };
 
   const handleBirthDateChange = (value: string) => {
     setFormState((prev) => ({ ...prev, birthDate: value }));
@@ -155,7 +165,9 @@ export function ProfilePersonalData() {
     if (!trimmedCity) {
       cityIdPayload = null;
     } else {
-      const matchedCity = cities.find((city) => city.name.toLowerCase() === trimmedCity.toLowerCase());
+      const matchedCity = cities.find(
+        (city) => city.name.toLowerCase() === trimmedCity.toLowerCase()
+      );
       if (matchedCity) {
         cityIdPayload = matchedCity.id;
       }
@@ -166,28 +178,35 @@ export function ProfilePersonalData() {
       try {
         avatarUrlPayload = await readFileAsDataUrl(avatarFile);
       } catch (error) {
-        console.error('[ProfilePersonalData] Failed to read avatar file', error);
-        setSubmitError('Не удалось прочитать выбранный файл. Попробуйте другой файл.');
+        console.error(
+          '[ProfilePersonalData] Failed to read avatar file',
+          error
+        );
+        setSubmitError(
+          'Не удалось прочитать выбранный файл. Попробуйте другой файл.'
+        );
         setIsSubmitting(false);
         return;
       }
     }
 
     try {
+      const normalizedEmail = formState.email.trim().toLowerCase();
       await updateProfile({
-        email: formState.email.trim(),
+        email: normalizedEmail,
         name: formState.name.trim(),
         birthDate: formState.birthDate ? toISODate(formState.birthDate) : null,
         gender: normalizeGenderInput(formState.gender),
         bio: formState.bio.trim() || null,
         ...(cityIdPayload !== undefined ? { cityId: cityIdPayload } : {}),
-        ...(avatarUrlPayload ? { avatarUrl: avatarUrlPayload } : {}),
+        ...(avatarUrlPayload ? { avatarUrl: avatarUrlPayload } : {})
       });
       setSavedState({ ...formState });
       setAvatarFile(null);
       setSubmitSuccess('Данные успешно сохранены');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Не удалось сохранить данные';
+      const message =
+        error instanceof Error ? error.message : 'Не удалось сохранить данные';
       setSubmitError(message);
     } finally {
       setIsSubmitting(false);
@@ -201,7 +220,8 @@ export function ProfilePersonalData() {
           Личные данные
         </Title>
         <p className={styles.subtitle}>
-          Обновите информацию о себе, чтобы другим было проще находить вас для обмена опытом.
+          Обновите информацию о себе, чтобы другим было проще находить вас для
+          обмена опытом.
         </p>
       </div>
 
@@ -219,7 +239,9 @@ export function ProfilePersonalData() {
             <button
               type='button'
               className={styles.passwordLink}
-              onClick={() => console.info('[Profile] Navigate to password change')}
+              onClick={() =>
+                console.info('[Profile] Navigate to password change')
+              }
             >
               Изменить пароль
             </button>
@@ -234,7 +256,11 @@ export function ProfilePersonalData() {
           />
 
           <div className={styles.inlineFields}>
-            <DatePicker title='Дата рождения' value={formState.birthDate} onChange={handleBirthDateChange} />
+            <DatePicker
+              title='Дата рождения'
+              value={formState.birthDate}
+              onChange={handleBirthDateChange}
+            />
             <Input
               title='Пол'
               value={formState.gender}
@@ -260,11 +286,23 @@ export function ProfilePersonalData() {
           </label>
 
           <div className={styles.actions}>
-            <Button type='submit' variant='primary' disabled={!hasChanges || isSubmitting}>
+            <Button
+              type='submit'
+              variant='primary'
+              disabled={!hasChanges || isSubmitting}
+            >
               {isSubmitting ? 'Сохраняем...' : 'Сохранить'}
             </Button>
-            {submitError && <p className={`${styles.statusMessage} ${styles.statusError}`}>{submitError}</p>}
-            {submitSuccess && <p className={`${styles.statusMessage} ${styles.statusSuccess}`}>{submitSuccess}</p>}
+            {submitError && (
+              <p className={`${styles.statusMessage} ${styles.statusError}`}>
+                {submitError}
+              </p>
+            )}
+            {submitSuccess && (
+              <p className={`${styles.statusMessage} ${styles.statusSuccess}`}>
+                {submitSuccess}
+              </p>
+            )}
           </div>
         </form>
 
@@ -278,11 +316,17 @@ export function ProfilePersonalData() {
               accept='image/*'
               onChange={handleAvatarChange}
             />
-            <button type='button' className={styles.avatarOverlay} onClick={handleAvatarPick}>
+            <button
+              type='button'
+              className={styles.avatarOverlay}
+              onClick={handleAvatarPick}
+            >
               Изменить фото
             </button>
           </div>
-          <p className={styles.avatarHint}>Формат JPG или PNG, размер до 5 МБ.</p>
+          <p className={styles.avatarHint}>
+            Формат JPG или PNG, размер до 5 МБ.
+          </p>
           <Button variant='secondary' type='button' onClick={handleAvatarPick}>
             Загрузить новое фото
           </Button>

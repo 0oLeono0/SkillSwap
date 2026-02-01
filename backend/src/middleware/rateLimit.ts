@@ -1,6 +1,7 @@
 import type { Request, RequestHandler } from 'express';
 import { createClient } from 'redis';
 import { config } from '../config/env.js';
+import { normalizeEmail } from '../utils/normalizeEmail.js';
 
 type RateLimitOptions = {
   windowMs: number;
@@ -46,7 +47,7 @@ const getClientIp = (req: Request): string => {
 const getEmailFromBody = (req: Request): string => {
   const body = req.body as { email?: unknown } | undefined;
   if (body && typeof body.email === 'string') {
-    return body.email.trim().toLowerCase();
+    return normalizeEmail(body.email);
   }
   return '';
 };
@@ -87,7 +88,7 @@ const createMemoryStore = (): RateLimitStore => {
       const nextEntry = { count: entry.count + 1, resetAt: entry.resetAt };
       hits.set(key, nextEntry);
       return nextEntry;
-    },
+    }
   };
 };
 
@@ -154,7 +155,7 @@ const createRedisStore = (fallback: RateLimitStore): RateLimitStore => {
         logRedisError('Redis store failed, falling back to memory', error);
         return fallback.increment(key, windowMs);
       }
-    },
+    }
   };
 };
 
@@ -166,21 +167,30 @@ export const createRateLimitStore = (): RateLimitStore => {
   return createRedisStore(memoryStore);
 };
 
-export const createRateLimiter = (options: RateLimitOptions): RequestHandler => {
+export const createRateLimiter = (
+  options: RateLimitOptions
+): RequestHandler => {
   const store = options.store ?? createMemoryStore();
   const prefix = options.prefix?.trim() ?? '';
 
   return async (req, res, next) => {
     try {
-      const rawKey = options.keyGenerator ? options.keyGenerator(req) : getClientIp(req);
+      const rawKey = options.keyGenerator
+        ? options.keyGenerator(req)
+        : getClientIp(req);
       const key = normalizeKey(rawKey);
       const storeKey = prefix ? `${prefix}:${key}` : key;
       const entry = await store.increment(storeKey, options.windowMs);
 
       if (entry.count > options.max) {
-        const retryAfterSeconds = Math.max(1, Math.ceil((entry.resetAt - Date.now()) / 1000));
+        const retryAfterSeconds = Math.max(
+          1,
+          Math.ceil((entry.resetAt - Date.now()) / 1000)
+        );
         res.set('Retry-After', String(retryAfterSeconds));
-        return res.status(429).json({ message: options.message ?? defaultMessage });
+        return res
+          .status(429)
+          .json({ message: options.message ?? defaultMessage });
       }
 
       return next();

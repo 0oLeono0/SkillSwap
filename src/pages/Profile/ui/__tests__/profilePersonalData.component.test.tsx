@@ -7,12 +7,24 @@ jest.mock('@/app/providers/auth');
 jest.mock('@/features/Filter/model/useFiltersBaseData');
 
 jest.mock('@/shared/ui/DatePicker/DatePicker', () => ({
-  DatePicker: ({ title, value, onChange }: { title?: string; value?: string; onChange?: (value: string) => void }) => (
+  DatePicker: ({
+    title,
+    value,
+    onChange
+  }: {
+    title?: string;
+    value?: string;
+    onChange?: (value: string) => void;
+  }) => (
     <label>
       {title}
-      <input data-testid="date-picker" value={value ?? ''} onChange={(event) => onChange?.(event.target.value)} />
+      <input
+        data-testid='date-picker'
+        value={value ?? ''}
+        onChange={(event) => onChange?.(event.target.value)}
+      />
     </label>
-  ),
+  )
 }));
 
 const mockUseAuth = useAuth as jest.Mock;
@@ -25,11 +37,11 @@ describe('ProfilePersonalData component', () => {
     mockUseFiltersBaseData.mockReturnValue({
       cities: [
         { id: 1, name: 'City A' },
-        { id: 2, name: 'City B' },
+        { id: 2, name: 'City B' }
       ],
       skillGroups: [],
       isLoading: false,
-      error: null,
+      error: null
     });
     mockUseAuth.mockReturnValue({
       user: {
@@ -38,9 +50,9 @@ describe('ProfilePersonalData component', () => {
         birthDate: '1990-01-01T00:00:00.000Z',
         gender: 'female',
         cityId: 2,
-        bio: 'About me',
+        bio: 'About me'
       },
-      updateProfile,
+      updateProfile
     });
     updateProfile.mockResolvedValue(undefined);
   });
@@ -61,16 +73,16 @@ describe('ProfilePersonalData component', () => {
     render(<ProfilePersonalData />);
 
     fireEvent.change(screen.getByDisplayValue('user@example.com'), {
-      target: { value: ' new@example.com ' },
+      target: { value: ' New@Example.com  ' }
     });
     fireEvent.change(screen.getByDisplayValue('User'), {
-      target: { value: '  New Name  ' },
+      target: { value: '  New Name  ' }
     });
     fireEvent.change(screen.getByTestId('date-picker'), {
-      target: { value: '12.03.1990' },
+      target: { value: '12.03.1990' }
     });
     fireEvent.change(screen.getByDisplayValue('City B'), {
-      target: { value: 'City A' },
+      target: { value: 'City A' }
     });
 
     fireEvent.click(screen.getByRole('button', { name: /Сохранить/i }));
@@ -83,7 +95,7 @@ describe('ProfilePersonalData component', () => {
     expect(payload).toMatchObject({
       email: 'new@example.com',
       name: 'New Name',
-      cityId: 1,
+      cityId: 1
     });
     expect(payload.birthDate).toEqual(expect.any(String));
   });
