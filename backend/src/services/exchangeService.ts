@@ -80,9 +80,7 @@ const ensureParticipant = (
   userId: string
 ) => {
   if (exchange.initiatorId !== userId && exchange.recipientId !== userId) {
-    throw createForbidden(
-      'РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РїСЂР°РІ РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ СЌС‚РёРј РѕР±РјРµРЅРѕРј'
-    );
+    throw createForbidden('Недостаточно прав для работы с этим обменом');
   }
 };
 
@@ -141,7 +139,7 @@ export const exchangeService = {
       exchangeId
     )) as ExchangeDetailRecord | null;
     if (!exchange) {
-      throw createNotFound('РћР±РјРµРЅ РЅРµ РЅР°Р№РґРµРЅ');
+      throw createNotFound('Обмен не найден');
     }
 
     ensureParticipant(exchange, userId);
@@ -151,21 +149,19 @@ export const exchangeService = {
   async sendMessage(exchangeId: string, userId: string, content: string) {
     const exchange = await exchangeRepository.findSummaryById(exchangeId);
     if (!exchange) {
-      throw createNotFound('РћР±РјРµРЅ РЅРµ РЅР°Р№РґРµРЅ');
+      throw createNotFound('Обмен не найден');
     }
 
     ensureParticipant(exchange, userId);
     if (exchange.status === EXCHANGE_STATUS.completed) {
       throw createBadRequest(
-        'РќРµР»СЊР·СЏ РѕС‚РїСЂР°РІР»СЏС‚СЊ СЃРѕРѕР±С‰РµРЅРёСЏ РІ Р·Р°РІРµСЂС€РµРЅРЅРѕРј РѕР±РјРµРЅРµ'
+        'Нельзя отправлять сообщения в завершенном обмене'
       );
     }
 
     const trimmed = content.trim();
     if (!trimmed) {
-      throw createBadRequest(
-        'РЎРѕРѕР±С‰РµРЅРёРµ РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РїСѓСЃС‚С‹Рј'
-      );
+      throw createBadRequest('Сообщение не может быть пустым');
     }
 
     return exchangeRepository.createMessage(exchangeId, userId, trimmed);
@@ -176,7 +172,7 @@ export const exchangeService = {
       exchangeId
     )) as ExchangeRecord | null;
     if (!exchange) {
-      throw createNotFound('РћР±РјРµРЅ РЅРµ РЅР°Р№РґРµРЅ');
+      throw createNotFound('Обмен не найден');
     }
 
     ensureParticipant(exchange, userId);

@@ -92,8 +92,8 @@ const buildRequestRecord = (overrides: Record<string, unknown> = {}) => ({
 describe('requestService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockPrisma.$transaction.mockImplementation(async (fn: TransactionCallback) =>
-      fn({})
+    mockPrisma.$transaction.mockImplementation(
+      async (fn: TransactionCallback) => fn({})
     );
   });
 
@@ -227,6 +227,15 @@ describe('requestService', () => {
       ).rejects.toMatchObject({ status: 403 });
     });
 
+    it('throws when rejecting and current user is not recipient', async () => {
+      mockRequestRepository.findById.mockResolvedValue(
+        buildRequestRecord({ fromUserId: 'me', toUserId: 'other' })
+      );
+      await expect(
+        requestService.updateStatus('req', 'me', 'rejected')
+      ).rejects.toMatchObject({ status: 403 });
+    });
+
     it('returns early when status unchanged', async () => {
       mockRequestRepository.findById.mockResolvedValue(
         buildRequestRecord({ status: 'pending' })
@@ -235,6 +244,20 @@ describe('requestService', () => {
       const result = await requestService.updateStatus('req', 'me', 'pending');
       expect(result).toMatchObject({ status: 'pending' });
       expect(mockRequestRepository.updateStatus).not.toHaveBeenCalled();
+    });
+
+    it('throws when trying to change status after resolution', async () => {
+      mockRequestRepository.findById.mockResolvedValue(
+        buildRequestRecord({
+          status: 'accepted',
+          fromUserId: 'other',
+          toUserId: 'me'
+        })
+      );
+
+      await expect(
+        requestService.updateStatus('req', 'me', 'rejected')
+      ).rejects.toMatchObject({ status: 409 });
     });
 
     it('updates status and ensures exchange when accepted', async () => {

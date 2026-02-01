@@ -10,6 +10,7 @@ import { exchangeService } from './exchangeService.js';
 import { prisma } from '../lib/prisma.js';
 import {
   createBadRequest,
+  createConflict,
   createForbidden,
   createNotFound
 } from '../utils/httpErrors.js';
@@ -76,14 +77,12 @@ export const requestService = {
     userSkillId: string
   ) {
     if (fromUserId === toUserId) {
-      throw createBadRequest(
-        'РќРµР»СЊР·СЏ РѕС‚РїСЂР°РІР»СЏС‚СЊ Р·Р°СЏРІРєСѓ СЃР°РјРѕРјСѓ СЃРµР±Рµ'
-      );
+      throw createBadRequest('Нельзя отправлять заявку самому себе');
     }
 
     const targetUser = await userRepository.findById(toUserId);
     if (!targetUser) {
-      throw createNotFound('РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ');
+      throw createNotFound('Пользователь не найден');
     }
 
     const targetSkill = await userSkillRepository.findById(userSkillId);
@@ -120,30 +119,36 @@ export const requestService = {
 
   async updateStatus(requestId: string, userId: string, status: RequestStatus) {
     if (!allowedStatuses.has(status)) {
-      throw createBadRequest('РќРµРІРµСЂРЅС‹Р№ СЃС‚Р°С‚СѓСЃ Р·Р°СЏРІРєРё');
+      throw createBadRequest('Неверный статус заявки');
     }
 
     const request = (await requestRepository.findById(
       requestId
     )) as RequestRecord | null;
     if (!request) {
-      throw createNotFound('Р—Р°СЏРІРєР° РЅРµ РЅР°Р№РґРµРЅР°');
+      throw createNotFound('Заявка не найдена');
     }
 
     if (request.fromUserId !== userId && request.toUserId !== userId) {
-      throw createForbidden(
-        'РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РїСЂР°РІ РґР»СЏ РёР·РјРµРЅРµРЅРёСЏ СЃС‚Р°С‚СѓСЃР° Р·Р°СЏРІРєРё'
-      );
+      throw createForbidden('Недостаточно прав для изменения статуса заявки');
     }
 
     if (status === REQUEST_STATUS.accepted && request.toUserId !== userId) {
-      throw createForbidden(
-        'РўРѕР»СЊРєРѕ РїРѕР»СѓС‡Р°С‚РµР»СЊ РјРѕР¶РµС‚ РїРѕРґС‚РІРµСЂРґРёС‚СЊ РѕР±РјРµРЅ'
-      );
+      throw createForbidden('Только получатель может принять заявку');
+    }
+
+    if (status === REQUEST_STATUS.rejected && request.toUserId !== userId) {
+      throw createForbidden('Только получатель может отклонить заявку');
     }
 
     if (request.status === status) {
       return mapRequest(request);
+    }
+
+    if (request.status !== REQUEST_STATUS.pending) {
+      throw createConflict(
+        'Статус заявки можно менять только пока она в ожидании.'
+      );
     }
 
     if (status === REQUEST_STATUS.accepted) {
