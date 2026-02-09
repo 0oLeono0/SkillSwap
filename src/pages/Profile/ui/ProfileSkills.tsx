@@ -3,7 +3,7 @@ import {
   useMemo,
   useState,
   type ChangeEvent,
-  type ReactElement,
+  type ReactElement
 } from 'react';
 import styles from './profileSkills.module.scss';
 import { Title } from '@/shared/ui/Title';
@@ -12,12 +12,15 @@ import { Input } from '@/shared/ui/Input';
 import { useAuth } from '@/app/providers/auth';
 import { useFiltersBaseData } from '@/features/Filter/model/useFiltersBaseData';
 import type { UserSkill } from '@/entities/User/types';
-import type { ApiUserSkill } from '@/shared/api/auth';
 import { Modal } from '@/shared/ui/Modal/Modal';
 import { Tag } from '@/shared/ui/Tag/Tag';
 import { SkillCategories, type SkillCategory } from '@/shared/lib/constants';
+import {
+  sanitizeSkillsForSubmit,
+  serializeSkills
+} from './profileSkills.helpers';
 const CATEGORY_NAME_TO_CONSTANT = new Map<string, SkillCategory>(
-  Object.values(SkillCategories).map((value) => [value, value]),
+  Object.values(SkillCategories).map((value) => [value, value])
 );
 const fileToDataUrl = (file: File) =>
   new Promise<string>((resolve, reject) => {
@@ -39,9 +42,7 @@ const cloneSkills = (skills?: UserSkill[]): UserSkill[] =>
   Array.isArray(skills)
     ? skills.map((skill) => ({
         ...skill,
-        imageUrls: Array.isArray(skill.imageUrls)
-          ? [...skill.imageUrls]
-          : [],
+        imageUrls: Array.isArray(skill.imageUrls) ? [...skill.imageUrls] : []
       }))
     : [];
 const createEmptySkill = (): UserSkill => ({
@@ -50,11 +51,11 @@ const createEmptySkill = (): UserSkill => ({
   categoryId: null,
   subcategoryId: null,
   description: '',
-  imageUrls: [],
+  imageUrls: []
 });
 const enrichSkillsWithCategory = (
   skills: UserSkill[] | undefined,
-  mapping: Map<number, number>,
+  mapping: Map<number, number>
 ): UserSkill[] =>
   cloneSkills(skills).map((skill) => {
     if (
@@ -66,63 +67,6 @@ const enrichSkillsWithCategory = (
     }
     return skill;
   });
-const FALLBACK_TITLE = 'Без названия';
-const FALLBACK_DESCRIPTION = 'Описание появится позже.';
-
-export const sanitizeSkillsForSubmit = (
-  skills: UserSkill[],
-  subskillToCategory: Map<number, number>,
-  subskillNameMap: Map<number, string>,
-): ApiUserSkill[] =>
-  skills.map((skill) => {
-    const fallbackCategory =
-      typeof skill.subcategoryId === 'number'
-        ? subskillToCategory.get(skill.subcategoryId) ?? null
-        : null;
-    const trimmedTitle = skill.title.trim();
-    const fallbackTitle =
-      typeof skill.subcategoryId === 'number'
-        ? subskillNameMap.get(skill.subcategoryId) ?? ''
-        : '';
-    const safeTitle =
-      trimmedTitle.length >= 2
-        ? trimmedTitle
-        : fallbackTitle.length >= 2
-          ? fallbackTitle
-          : FALLBACK_TITLE;
-    const trimmedDescription = skill.description.trim();
-    const safeDescription =
-      trimmedDescription.length > 0 ? trimmedDescription : FALLBACK_DESCRIPTION;
-    return {
-      id: skill.id,
-      title: safeTitle,
-      categoryId:
-        typeof skill.categoryId === 'number'
-          ? skill.categoryId
-          : fallbackCategory ?? null,
-      subcategoryId:
-        typeof skill.subcategoryId === 'number'
-          ? skill.subcategoryId
-          : null,
-      description: safeDescription,
-      imageUrls: skill.imageUrls
-        .map((url) => url.trim())
-        .filter((url) => url.length > 0),
-    };
-  });
-export const serializeSkills = (
-  skills: UserSkill[],
-  subskillToCategory: Map<number, number>,
-  subskillNameMap: Map<number, string>,
-) =>
-  JSON.stringify(
-    sanitizeSkillsForSubmit(skills, subskillToCategory, subskillNameMap)
-      .map((skill) => ({
-        ...skill,
-        imageUrls: [...skill.imageUrls],
-      }))
-      .sort((a, b) => a.id.localeCompare(b.id)),
-  );
 type SkillType = 'teach' | 'learn';
 export function ProfileSkills(): ReactElement {
   const { user, updateProfile } = useAuth();
@@ -130,7 +74,7 @@ export function ProfileSkills(): ReactElement {
   const subskillNameMap = useMemo(() => {
     const map = new Map<number, string>();
     skillGroups.forEach((group) =>
-      group.skills.forEach((skill) => map.set(skill.id, skill.name)),
+      group.skills.forEach((skill) => map.set(skill.id, skill.name))
     );
     return map;
   }, [skillGroups]);
@@ -147,16 +91,16 @@ export function ProfileSkills(): ReactElement {
   const subskillToCategoryMap = useMemo(() => {
     const map = new Map<number, number>();
     skillGroups.forEach((group) =>
-      group.skills.forEach((skill) => map.set(skill.id, group.id)),
+      group.skills.forEach((skill) => map.set(skill.id, group.id))
     );
     return map;
   }, [skillGroups]);
   const [isEditing, setIsEditing] = useState(false);
   const [teachableDraft, setTeachableDraft] = useState<UserSkill[]>(() =>
-    enrichSkillsWithCategory(user?.teachableSkills, subskillToCategoryMap),
+    enrichSkillsWithCategory(user?.teachableSkills, subskillToCategoryMap)
   );
   const [learningDraft, setLearningDraft] = useState<UserSkill[]>(() =>
-    enrichSkillsWithCategory(user?.learningSkills, subskillToCategoryMap),
+    enrichSkillsWithCategory(user?.learningSkills, subskillToCategoryMap)
   );
   const [isSaving, setIsSaving] = useState(false);
   const [previewSkillState, setPreviewSkillState] = useState<{
@@ -167,57 +111,45 @@ export function ProfileSkills(): ReactElement {
   useEffect(() => {
     if (!isEditing) {
       setTeachableDraft(
-        enrichSkillsWithCategory(
-          user?.teachableSkills,
-          subskillToCategoryMap,
-        ),
+        enrichSkillsWithCategory(user?.teachableSkills, subskillToCategoryMap)
       );
       setLearningDraft(
-        enrichSkillsWithCategory(
-          user?.learningSkills,
-          subskillToCategoryMap,
-        ),
+        enrichSkillsWithCategory(user?.learningSkills, subskillToCategoryMap)
       );
     }
   }, [
     isEditing,
     subskillToCategoryMap,
     user?.learningSkills,
-    user?.teachableSkills,
+    user?.teachableSkills
   ]);
   const teachableBaseline = useMemo(
     () =>
       serializeSkills(
-        enrichSkillsWithCategory(
-          user?.teachableSkills,
-          subskillToCategoryMap,
-        ),
+        enrichSkillsWithCategory(user?.teachableSkills, subskillToCategoryMap),
         subskillToCategoryMap,
-        subskillNameMap,
+        subskillNameMap
       ),
-    [user?.teachableSkills, subskillToCategoryMap, subskillNameMap],
+    [user?.teachableSkills, subskillToCategoryMap, subskillNameMap]
   );
   const learningBaseline = useMemo(
     () =>
       serializeSkills(
-        enrichSkillsWithCategory(
-          user?.learningSkills,
-          subskillToCategoryMap,
-        ),
+        enrichSkillsWithCategory(user?.learningSkills, subskillToCategoryMap),
         subskillToCategoryMap,
-        subskillNameMap,
+        subskillNameMap
       ),
-    [user?.learningSkills, subskillToCategoryMap, subskillNameMap],
+    [user?.learningSkills, subskillToCategoryMap, subskillNameMap]
   );
   const currentTeachableSignature = serializeSkills(
     teachableDraft,
     subskillToCategoryMap,
-    subskillNameMap,
+    subskillNameMap
   );
   const currentLearningSignature = serializeSkills(
     learningDraft,
     subskillToCategoryMap,
-    subskillNameMap,
+    subskillNameMap
   );
   const hasChanges =
     currentTeachableSignature !== teachableBaseline ||
@@ -231,24 +163,21 @@ export function ProfileSkills(): ReactElement {
     setSaveError(null);
   };
   const handleAddSkill = (type: SkillType) => {
-    const updater =
-      type === 'teach' ? setTeachableDraft : setLearningDraft;
+    const updater = type === 'teach' ? setTeachableDraft : setLearningDraft;
     updater((prev) => [...prev, createEmptySkill()]);
   };
   const handleRemoveSkill = (type: SkillType, skillId: string) => {
-    const updater =
-      type === 'teach' ? setTeachableDraft : setLearningDraft;
+    const updater = type === 'teach' ? setTeachableDraft : setLearningDraft;
     updater((prev) => prev.filter((skill) => skill.id !== skillId));
   };
   const updateSkill = (
     type: SkillType,
     skillId: string,
-    updaterFn: (skill: UserSkill) => UserSkill,
+    updaterFn: (skill: UserSkill) => UserSkill
   ) => {
-    const updater =
-      type === 'teach' ? setTeachableDraft : setLearningDraft;
+    const updater = type === 'teach' ? setTeachableDraft : setLearningDraft;
     updater((prev) =>
-      prev.map((skill) => (skill.id === skillId ? updaterFn(skill) : skill)),
+      prev.map((skill) => (skill.id === skillId ? updaterFn(skill) : skill))
     );
   };
   const openSkillPreview = (type: SkillType, skill: UserSkill) => {
@@ -256,8 +185,8 @@ export function ProfileSkills(): ReactElement {
       type,
       skill: {
         ...skill,
-        imageUrls: [...skill.imageUrls],
-      },
+        imageUrls: [...skill.imageUrls]
+      }
     });
   };
   const closeSkillPreview = () => {
@@ -266,53 +195,50 @@ export function ProfileSkills(): ReactElement {
   const handleTitleChange = (
     type: SkillType,
     skillId: string,
-    value: string,
+    value: string
   ) => {
     updateSkill(type, skillId, (skill) => ({ ...skill, title: value }));
   };
   const handleCategoryChange = (
     type: SkillType,
     skillId: string,
-    categoryValue: string,
+    categoryValue: string
   ) => {
-    const nextCategory =
-      categoryValue === '' ? null : Number(categoryValue);
+    const nextCategory = categoryValue === '' ? null : Number(categoryValue);
     updateSkill(type, skillId, (skill) => ({
       ...skill,
       categoryId: Number.isFinite(nextCategory) ? nextCategory : null,
-      subcategoryId: null,
+      subcategoryId: null
     }));
   };
   const handleSubcategoryChange = (
     type: SkillType,
     skillId: string,
-    subcategoryValue: string,
+    subcategoryValue: string
   ) => {
     const nextSubcategory =
       subcategoryValue === '' ? null : Number(subcategoryValue);
     updateSkill(type, skillId, (skill) => ({
       ...skill,
-      subcategoryId: Number.isFinite(nextSubcategory)
-        ? nextSubcategory
-        : null,
+      subcategoryId: Number.isFinite(nextSubcategory) ? nextSubcategory : null
     }));
   };
   const handleDescriptionChange = (
     type: SkillType,
     skillId: string,
-    event: ChangeEvent<HTMLTextAreaElement>,
+    event: ChangeEvent<HTMLTextAreaElement>
   ) => {
     const { value } = event.target;
     updateSkill(type, skillId, (skill) => ({
       ...skill,
-      description: value,
+      description: value
     }));
   };
   const handleImageChange = (
     type: SkillType,
     skillId: string,
     index: number,
-    value: string,
+    value: string
   ) => {
     updateSkill(type, skillId, (skill) => {
       const nextImages = [...skill.imageUrls];
@@ -324,7 +250,7 @@ export function ProfileSkills(): ReactElement {
     type: SkillType,
     skillId: string,
     index: number | null,
-    event: ChangeEvent<HTMLInputElement>,
+    event: ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
     if (!file) {
@@ -340,7 +266,7 @@ export function ProfileSkills(): ReactElement {
       } else {
         updateSkill(type, skillId, (skill) => ({
           ...skill,
-          imageUrls: [...skill.imageUrls, dataUrl],
+          imageUrls: [...skill.imageUrls, dataUrl]
         }));
       }
     } catch (error) {
@@ -352,7 +278,7 @@ export function ProfileSkills(): ReactElement {
   const handleRemoveImageField = (
     type: SkillType,
     skillId: string,
-    index: number,
+    index: number
   ) => {
     updateSkill(type, skillId, (skill) => {
       const nextImages = skill.imageUrls.filter((_, idx) => idx !== index);
@@ -399,16 +325,14 @@ export function ProfileSkills(): ReactElement {
   const renderSkillGallery = (images: string[]) => {
     if (!images.length) {
       return (
-        <p className={styles.emptyGallery}>
-          Изображения еще не добавлены.
-        </p>
+        <p className={styles.emptyGallery}>Изображения еще не добавлены.</p>
       );
     }
     return (
       <div className={styles.gallery}>
         {images.map((url, index) => (
           <div key={`${url}-${index}`} className={styles.galleryItem}>
-            <img src={url} alt="Skill image" />
+            <img src={url} alt='Skill image' />
           </div>
         ))}
       </div>
@@ -419,8 +343,7 @@ export function ProfileSkills(): ReactElement {
     const categoryName =
       resolveCategoryName(categoryId) ?? 'No category selected';
     const subcategoryName =
-      resolveSubcategoryName(skill.subcategoryId) ??
-      'Subcategory not selected';
+      resolveSubcategoryName(skill.subcategoryId) ?? 'Subcategory not selected';
     const title =
       skill.title.trim() ||
       resolveSubcategoryName(skill.subcategoryId) ||
@@ -455,14 +378,14 @@ export function ProfileSkills(): ReactElement {
   const renderSkillEditor = (type: SkillType, skill: UserSkill) => {
     const categoryOptions = skillGroups.map((group) => ({
       value: group.id.toString(),
-      label: group.name,
+      label: group.name
     }));
     const currentCategory =
       typeof skill.categoryId === 'number' ? skill.categoryId : null;
     const availableSubskills =
       typeof currentCategory === 'number'
-        ? skillGroups.find((group) => group.id === currentCategory)?.skills ??
-          []
+        ? (skillGroups.find((group) => group.id === currentCategory)?.skills ??
+          [])
         : [];
     const isLearningSkill = type === 'learn';
     const fallbackTitle =
@@ -476,20 +399,20 @@ export function ProfileSkills(): ReactElement {
     return (
       <div key={skill.id} className={styles.editorCard}>
         <div className={styles.editorHeader}>
-          <Title tag="h3" variant="md">
+          <Title tag='h3' variant='md'>
             {skillTitle}
           </Title>
           <div className={styles.editorHeaderActions}>
             {!isLearningSkill && (
               <Button
-                variant="primary"
+                variant='primary'
                 onClick={() => openSkillPreview(type, skill)}
               >
                 Сохранить навык
               </Button>
             )}
             <Button
-              variant="secondary"
+              variant='secondary'
               onClick={() => handleRemoveSkill(type, skill.id)}
             >
               Удалить
@@ -499,59 +422,61 @@ export function ProfileSkills(): ReactElement {
         <div className={styles.formGrid}>
           {!isLearningSkill && (
             <Input
-              title="Название навыка"
-              placeholder="Введите название навыка"
+              title='Название навыка'
+              placeholder='Введите название навыка'
               value={skill.title}
               onChange={(event) =>
                 handleTitleChange(type, skill.id, event.target.value)
               }
             />
           )}
-            <label className={styles.field}>
-                Категория
-                <select
-                  className={styles.select}
-                  value={skill.categoryId ?? ''}
-                  onChange={(event) =>
-                    handleCategoryChange(type, skill.id, event.target.value)
-                  }
-                >
-                  <option value="">Выберите категорию</option>
-                  {categoryOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className={styles.field}>
-                Подкатегория
-                <select
-                  className={styles.select}
-                  value={skill.subcategoryId ?? ''}
-                  disabled={!availableSubskills.length}
-                  onChange={(event) =>
-                    handleSubcategoryChange(type, skill.id, event.target.value)
-                  }
-                >
-                  <option value="">Выберите подкатегорию</option>
-                  {availableSubskills.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
+          <label className={styles.field}>
+            Категория
+            <select
+              className={styles.select}
+              value={skill.categoryId ?? ''}
+              onChange={(event) =>
+                handleCategoryChange(type, skill.id, event.target.value)
+              }
+            >
+              <option value=''>Выберите категорию</option>
+              {categoryOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className={styles.field}>
+            Подкатегория
+            <select
+              className={styles.select}
+              value={skill.subcategoryId ?? ''}
+              disabled={!availableSubskills.length}
+              onChange={(event) =>
+                handleSubcategoryChange(type, skill.id, event.target.value)
+              }
+            >
+              <option value=''>Выберите подкатегорию</option>
+              {availableSubskills.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
         {!isLearningSkill && (
           <>
             <label className={styles.field}>
               Описание
               <textarea
                 className={styles.textarea}
-                placeholder="Расскажите другим, что делает этот навык ценным"
+                placeholder='Расскажите другим, что делает этот навык ценным'
                 value={skill.description}
-                onChange={(event) => handleDescriptionChange(type, skill.id, event)}
+                onChange={(event) =>
+                  handleDescriptionChange(type, skill.id, event)
+                }
                 rows={4}
               />
             </label>
@@ -559,7 +484,8 @@ export function ProfileSkills(): ReactElement {
               <span>Изображения</span>
               {!skill.imageUrls.length && (
                 <p className={styles.imageHint}>
-                  Добавьте хотя бы одно изображение, чтобы другие пользователи лучше понимали, что вы предлагаете.
+                  Добавьте хотя бы одно изображение, чтобы другие пользователи
+                  лучше понимали, что вы предлагаете.
                 </p>
               )}
               <div className={styles.imageList}>
@@ -569,17 +495,20 @@ export function ProfileSkills(): ReactElement {
                     <div key={inputId} className={styles.imageRow}>
                       <div className={styles.imagePreview}>
                         {url ? (
-                          <img src={url} alt="Превью навыка" />
+                          <img src={url} alt='Превью навыка' />
                         ) : (
                           <span>Нет изображения</span>
                         )}
                       </div>
                       <div className={styles.imageControls}>
-                        <label htmlFor={inputId} className={styles.uploadButton}>
+                        <label
+                          htmlFor={inputId}
+                          className={styles.uploadButton}
+                        >
                           <input
                             id={inputId}
-                            type="file"
-                            accept="image/*"
+                            type='file'
+                            accept='image/*'
                             className={styles.uploadInput}
                             onChange={(event) =>
                               handleImageUpload(type, skill.id, index, event)
@@ -588,7 +517,7 @@ export function ProfileSkills(): ReactElement {
                           Выбрать файл
                         </label>
                         <Button
-                          variant="secondary"
+                          variant='secondary'
                           onClick={() =>
                             handleRemoveImageField(type, skill.id, index)
                           }
@@ -604,8 +533,8 @@ export function ProfileSkills(): ReactElement {
                 className={`${styles.uploadButton} ${styles.uploadButtonFull}`}
               >
                 <input
-                  type="file"
-                  accept="image/*"
+                  type='file'
+                  accept='image/*'
                   className={styles.uploadInput}
                   onChange={(event) =>
                     handleImageUpload(type, skill.id, null, event)
@@ -613,7 +542,8 @@ export function ProfileSkills(): ReactElement {
                 />
                 Добавить изображение
               </label>
-            </div>          </>
+            </div>{' '}
+          </>
         )}
       </div>
     );
@@ -628,16 +558,16 @@ export function ProfileSkills(): ReactElement {
       const teachablePayload = sanitizeSkillsForSubmit(
         teachableDraft,
         subskillToCategoryMap,
-        subskillNameMap,
+        subskillNameMap
       );
       const learningPayload = sanitizeSkillsForSubmit(
         learningDraft,
         subskillToCategoryMap,
-        subskillNameMap,
+        subskillNameMap
       );
       await updateProfile({
         teachableSkills: teachablePayload,
-        learningSkills: learningPayload,
+        learningSkills: learningPayload
       });
       setIsEditing(false);
       return true;
@@ -657,33 +587,28 @@ export function ProfileSkills(): ReactElement {
   };
   const teachableView = isEditing
     ? teachableDraft
-    : user?.teachableSkills ?? [];
-  const learningView = isEditing ? learningDraft : user?.learningSkills ?? [];
+    : (user?.teachableSkills ?? []);
+  const learningView = isEditing ? learningDraft : (user?.learningSkills ?? []);
   const previewSkill = previewSkillState?.skill ?? null;
   const previewCategoryId =
     previewSkill && typeof previewSkill.categoryId === 'number'
       ? previewSkill.categoryId
       : previewSkill && typeof previewSkill.subcategoryId === 'number'
-        ? subskillToCategoryMap.get(previewSkill.subcategoryId) ?? null
+        ? (subskillToCategoryMap.get(previewSkill.subcategoryId) ?? null)
         : null;
   const previewCategoryName =
     previewSkill && previewCategoryId !== null
-      ? resolveCategoryName(previewCategoryId) ?? 'No category selected'
+      ? (resolveCategoryName(previewCategoryId) ?? 'No category selected')
       : 'No category selected';
   const previewSubcategoryName = previewSkill
-    ? resolveSubcategoryName(previewSkill.subcategoryId) ??
-      'Subcategory not selected'
+    ? (resolveSubcategoryName(previewSkill.subcategoryId) ??
+      'Subcategory not selected')
     : 'Subcategory not selected';
-  const previewTitle =
-    previewSkill?.title.trim() ||
-    'Skill without a name';
+  const previewTitle = previewSkill?.title.trim() || 'Skill without a name';
   const previewDescription =
-    previewSkill?.description.trim() ||
-    'Description is not provided yet.';
+    previewSkill?.description.trim() || 'Description is not provided yet.';
   const previewGallery =
-    previewSkill && previewSkill.imageUrls.length
-      ? previewSkill.imageUrls
-      : [];
+    previewSkill && previewSkill.imageUrls.length ? previewSkill.imageUrls : [];
   const hasPreviewImages = previewGallery.length > 0;
   const previewMainImage = hasPreviewImages ? previewGallery[0] : null;
   const previewThumbs = hasPreviewImages ? previewGallery.slice(1, 4) : [];
@@ -696,24 +621,27 @@ export function ProfileSkills(): ReactElement {
       <section className={styles.skills}>
         <div className={styles.header}>
           <div>
-            <Title tag="h2" variant="lg">Мои навыки</Title>
+            <Title tag='h2' variant='lg'>
+              Мои навыки
+            </Title>
             <p className={styles.subtitle}>
-              Управляйте навыками, которыми вы можете поделиться с другими, и теми, которые вы хотите изучить.
-              Чем больше деталей и фотографий вы добавите, тем легче другим участникам будет вас найти.
+              Управляйте навыками, которыми вы можете поделиться с другими, и
+              теми, которые вы хотите изучить. Чем больше деталей и фотографий
+              вы добавите, тем легче другим участникам будет вас найти.
             </p>
           </div>
           <div className={styles.actions}>
             {isEditing ? (
               <>
                 <Button
-                  variant="secondary"
+                  variant='secondary'
                   onClick={handleCancel}
                   disabled={isSaving}
                 >
                   Отменить
                 </Button>
                 <Button
-                  variant="primary"
+                  variant='primary'
                   onClick={handleSave}
                   disabled={isSaving || !hasChanges}
                 >
@@ -721,7 +649,7 @@ export function ProfileSkills(): ReactElement {
                 </Button>
               </>
             ) : (
-              <Button variant="secondary" onClick={startEditing}>
+              <Button variant='secondary' onClick={startEditing}>
                 Редактировать навыки
               </Button>
             )}
@@ -739,10 +667,10 @@ export function ProfileSkills(): ReactElement {
               {isEditing ? (
                 <>
                   {teachableDraft.map((skill) =>
-                    renderSkillEditor('teach', skill),
+                    renderSkillEditor('teach', skill)
                   )}
                   <Button
-                    variant="secondary"
+                    variant='secondary'
                     onClick={() => handleAddSkill('teach')}
                   >
                     Добавить навык
@@ -754,7 +682,8 @@ export function ProfileSkills(): ReactElement {
                 </div>
               ) : (
                 <p className={styles.emptyList}>
-                  Пока нет навыков, которыми вы можете поделиться. Добавьте хотя бы одну карточку, чтобы показать, чем вы можете помочь.
+                  Пока нет навыков, которыми вы можете поделиться. Добавьте хотя
+                  бы одну карточку, чтобы показать, чем вы можете помочь.
                 </p>
               )}
             </div>
@@ -769,10 +698,10 @@ export function ProfileSkills(): ReactElement {
               {isEditing ? (
                 <>
                   {learningDraft.map((skill) =>
-                    renderSkillEditor('learn', skill),
+                    renderSkillEditor('learn', skill)
                   )}
                   <Button
-                    variant="secondary"
+                    variant='secondary'
                     onClick={() => handleAddSkill('learn')}
                   >
                     Добавить навык
@@ -784,7 +713,8 @@ export function ProfileSkills(): ReactElement {
                 </div>
               ) : (
                 <p className={styles.emptyList}>
-                  Опишите навыки, которые вы хотели бы изучить, чтобы другие участники могли предложить обмен.
+                  Опишите навыки, которые вы хотели бы изучить, чтобы другие
+                  участники могли предложить обмен.
                 </p>
               )}
             </div>
@@ -797,25 +727,30 @@ export function ProfileSkills(): ReactElement {
         className={styles.previewModal}
       >
         <div className={styles.previewModalHeader}>
-          <Title tag="h2" variant="lg">Предварительный просмотр навыка</Title>
+          <Title tag='h2' variant='lg'>
+            Предварительный просмотр навыка
+          </Title>
           <p>
-            Проверьте заголовок, описание и галерею. Вернитесь назад, если нужно что-то изменить.
+            Проверьте заголовок, описание и галерею. Вернитесь назад, если нужно
+            что-то изменить.
           </p>
         </div>
         <div className={styles.previewModalBody}>
           <div className={styles.previewContent}>
-            <Title tag="h3" variant="lg">{previewTitle}</Title>
+            <Title tag='h3' variant='lg'>
+              {previewTitle}
+            </Title>
             <span className={styles.previewCategory}>
               {previewCategoryName}
               {previewSubcategoryName ? ` / ${previewSubcategoryName}` : ''}
             </span>
             <p className={styles.previewDescription}>{previewDescription}</p>
             <div className={styles.previewActions}>
-              <Button variant="secondary" onClick={closeSkillPreview}>
+              <Button variant='secondary' onClick={closeSkillPreview}>
                 Вернуться к редактированию
               </Button>
               <Button
-                variant="primary"
+                variant='primary'
                 onClick={handlePreviewConfirm}
                 disabled={isSaving}
               >
@@ -840,7 +775,9 @@ export function ProfileSkills(): ReactElement {
                   />
                 ))}
                 {previewExtraCount > 0 && (
-                  <div className={styles.previewThumbMore}>+{previewExtraCount}</div>
+                  <div className={styles.previewThumbMore}>
+                    +{previewExtraCount}
+                  </div>
                 )}
               </div>
             </div>

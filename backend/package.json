@@ -8,6 +8,7 @@
     "postinstall": "node ./scripts/postinstall.mjs",
     "dev": "tsx watch src/server.ts",
     "build": "tsc --project tsconfig.json",
+    "check": "npm test -- --runInBand && npm run build",
     "start": "node dist/server.js",
     "db:init": "tsx scripts/init-db.ts",
     "db:seed": "prisma db seed",

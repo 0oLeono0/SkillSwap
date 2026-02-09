@@ -91,13 +91,21 @@ REDIS_URL=""
 - `npm run build` — сборка (tsc + Vite).
 - `npm run preview` — превью собранного билда.
 - `npm run lint` — ESLint.
+- `npm run check` — полный quality-check фронтенда (lint + test + build).
+- `npm run check:backend` — запуск backend quality-check из корня.
 - `npm test` / `npm run test:watch` — Jest.
 - `npm run storybook` / `npm run build-storybook` — Storybook.
 
 **Бэкенд (`cd backend`):**
 - `npm run dev` — Express с tsx watch.
 - `npm run build` / `npm start` — сборка и запуск из `dist`.
+- `npm run check` — backend quality-check (test + build).
 - `npm run db:init` — инициализация БД через `prisma migrate deploy` + `prisma db seed`.
 - `npm run db:seed` — повторный запуск сидов Prisma.
 - `npm run prisma:generate` — генерация Prisma Client.
 - `npm test` / `npm run test:watch` — Jest + Supertest.
+
+## CI
+- GitHub Actions workflow: `.github/workflows/ci.yml`.
+- `frontend` job запускает `npm run check`.
+- `backend` job проверяет Prisma (`prisma validate`, `prisma migrate deploy`) и запускает `npm run check`.

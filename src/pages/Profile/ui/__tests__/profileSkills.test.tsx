@@ -1,8 +1,19 @@
 import type { UserSkill } from '@/entities/User/types';
-import { sanitizeSkillsForSubmit, serializeSkills } from '../ProfileSkills';
+import {
+  sanitizeSkillsForSubmit,
+  serializeSkills
+} from '../profileSkills.helpers';
 
-const buildSubskillCategoryMap = () => new Map([[1, 101], [2, 101]]);
-const buildSubskillNameMap = () => new Map([[1, 'Гитара'], [2, 'Фортепиано']]);
+const buildSubskillCategoryMap = () =>
+  new Map([
+    [1, 101],
+    [2, 101]
+  ]);
+const buildSubskillNameMap = () =>
+  new Map([
+    [1, 'Гитара'],
+    [2, 'Фортепиано']
+  ]);
 
 const createSkill = (overrides: Partial<UserSkill> = {}): UserSkill => ({
   id: overrides.id ?? 'skill-a',
@@ -11,7 +22,7 @@ const createSkill = (overrides: Partial<UserSkill> = {}): UserSkill => ({
   subcategoryId:
     overrides.subcategoryId !== undefined ? overrides.subcategoryId : 1,
   description: overrides.description ?? 'Описание',
-  imageUrls: overrides.imageUrls ?? [],
+  imageUrls: overrides.imageUrls ?? []
 });
 
 describe('ProfileSkills helpers', () => {
@@ -23,12 +34,12 @@ describe('ProfileSkills helpers', () => {
         description: '   ',
         categoryId: null,
         subcategoryId: 1,
-        imageUrls: [' https://image ', '   ', ''],
+        imageUrls: [' https://image ', '   ', '']
       });
       const [result] = sanitizeSkillsForSubmit(
         [input],
         buildSubskillCategoryMap(),
-        buildSubskillNameMap(),
+        buildSubskillNameMap()
       );
 
       expect(result).toEqual({
@@ -37,7 +48,7 @@ describe('ProfileSkills helpers', () => {
         categoryId: 101,
         subcategoryId: 1,
         description: expect.any(String),
-        imageUrls: ['https://image'],
+        imageUrls: ['https://image']
       });
       expect(result.description.length).toBeGreaterThan(0);
     });
@@ -46,12 +57,12 @@ describe('ProfileSkills helpers', () => {
       const input: UserSkill = createSkill({
         title: '  Custom ',
         description: '  Detailed ',
-        subcategoryId: null,
+        subcategoryId: null
       });
       const [result] = sanitizeSkillsForSubmit(
         [input],
         buildSubskillCategoryMap(),
-        buildSubskillNameMap(),
+        buildSubskillNameMap()
       );
 
       expect(result.title).toBe('Custom');
@@ -69,7 +80,7 @@ describe('ProfileSkills helpers', () => {
       const serialized = serializeSkills(
         [skillA, skillB],
         buildSubskillCategoryMap(),
-        buildSubskillNameMap(),
+        buildSubskillNameMap()
       );
       const parsed = JSON.parse(serialized);
 

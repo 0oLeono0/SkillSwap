@@ -1,5 +1,4 @@
 /* eslint-env node */
-/* global process, console, setTimeout */
 
 import fs from 'fs';
 import path from 'path';
@@ -12,7 +11,10 @@ import { pipeline } from 'stream';
 import { promisify } from 'util';
 
 const require = createRequire(import.meta.url);
-const { getBinaryTargetForCurrentPlatform, getNodeAPIName } = require('@prisma/get-platform');
+const {
+  getBinaryTargetForCurrentPlatform,
+  getNodeAPIName
+} = require('@prisma/get-platform');
 const { enginesVersion } = require('@prisma/engines-version');
 
 const pipelineAsync = promisify(pipeline);
@@ -43,7 +45,11 @@ async function downloadAndExtract(url, destination) {
       .on('error', reject);
   });
 
-  await pipelineAsync(responseStream, createGunzip(), fs.createWriteStream(destination));
+  await pipelineAsync(
+    responseStream,
+    createGunzip(),
+    fs.createWriteStream(destination)
+  );
 }
 
 async function ensureEngineFiles(binaryTarget) {
@@ -52,23 +58,32 @@ async function ensureEngineFiles(binaryTarget) {
   }
 
   const ext = process.platform === 'win32' ? '.exe' : '';
-  const queryEngineBinary = path.join(enginesDir, `query-engine-${binaryTarget}${ext}`);
-  const schemaEngineBinary = path.join(enginesDir, `schema-engine-${binaryTarget}${ext}`);
-  const queryEngineLibrary = path.join(enginesDir, getNodeAPIName(binaryTarget, 'fs'));
+  const queryEngineBinary = path.join(
+    enginesDir,
+    `query-engine-${binaryTarget}${ext}`
+  );
+  const schemaEngineBinary = path.join(
+    enginesDir,
+    `schema-engine-${binaryTarget}${ext}`
+  );
+  const queryEngineLibrary = path.join(
+    enginesDir,
+    getNodeAPIName(binaryTarget, 'fs')
+  );
 
   const downloads = [
     {
       target: queryEngineBinary,
-      downloadName: `query-engine${ext}.gz`,
+      downloadName: `query-engine${ext}.gz`
     },
     {
       target: schemaEngineBinary,
-      downloadName: `schema-engine${ext}.gz`,
+      downloadName: `schema-engine${ext}.gz`
     },
     {
       target: queryEngineLibrary,
-      downloadName: `${getNodeAPIName(binaryTarget, 'url')}.gz`,
-    },
+      downloadName: `${getNodeAPIName(binaryTarget, 'url')}.gz`
+    }
   ];
 
   for (const { target, downloadName } of downloads) {
@@ -76,7 +91,8 @@ async function ensureEngineFiles(binaryTarget) {
       continue;
     }
 
-    const baseUrl = process.env.PRISMA_ENGINES_MIRROR || 'https://binaries.prisma.sh';
+    const baseUrl =
+      process.env.PRISMA_ENGINES_MIRROR || 'https://binaries.prisma.sh';
     const url = `${baseUrl}/all_commits/${enginesVersion}/${binaryTarget}/${downloadName}`;
 
     let success = false;
@@ -86,17 +102,23 @@ async function ensureEngineFiles(binaryTarget) {
         success = true;
       } catch (error) {
         if (attempt === 3) {
-          console.warn(`Не удалось скачать ${downloadName} (${error.message}).`);
+          console.warn(
+            `Не удалось скачать ${downloadName} (${error.message}).`
+          );
         } else {
           const waitMs = attempt * 1000;
-          console.warn(`Попытка ${attempt} не удалась, повтор через ${waitMs} мс...`);
+          console.warn(
+            `Попытка ${attempt} не удалась, повтор через ${waitMs} мс...`
+          );
           await new Promise((resolve) => setTimeout(resolve, waitMs));
         }
       }
     }
 
     if (!success) {
-      console.warn(`Файл ${downloadName} отсутствует. Prisma может попытаться скачать его самостоятельно.`);
+      console.warn(
+        `Файл ${downloadName} отсутствует. Prisma может попытаться скачать его самостоятельно.`
+      );
     }
   }
 
@@ -108,11 +130,13 @@ function runPrismaGenerate(envOverrides) {
     backendDir,
     'node_modules',
     '.bin',
-    process.platform === 'win32' ? 'prisma.cmd' : 'prisma',
+    process.platform === 'win32' ? 'prisma.cmd' : 'prisma'
   );
 
   if (!fs.existsSync(prismaBin)) {
-    console.warn('Prisma CLI не найден (возможно, devDependencies не установлены). Пропускаю prisma generate.');
+    console.warn(
+      'Prisma CLI не найден (возможно, devDependencies не установлены). Пропускаю prisma generate.'
+    );
     return;
   }
 
@@ -120,11 +144,13 @@ function runPrismaGenerate(envOverrides) {
     cwd: backendDir,
     stdio: 'inherit',
     env: envOverrides,
-    shell: process.platform === 'win32',
+    shell: process.platform === 'win32'
   });
 
   if (result.status !== 0) {
-    console.error('Prisma generate завершился с ошибкой. Исправьте проблему и запустите `npx prisma generate` вручную.');
+    console.error(
+      'Prisma generate завершился с ошибкой. Исправьте проблему и запустите `npx prisma generate` вручную.'
+    );
     if (result.error) {
       console.error(result.error);
     }
@@ -137,11 +163,13 @@ function runDbInit(envOverrides) {
     backendDir,
     'node_modules',
     '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
+    process.platform === 'win32' ? 'tsx.cmd' : 'tsx'
   );
 
   if (!fs.existsSync(tsxBin)) {
-    console.warn('tsx не найден (возможно, devDependencies не установлены). Пропускаю init-db.');
+    console.warn(
+      'tsx не найден (возможно, devDependencies не установлены). Пропускаю init-db.'
+    );
     return;
   }
 
@@ -149,11 +177,13 @@ function runDbInit(envOverrides) {
     cwd: backendDir,
     stdio: 'inherit',
     env: envOverrides,
-    shell: process.platform === 'win32',
+    shell: process.platform === 'win32'
   });
 
   if (result.status !== 0) {
-    console.error('Инициализация БД не прошла. Проверьте переменные окружения и запустите `npx tsx scripts/init-db.ts` вручную.');
+    console.error(
+      'Инициализация БД не прошла. Проверьте переменные окружения и запустите `npx tsx scripts/init-db.ts` вручную.'
+    );
     process.exit(result.status ?? 1);
   }
 }
@@ -167,7 +197,7 @@ async function main() {
     PRISMA_CLI_BINARY_TARGETS: binaryTarget,
     PRISMA_QUERY_ENGINE_BINARY: binaries.queryEngineBinary,
     PRISMA_SCHEMA_ENGINE_BINARY: binaries.schemaEngineBinary,
-    PRISMA_QUERY_ENGINE_LIBRARY: binaries.queryEngineLibrary,
+    PRISMA_QUERY_ENGINE_LIBRARY: binaries.queryEngineLibrary
   };
 
   runPrismaGenerate(prismaEnv);

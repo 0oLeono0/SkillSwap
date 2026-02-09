@@ -19,19 +19,24 @@ export default defineConfig(({ mode }) => {
           open: true,
           filename: 'bundle-analyzer.html',
           gzipSize: true,
-          brotliSize: true,
-        }),
+          brotliSize: true
+        })
     ].filter(Boolean),
 
     css: {
       modules: {
-        localsConvention: 'camelCaseOnly',
+        localsConvention: 'camelCaseOnly'
       },
+      preprocessorOptions: {
+        scss: {
+          silenceDeprecations: ['legacy-js-api']
+        }
+      }
     },
 
     resolve: {
       alias: {
-        '@': resolve(rootDir, './src'),
+        '@': resolve(rootDir, './src')
       },
       extensions: [
         '.js',
@@ -43,8 +48,8 @@ export default defineConfig(({ mode }) => {
         '.scss',
         '.png',
         '.svg',
-        '.jpg',
-      ],
+        '.jpg'
+      ]
     },
 
     build: {
@@ -61,26 +66,26 @@ export default defineConfig(({ mode }) => {
               return 'vendor';
             }
             return undefined;
-          },
-        },
+          }
+        }
       },
-      chunkSizeWarningLimit: 1600,
+      chunkSizeWarningLimit: 1600
     },
 
     server: {
       port: 5173,
       open: true,
-      host: true,
+      host: true
     },
 
     preview: {
       port: 4173,
-      open: true,
+      open: true
     },
 
     define: {
       'process.env': env,
-      __APP_ENV__: JSON.stringify(env.NODE_ENV),
-    },
+      __APP_ENV__: JSON.stringify(env.NODE_ENV)
+    }
   };
 });

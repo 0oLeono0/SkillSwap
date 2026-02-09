@@ -13,16 +13,16 @@ const meta: Meta<typeof Button> = {
   title: 'UI/Button',
   component: Button,
   parameters: {
-    layout: 'centered',
+    layout: 'centered'
   },
   argTypes: {
-    leftIcon: { control: { type: null } },
-    rightIcon: { control: { type: null } },
+    leftIcon: { control: false },
+    rightIcon: { control: false },
     variant: {
       control: { type: 'radio' },
-      options: ['primary', 'secondary', 'tertiary', 'empty'],
-    },
-  },
+      options: ['primary', 'secondary', 'tertiary', 'empty']
+    }
+  }
 };
 
 export default meta;
@@ -33,7 +33,7 @@ export const ButtonVariants: StoryObj<ButtonStoryArgs> = {
     variant: 'primary',
     disabled: false,
     showLeftIcon: false,
-    showRightIcon: false,
+    showRightIcon: false
   },
   render: ({ showLeftIcon, showRightIcon, ...rest }) => (
     <div
@@ -43,7 +43,7 @@ export const ButtonVariants: StoryObj<ButtonStoryArgs> = {
         gap: '12px',
         width: '324px',
         padding: '20px',
-        backgroundColor: '#F9FAF7',
+        backgroundColor: '#F9FAF7'
       }}
     >
       <Button
@@ -52,5 +52,5 @@ export const ButtonVariants: StoryObj<ButtonStoryArgs> = {
         rightIcon={{ icon: <CrossIcon />, show: showRightIcon }}
       />
     </div>
-  ),
+  )
 };
