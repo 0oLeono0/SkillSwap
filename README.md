@@ -2,7 +2,7 @@
 
 ## Быстрый старт (dev)
 - `npm install` в корне > `npm run dev` (frontend, .env копируется из .env.example при отсутствии).
-- `cd backend && npm install` (автокопия backend/.env, Prisma generate, SQLite-схема) > `npm run dev`.
+- `cd backend && npm install` (автокопия backend/.env, Prisma generate, Prisma migrate + seed) > `npm run dev`.
 - Настройки можно менять в `.env` и `backend/.env` (создаются при установке, если их нет).
 
 
@@ -76,7 +76,7 @@ REDIS_URL=""
    ```bash
    cd backend
    npm install
-   npm run db:init   # создаёт SQLite БД (для PostgreSQL используйте prisma migrate)
+   npm run db:init   # применяет миграции Prisma и сиды (города/категории/скиллы)
    npm run dev       # API на 4000
    ```
 4. Запустите фронтенд из корня:
@@ -97,6 +97,7 @@ REDIS_URL=""
 **Бэкенд (`cd backend`):**
 - `npm run dev` — Express с tsx watch.
 - `npm run build` / `npm start` — сборка и запуск из `dist`.
-- `npm run db:init` — инициализация SQLite схемы SQL-скриптом.
+- `npm run db:init` — инициализация БД через `prisma migrate deploy` + `prisma db seed`.
+- `npm run db:seed` — повторный запуск сидов Prisma.
 - `npm run prisma:generate` — генерация Prisma Client.
 - `npm test` / `npm run test:watch` — Jest + Supertest.

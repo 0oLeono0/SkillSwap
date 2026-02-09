@@ -99,3 +99,4 @@ bundle-analyzer.html
 storybook-static
 
 dev.db
+*.legacy-*.bak

@@ -10,9 +10,13 @@
     "build": "tsc --project tsconfig.json",
     "start": "node dist/server.js",
     "db:init": "tsx scripts/init-db.ts",
+    "db:seed": "prisma db seed",
     "prisma:generate": "prisma generate",
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "test:watch": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --watch"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "keywords": [],
   "author": "",
