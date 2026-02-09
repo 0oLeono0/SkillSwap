@@ -192,6 +192,51 @@ describe('requestService', () => {
       });
       expect(result).toMatchObject({ id: 'new', userSkillId: 'skill' });
     });
+
+    it('returns existing pending request on unique constraint conflict', async () => {
+      mockUserRepository.findById.mockResolvedValue({ id: 'other' });
+      mockUserSkillRepository.findById.mockResolvedValue({
+        id: 'skill',
+        userId: 'other',
+        title: 'Skill',
+        type: 'teach',
+        subcategoryId: 10,
+        categoryId: 1
+      });
+      const duplicate = buildRequestRecord({ id: 'req-duplicate' });
+      mockRequestRepository.findPendingDuplicate
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(duplicate);
+      mockRequestRepository.create.mockRejectedValueOnce({ code: 'P2002' });
+
+      const result = await requestService.createRequest('me', 'other', 'skill');
+
+      expect(mockRequestRepository.create).toHaveBeenCalledTimes(1);
+      expect(mockRequestRepository.findPendingDuplicate).toHaveBeenCalledTimes(
+        2
+      );
+      expect(result).toMatchObject({ id: 'req-duplicate' });
+    });
+
+    it('rethrows unique constraint conflict if duplicate lookup fails', async () => {
+      mockUserRepository.findById.mockResolvedValue({ id: 'other' });
+      mockUserSkillRepository.findById.mockResolvedValue({
+        id: 'skill',
+        userId: 'other',
+        title: 'Skill',
+        type: 'teach',
+        subcategoryId: 10,
+        categoryId: 1
+      });
+      mockRequestRepository.findPendingDuplicate
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null);
+      mockRequestRepository.create.mockRejectedValueOnce({ code: 'P2002' });
+
+      await expect(
+        requestService.createRequest('me', 'other', 'skill')
+      ).rejects.toMatchObject({ code: 'P2002' });
+    });
   });
 
   describe('updateStatus', () => {

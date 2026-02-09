@@ -151,6 +151,27 @@ const statements = [
   `CREATE INDEX IF NOT EXISTS "Request_fromUserId_idx" ON "Request"("fromUserId");`,
   `CREATE INDEX IF NOT EXISTS "Request_toUserId_idx" ON "Request"("toUserId");`,
   `CREATE INDEX IF NOT EXISTS "Request_userSkillId_idx" ON "Request"("userSkillId");`,
+  `DELETE FROM "Request"
+    WHERE "status" = 'pending'
+      AND "userSkillId" IS NOT NULL
+      AND EXISTS (
+        SELECT 1
+        FROM "Request" AS "prior"
+        WHERE "prior"."status" = 'pending'
+          AND "prior"."userSkillId" = "Request"."userSkillId"
+          AND "prior"."fromUserId" = "Request"."fromUserId"
+          AND "prior"."toUserId" = "Request"."toUserId"
+          AND (
+            "prior"."createdAt" < "Request"."createdAt"
+            OR (
+              "prior"."createdAt" = "Request"."createdAt"
+              AND "prior"."id" < "Request"."id"
+            )
+          )
+      );`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "Request_pending_from_to_userSkill_key"
+    ON "Request"("fromUserId", "toUserId", "userSkillId")
+    WHERE "status" = 'pending' AND "userSkillId" IS NOT NULL;`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "Favorite_userId_targetUserId_key" ON "Favorite"("userId", "targetUserId");`,
   `CREATE INDEX IF NOT EXISTS "Favorite_userId_idx" ON "Favorite"("userId");`,
   `CREATE INDEX IF NOT EXISTS "Favorite_targetUserId_idx" ON "Favorite"("targetUserId");`,

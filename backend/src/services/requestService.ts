@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import {
   REQUEST_STATUS,
   REQUEST_STATUSES,
@@ -20,6 +21,19 @@ import {
 } from '../mappers/requestSkill.js';
 
 const allowedStatuses = new Set<RequestStatus>(REQUEST_STATUSES);
+
+const isUniqueConstraintError = (error: unknown): boolean => {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    return error.code === 'P2002';
+  }
+
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: unknown }).code === 'P2002'
+  );
+};
 
 type RequestParticipant = {
   id: string;
@@ -104,17 +118,34 @@ export const requestService = {
       return mapRequest(existing as RequestRecord);
     }
 
-    const request = await requestRepository.create({
-      fromUserId,
-      toUserId,
-      userSkillId,
-      skillTitle: targetSkill.title.trim(),
-      skillType: targetSkill.type,
-      skillSubcategoryId: targetSkill.subcategoryId ?? null,
-      skillCategoryId: targetSkill.categoryId ?? null
-    });
+    try {
+      const request = await requestRepository.create({
+        fromUserId,
+        toUserId,
+        userSkillId,
+        skillTitle: targetSkill.title.trim(),
+        skillType: targetSkill.type,
+        skillSubcategoryId: targetSkill.subcategoryId ?? null,
+        skillCategoryId: targetSkill.categoryId ?? null
+      });
 
-    return mapRequest(request as RequestRecord);
+      return mapRequest(request as RequestRecord);
+    } catch (error) {
+      if (!isUniqueConstraintError(error)) {
+        throw error;
+      }
+
+      const duplicate = await requestRepository.findPendingDuplicate(
+        fromUserId,
+        toUserId,
+        userSkillId
+      );
+      if (duplicate) {
+        return mapRequest(duplicate as RequestRecord);
+      }
+
+      throw error;
+    }
   },
 
   async updateStatus(requestId: string, userId: string, status: RequestStatus) {
