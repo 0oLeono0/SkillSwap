@@ -8,6 +8,13 @@ import { USER_ROLE } from '../types/userRole.js';
 const updateRoleSchema = z.object({
   role: z.enum([USER_ROLE.user, USER_ROLE.admin])
 });
+const listUsersQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional(),
+  pageSize: z.coerce.number().int().min(1).max(100).optional(),
+  search: z.string().trim().max(100).optional(),
+  sortBy: z.enum(['createdAt', 'name', 'email', 'role']).optional(),
+  sortDirection: z.enum(['asc', 'desc']).optional()
+});
 
 export const deleteUserAccount = asyncHandler(async (req, res) => {
   const { userId } = req.params;
@@ -42,7 +49,36 @@ export const updateUserRole = asyncHandler(async (req, res) => {
   return res.status(200).json({ user: updatedUser });
 });
 
-export const listUsersForOwner = asyncHandler(async (_req, res) => {
-  const users = await userService.listUsers();
-  return res.status(200).json({ users });
+export const listUsersForOwner = asyncHandler(async (req, res) => {
+  const queryResult = listUsersQuerySchema.safeParse(req.query);
+  if (!queryResult.success) {
+    throw createBadRequest('Invalid query params', queryResult.error.flatten());
+  }
+
+  const {
+    page = 1,
+    pageSize = 25,
+    search,
+    sortBy,
+    sortDirection
+  } = queryResult.data;
+  const requestOptions: {
+    page: number;
+    pageSize: number;
+    search?: string;
+    sortBy?: 'createdAt' | 'name' | 'email' | 'role';
+    sortDirection?: 'asc' | 'desc';
+  } = { page, pageSize };
+  if (search) {
+    requestOptions.search = search;
+  }
+  if (sortBy) {
+    requestOptions.sortBy = sortBy;
+  }
+  if (sortDirection) {
+    requestOptions.sortDirection = sortDirection;
+  }
+  const result = await userService.listUsersForAdmin(requestOptions);
+
+  return res.status(200).json(result);
 });

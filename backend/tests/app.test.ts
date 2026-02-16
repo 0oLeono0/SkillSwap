@@ -4,9 +4,19 @@ import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 const mockUserService: {
   listUsers: jest.MockedFunction<() => Promise<unknown>>;
   listPublicUsers: jest.MockedFunction<() => Promise<unknown>>;
+  listUsersForAdmin: jest.MockedFunction<
+    (options: {
+      page: number;
+      pageSize: number;
+      search?: string;
+      sortBy?: 'createdAt' | 'name' | 'email' | 'role';
+      sortDirection?: 'asc' | 'desc';
+    }) => Promise<unknown>
+  >;
 } = {
   listUsers: jest.fn(),
-  listPublicUsers: jest.fn()
+  listPublicUsers: jest.fn(),
+  listUsersForAdmin: jest.fn()
 };
 const mockSanitizeUser: jest.Mock = jest.fn();
 const mockCatalogService: {
@@ -277,6 +287,83 @@ describe('Catalog routes', () => {
     const response = await request(app).get('/api/cities/404');
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('City not found');
+  });
+});
+
+describe('Admin routes', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('rejects unauthorized requests to owner users list', async () => {
+    const response = await request(app).get('/api/admin/users');
+    expect(response.status).toBe(401);
+  });
+
+  it('returns paginated lightweight users list for owner', async () => {
+    mockTokenService.verifyAccessToken.mockReturnValue({
+      sub: 'owner-1',
+      email: 'owner@example.com',
+      name: 'Owner',
+      role: 'owner'
+    });
+    mockUserService.listUsersForAdmin.mockResolvedValue({
+      users: [
+        { id: 'u1', name: 'Alice', email: 'alice@example.com', role: 'admin' }
+      ],
+      page: 2,
+      pageSize: 10,
+      total: 31,
+      totalPages: 4,
+      sortBy: 'email',
+      sortDirection: 'asc'
+    });
+
+    const response = await request(app)
+      .get(
+        '/api/admin/users?page=2&pageSize=10&search=ali&sortBy=email&sortDirection=asc'
+      )
+      .set('Authorization', 'Bearer owner-token');
+
+    expect(mockTokenService.verifyAccessToken).toHaveBeenCalledWith(
+      'owner-token'
+    );
+    expect(mockUserService.listUsersForAdmin).toHaveBeenCalledWith({
+      page: 2,
+      pageSize: 10,
+      search: 'ali',
+      sortBy: 'email',
+      sortDirection: 'asc'
+    });
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      users: [
+        { id: 'u1', name: 'Alice', email: 'alice@example.com', role: 'admin' }
+      ],
+      page: 2,
+      pageSize: 10,
+      total: 31,
+      totalPages: 4,
+      sortBy: 'email',
+      sortDirection: 'asc'
+    });
+  });
+
+  it('returns bad request on invalid pagination params', async () => {
+    mockTokenService.verifyAccessToken.mockReturnValue({
+      sub: 'owner-1',
+      email: 'owner@example.com',
+      name: 'Owner',
+      role: 'owner'
+    });
+
+    const response = await request(app)
+      .get('/api/admin/users?page=0&pageSize=500')
+      .set('Authorization', 'Bearer owner-token');
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe('Invalid query params');
+    expect(mockUserService.listUsersForAdmin).not.toHaveBeenCalled();
   });
 });
 

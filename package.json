@@ -11,6 +11,7 @@
     "check": "npm run lint && npm test -- --runInBand && npm run build",
     "check:backend": "npm --prefix backend run check",
     "preview": "vite preview",
+    "test:e2e": "playwright test",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "test": "jest",

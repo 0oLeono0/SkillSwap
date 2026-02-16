@@ -8,8 +8,58 @@ const includeSkills = {
 };
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
+export type AdminUsersSortBy = 'createdAt' | 'name' | 'email' | 'role';
+export type AdminUsersSortDirection = 'asc' | 'desc';
+type AdminUsersListQuery = {
+  skip: number;
+  take: number;
+  sortBy: AdminUsersSortBy;
+  sortDirection: AdminUsersSortDirection;
+  search?: string;
+};
+type AdminUserRow = {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+};
 
 const getClient = (client?: DbClient) => client ?? prisma;
+const normalizeSearch = (value?: string) => {
+  if (!value) {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+};
+const buildAdminUsersWhere = (
+  search?: string
+): Prisma.UserWhereInput | undefined => {
+  const normalized = normalizeSearch(search);
+  if (!normalized) {
+    return undefined;
+  }
+  return {
+    OR: [
+      { name: { contains: normalized } },
+      { email: { contains: normalized } }
+    ]
+  };
+};
+
+const buildAdminUsersOrderBy = (
+  sortBy: AdminUsersSortBy,
+  sortDirection: AdminUsersSortDirection
+): Prisma.UserOrderByWithRelationInput[] => {
+  if (sortBy === 'createdAt') {
+    return [{ createdAt: sortDirection }, { id: sortDirection }];
+  }
+
+  return [
+    { [sortBy]: sortDirection } as Prisma.UserOrderByWithRelationInput,
+    { id: 'asc' }
+  ];
+};
 
 export const userRepository = {
   findByEmail(email: string, client?: DbClient) {
@@ -26,6 +76,38 @@ export const userRepository = {
       },
       include: includeSkills
     });
+  },
+
+  findAdminUsers(
+    { skip, take, search, sortBy, sortDirection }: AdminUsersListQuery,
+    client?: DbClient
+  ): Promise<AdminUserRow[]> {
+    const where = buildAdminUsersWhere(search);
+    const query: Prisma.UserFindManyArgs = {
+      orderBy: buildAdminUsersOrderBy(sortBy, sortDirection),
+      skip,
+      take,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true
+      }
+    };
+
+    if (where) {
+      query.where = where;
+    }
+
+    return getClient(client).user.findMany(query) as Promise<AdminUserRow[]>;
+  },
+
+  countAdminUsers(search?: string, client?: DbClient) {
+    const where = buildAdminUsersWhere(search);
+    if (!where) {
+      return getClient(client).user.count();
+    }
+    return getClient(client).user.count({ where });
   },
 
   findById(id: string, client?: DbClient) {
