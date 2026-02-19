@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { db } from '../src/data/mockData.js';
+import { validateMockData } from '../src/data/validateMockData.js';
 
 const prisma = new PrismaClient();
 
@@ -50,6 +51,7 @@ const seedSkills = async () => {
 };
 
 async function main() {
+  validateMockData(db);
   await seedCities();
   await seedSkillGroups();
   await seedSkills();

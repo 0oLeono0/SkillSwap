@@ -61,11 +61,8 @@ jobs:
       - name: Prisma validate
         run: npx prisma validate
 
-      - name: Prepare CI SQLite file
-        run: touch prisma/ci.db
-
-      - name: Prisma migrate deploy
-        run: npx prisma migrate deploy
+      - name: Database init (migrate + seed)
+        run: npm run db:init
 
       - name: Quality checks
         run: npm run check
