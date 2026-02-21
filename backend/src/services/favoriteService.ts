@@ -1,6 +1,7 @@
-import { favoriteRepository } from '../repositories/favoriteRepository.js';
+﻿import { favoriteRepository } from '../repositories/favoriteRepository.js';
 import { userRepository } from '../repositories/userRepository.js';
 import { createBadRequest, createNotFound } from '../utils/httpErrors.js';
+import { NOT_FOUND_MESSAGES } from '../utils/errorMessages.js';
 
 export const favoriteService = {
   async list(userId: string) {
@@ -15,7 +16,7 @@ export const favoriteService = {
 
     const targetUser = await userRepository.findById(targetUserId);
     if (!targetUser) {
-      throw createNotFound('Пользователь не найден');
+      throw createNotFound(NOT_FOUND_MESSAGES.userNotFound);
     }
 
     const existing = await favoriteRepository.find(userId, targetUserId);
@@ -38,5 +39,5 @@ export const favoriteService = {
 
   async clear(userId: string) {
     await favoriteRepository.deleteAll(userId);
-  },
+  }
 };

@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+﻿import { Prisma } from '@prisma/client';
 import {
   REQUEST_STATUS,
   REQUEST_STATUSES,
@@ -15,6 +15,7 @@ import {
   createForbidden,
   createNotFound
 } from '../utils/httpErrors.js';
+import { NOT_FOUND_MESSAGES } from '../utils/errorMessages.js';
 import {
   mapRequestSkill,
   type RequestSkillRecord
@@ -96,7 +97,7 @@ export const requestService = {
 
     const targetUser = await userRepository.findById(toUserId);
     if (!targetUser) {
-      throw createNotFound('Пользователь не найден');
+      throw createNotFound(NOT_FOUND_MESSAGES.userNotFound);
     }
 
     const targetSkill = await userSkillRepository.findById(userSkillId);
@@ -157,7 +158,7 @@ export const requestService = {
       requestId
     )) as RequestRecord | null;
     if (!request) {
-      throw createNotFound('Заявка не найдена');
+      throw createNotFound(NOT_FOUND_MESSAGES.requestNotFound);
     }
 
     if (request.fromUserId !== userId && request.toUserId !== userId) {

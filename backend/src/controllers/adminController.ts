@@ -2,6 +2,9 @@ import { z } from 'zod';
 import { asyncHandler } from '../middleware/asyncHandler.js';
 import { adminService } from '../services/adminService.js';
 import { createBadRequest } from '../utils/httpErrors.js';
+import { BAD_REQUEST_MESSAGES } from '../utils/errorMessages.js';
+import { requireStringParam } from '../utils/routeParams.js';
+import { parseOrBadRequest } from '../utils/validation.js';
 import { userService } from '../services/userService.js';
 import { USER_ROLE } from '../types/userRole.js';
 
@@ -17,51 +20,42 @@ const listUsersQuerySchema = z.object({
 });
 
 export const deleteUserAccount = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
-  if (!userId) {
-    throw createBadRequest('User id is required');
-  }
+  const userId = requireStringParam(
+    req.params,
+    'userId',
+    BAD_REQUEST_MESSAGES.userIdRequired
+  );
   if (req.user?.sub === userId) {
-    throw createBadRequest('You cannot delete your own account');
+    throw createBadRequest(BAD_REQUEST_MESSAGES.cannotDeleteOwnAccount);
   }
   await adminService.deleteUser(userId);
   return res.status(204).send();
 });
 
 export const updateUserRole = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
-  if (!userId) {
-    throw createBadRequest('User id is required');
-  }
-  const payloadResult = updateRoleSchema.safeParse(req.body);
-  if (!payloadResult.success) {
-    throw createBadRequest('Invalid payload', payloadResult.error.flatten());
-  }
+  const userId = requireStringParam(
+    req.params,
+    'userId',
+    BAD_REQUEST_MESSAGES.userIdRequired
+  );
+  const payload = parseOrBadRequest(updateRoleSchema, req.body);
 
   if (req.user?.sub === userId) {
-    throw createBadRequest('You cannot change your own role');
+    throw createBadRequest(BAD_REQUEST_MESSAGES.cannotChangeOwnRole);
   }
 
-  const updatedUser = await adminService.updateUserRole(
-    userId,
-    payloadResult.data.role
-  );
+  const updatedUser = await adminService.updateUserRole(userId, payload.role);
   return res.status(200).json({ user: updatedUser });
 });
 
 export const listUsersForOwner = asyncHandler(async (req, res) => {
-  const queryResult = listUsersQuerySchema.safeParse(req.query);
-  if (!queryResult.success) {
-    throw createBadRequest('Invalid query params', queryResult.error.flatten());
-  }
+  const query = parseOrBadRequest(
+    listUsersQuerySchema,
+    req.query,
+    BAD_REQUEST_MESSAGES.invalidQueryParams
+  );
 
-  const {
-    page = 1,
-    pageSize = 25,
-    search,
-    sortBy,
-    sortDirection
-  } = queryResult.data;
+  const { page = 1, pageSize = 25, search, sortBy, sortDirection } = query;
   const requestOptions: {
     page: number;
     pageSize: number;

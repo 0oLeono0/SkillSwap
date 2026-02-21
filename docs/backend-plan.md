@@ -1,44 +1,71 @@
-# Backend Overview
+﻿# Обзор backend
 
-## Stack Choice
-- **Runtime**: Node.js 22 (matches modern LTS, already available in project scripts).
-- **Framework**: Express 5 (minimalistic HTTP layer, easy integration with existing front-end).
-- **Language**: TypeScript (consistency with front-end codebase, static typing).
-- **ORM**: Prisma with SQLite for local development (file-based DB → true relational model; later switchable to PostgreSQL by changing connection string and running migrations).
-- **Auth**: bcrypt for password hashing, JSON Web Tokens for stateless sessions (access token via `Authorization` header, refresh token stored as HTTP-only cookie).
-- **Env management**: dotenv for configuration keys (`DATABASE_URL`, `JWT_SECRET` etc.).
+## Текущая архитектура
+Репозиторий использует workspace-структуру:
 
-## Service Layout
+```
+/
+  backend/                 # Express API + Prisma
+  packages/contracts/      # Общие API-контракты (типы + runtime-схемы)
+  src/                     # Фронтенд-приложение
+```
+
+Backend разрабатывается и запускается из корня через workspace-команды:
+
+- `npm run backend:dev`
+- `npm run backend:test`
+- `npm run backend:build`
+- `npm run backend:db:init`
+
+## Стек
+- Runtime: Node.js 22
+- Framework: Express 5
+- Language: TypeScript
+- ORM: Prisma (SQLite локально)
+- Validation: Zod
+- Auth: JWT access/refresh + httpOnly refresh-cookie
+
+## Структура backend
 ```
 backend/
   src/
-    app.ts            # Express app wiring (routes, middlewares).
-    server.ts         # Entry point that starts HTTP server.
+    app.ts
+    server.ts
     routes/
-      auth.ts         # /api/auth endpoints (register, login, refresh, logout).
     controllers/
-      authController.ts
     services/
-      authService.ts
-      tokenService.ts
     repositories/
-      userRepository.ts
     middleware/
-      authMiddleware.ts
     utils/
-      validators.ts   # Zod schemas for request validation.
+    data/
   prisma/
-    schema.prisma     # DB schema for User, RefreshToken tables.
+  scripts/
   package.json
   tsconfig.json
-  .env (local secrets)
 ```
 
-## Integration Notes
-- Front-end `AuthProvider` будет отправлять запросы на `backend` (`/api/auth/login`, `/api/auth/register`) и хранить только access-token в памяти.
-- Protected маршруты получат access-token через контекст и будут прикладывать его в `Authorization` заголовок.
-- Refresh токен автоматически продлевается через `Set-Cookie` HTTP-only.
+## Контракты
+Общие контракты находятся в `packages/contracts`:
 
-## Verification
-1. Открыть файл, убедиться, что структура понятна.
-2. При необходимости скорректировать стек до начала реализации последующих шагов.
+- `auth.d.ts` — общие auth-типы запросов и ответов
+- `authSchemas.js` — общие runtime Zod-схемы для валидации auth-запросов
+- `authSchemas.d.ts` — типизированная поверхность схем
+
+Backend-контроллеры импортируют схемы из:
+
+- `@skillswap/contracts/authSchemas`
+
+Frontend API-типизация импортирует типы из:
+
+- `@skillswap/contracts/auth`
+
+## Правила проектирования
+1. Транспортные контракты хранятся в `packages/contracts`.
+2. Не дублируйте auth-типы в папках frontend/backend.
+3. Валидация входящих payload на backend должна использовать общие Zod-схемы.
+4. При изменении контрактов обновляйте backend-тесты и frontend-использование в одном PR.
+
+## Чек-лист проверки
+1. `npm run backend:test`
+2. `npm run backend:build`
+3. `npm run check`

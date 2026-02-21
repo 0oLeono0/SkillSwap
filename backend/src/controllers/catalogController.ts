@@ -1,6 +1,8 @@
 import { asyncHandler } from '../middleware/asyncHandler.js';
 import { catalogService } from '../services/catalogService.js';
 import { createNotFound } from '../utils/httpErrors.js';
+import { NOT_FOUND_MESSAGES } from '../utils/errorMessages.js';
+import { parseNumberParamOrNotFound } from '../utils/routeParams.js';
 
 const parseStringList = (value: unknown): string[] => {
   if (Array.isArray(value)) {
@@ -40,14 +42,15 @@ export const getSkillCategories = asyncHandler(async (_req, res) => {
 });
 
 export const getSkillCategoryById = asyncHandler(async (req, res) => {
-  const id = Number(req.params.id);
-  if (!Number.isFinite(id)) {
-    throw createNotFound('Skill category not found');
-  }
+  const id = parseNumberParamOrNotFound(
+    req.params,
+    'id',
+    NOT_FOUND_MESSAGES.skillCategoryNotFound
+  );
 
   const category = await catalogService.findSkillCategoryById(id);
   if (!category) {
-    throw createNotFound('Skill category not found');
+    throw createNotFound(NOT_FOUND_MESSAGES.skillCategoryNotFound);
   }
 
   return res.status(200).json(category);
@@ -115,14 +118,15 @@ export const searchCatalogSkills = asyncHandler(async (req, res) => {
 });
 
 export const getCityById = asyncHandler(async (req, res) => {
-  const id = Number(req.params.id);
-  if (!Number.isFinite(id)) {
-    throw createNotFound('City not found');
-  }
+  const id = parseNumberParamOrNotFound(
+    req.params,
+    'id',
+    NOT_FOUND_MESSAGES.cityNotFound
+  );
 
   const city = await catalogService.findCityById(id);
   if (!city) {
-    throw createNotFound('City not found');
+    throw createNotFound(NOT_FOUND_MESSAGES.cityNotFound);
   }
 
   return res.status(200).json(city);

@@ -1,12 +1,13 @@
 import { userRepository } from '../repositories/userRepository.js';
 import { sanitizeUser, type SanitizedUser } from './userService.js';
 import { createBadRequest, createNotFound } from '../utils/httpErrors.js';
+import { NOT_FOUND_MESSAGES } from '../utils/errorMessages.js';
 import { isUserRole, type UserRole, USER_ROLE } from '../types/userRole.js';
 
 const ensureUser = async (userId: string) => {
   const user = await userRepository.findById(userId);
   if (!user) {
-    throw createNotFound('User not found');
+    throw createNotFound(NOT_FOUND_MESSAGES.adminUserNotFound);
   }
   return user;
 };
@@ -34,7 +35,7 @@ export const adminService = {
     if (user.role === role) {
       const sanitized = sanitizeUser(user);
       if (!sanitized) {
-        throw createNotFound('User not found');
+        throw createNotFound(NOT_FOUND_MESSAGES.adminUserNotFound);
       }
       return sanitized;
     }
@@ -42,7 +43,7 @@ export const adminService = {
     const updated = await userRepository.updateById(userId, { role });
     const sanitized = sanitizeUser(updated);
     if (!sanitized) {
-      throw createNotFound('User not found');
+      throw createNotFound(NOT_FOUND_MESSAGES.adminUserNotFound);
     }
     return sanitized;
   }

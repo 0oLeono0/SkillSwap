@@ -1,10 +1,11 @@
-import { Prisma, type PrismaClient, type Request } from '@prisma/client';
+﻿import { Prisma, type PrismaClient, type Request } from '@prisma/client';
 import { exchangeRepository } from '../repositories/exchangeRepository.js';
 import {
   createBadRequest,
   createForbidden,
   createNotFound
 } from '../utils/httpErrors.js';
+import { NOT_FOUND_MESSAGES } from '../utils/errorMessages.js';
 import {
   EXCHANGE_STATUS,
   type ExchangeStatus
@@ -139,7 +140,7 @@ export const exchangeService = {
       exchangeId
     )) as ExchangeDetailRecord | null;
     if (!exchange) {
-      throw createNotFound('Обмен не найден');
+      throw createNotFound(NOT_FOUND_MESSAGES.exchangeNotFound);
     }
 
     ensureParticipant(exchange, userId);
@@ -149,7 +150,7 @@ export const exchangeService = {
   async sendMessage(exchangeId: string, userId: string, content: string) {
     const exchange = await exchangeRepository.findSummaryById(exchangeId);
     if (!exchange) {
-      throw createNotFound('Обмен не найден');
+      throw createNotFound(NOT_FOUND_MESSAGES.exchangeNotFound);
     }
 
     ensureParticipant(exchange, userId);
@@ -172,7 +173,7 @@ export const exchangeService = {
       exchangeId
     )) as ExchangeRecord | null;
     if (!exchange) {
-      throw createNotFound('Обмен не найден');
+      throw createNotFound(NOT_FOUND_MESSAGES.exchangeNotFound);
     }
 
     ensureParticipant(exchange, userId);

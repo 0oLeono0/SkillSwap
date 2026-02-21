@@ -159,8 +159,26 @@ describe('authService', () => {
         email: 'User@Example.com  ',
         password: 'pass123',
         name: 'User',
-        teachableSkills: [{ id: '1', title: ' Skill ', description: ' Desc ' }],
-        learningSkills: [1]
+        teachableSkills: [
+          {
+            id: '1',
+            title: ' Skill ',
+            description: ' Desc ',
+            categoryId: null,
+            subcategoryId: null,
+            imageUrls: []
+          }
+        ],
+        learningSkills: [
+          {
+            id: '2',
+            title: ' Learn ',
+            description: ' Need help ',
+            categoryId: null,
+            subcategoryId: 1,
+            imageUrls: []
+          }
+        ]
       });
 
       const payload = mockUserRepository.create.mock.calls[0][0];
@@ -182,8 +200,8 @@ describe('authService', () => {
           expect.objectContaining({
             userId: 'user-1',
             type: 'learn',
-            title: '',
-            description: '',
+            title: 'Learn',
+            description: 'Need help',
             subcategoryId: 1,
             imageUrls: '[]'
           })
@@ -362,7 +380,14 @@ describe('authService', () => {
         name: 'New Name',
         gender: 'Мужской',
         teachableSkills: [
-          { id: 'skill', title: '  Dev ', description: '  JS ' }
+          {
+            id: 'skill',
+            title: '  Dev ',
+            description: '  JS ',
+            categoryId: null,
+            subcategoryId: null,
+            imageUrls: []
+          }
         ]
       });
 

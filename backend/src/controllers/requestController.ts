@@ -1,7 +1,10 @@
 import { z } from 'zod';
 import { REQUEST_STATUSES } from '../types/requestStatus.js';
 import { asyncHandler } from '../middleware/asyncHandler.js';
-import { createBadRequest, createUnauthorized } from '../utils/httpErrors.js';
+import { BAD_REQUEST_MESSAGES } from '../utils/errorMessages.js';
+import { requireCurrentUser } from '../utils/currentUser.js';
+import { requireStringParam } from '../utils/routeParams.js';
+import { parseOrBadRequest } from '../utils/validation.js';
 import { requestService } from '../services/requestService.js';
 
 const createRequestSchema = z.object({
@@ -14,54 +17,40 @@ const updateStatusSchema = z.object({
 });
 
 export const getRequests = asyncHandler(async (req, res) => {
-  const currentUser = req.user;
-  if (!currentUser) {
-    throw createUnauthorized();
-  }
+  const currentUser = requireCurrentUser(req);
 
   const data = await requestService.listForUser(currentUser.sub);
   return res.status(200).json(data);
 });
 
 export const createRequest = asyncHandler(async (req, res) => {
-  const currentUser = req.user;
-  if (!currentUser) {
-    throw createUnauthorized();
-  }
+  const currentUser = requireCurrentUser(req);
 
-  const parseResult = createRequestSchema.safeParse(req.body);
-  if (!parseResult.success) {
-    throw createBadRequest('Invalid payload', parseResult.error.flatten());
-  }
+  const payload = parseOrBadRequest(createRequestSchema, req.body);
 
   const request = await requestService.createRequest(
     currentUser.sub,
-    parseResult.data.toUserId,
-    parseResult.data.userSkillId
+    payload.toUserId,
+    payload.userSkillId
   );
   return res.status(201).json({ request });
 });
 
 export const updateRequestStatus = asyncHandler(async (req, res) => {
-  const currentUser = req.user;
-  if (!currentUser) {
-    throw createUnauthorized();
-  }
+  const currentUser = requireCurrentUser(req);
 
-  const parseResult = updateStatusSchema.safeParse(req.body);
-  if (!parseResult.success) {
-    throw createBadRequest('Invalid payload', parseResult.error.flatten());
-  }
+  const payload = parseOrBadRequest(updateStatusSchema, req.body);
 
-  const { requestId } = req.params;
-  if (!requestId) {
-    throw createBadRequest('Request id is required');
-  }
+  const requestId = requireStringParam(
+    req.params,
+    'requestId',
+    BAD_REQUEST_MESSAGES.requestIdRequired
+  );
 
   const request = await requestService.updateStatus(
     requestId,
     currentUser.sub,
-    parseResult.data.status
+    payload.status
   );
   return res.status(200).json({ request });
 });

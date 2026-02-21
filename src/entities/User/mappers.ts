@@ -1,8 +1,6 @@
-import type {
-  ApiAuthUser,
-  ApiUserSkillResponse,
-} from '@/shared/api/auth';
+import type { ApiAuthUser, ApiUserSkill } from '@/shared/api/auth';
 import type { ApiCatalogUser } from '@/shared/api/users';
+import type { Gender } from '@/shared/types/gender';
 import type { User, UserSkill } from './types';
 
 const generateSkillId = () => {
@@ -29,18 +27,23 @@ const toStringArray = (value: unknown): string[] => {
     .filter((item): item is string => item.length > 0);
 };
 
-const normalizeApiSkill = (entry: ApiUserSkillResponse): UserSkill => {
-  if (typeof entry === 'number') {
-    return {
-      id: generateSkillId(),
-      title: '',
-      categoryId: null,
-      subcategoryId: Number.isFinite(entry) ? entry : null,
-      description: '',
-      imageUrls: [],
-    };
-  }
+const ALLOWED_GENDERS = new Set<Gender>([
+  '\u041c\u0443\u0436\u0441\u043a\u043e\u0439',
+  '\u0416\u0435\u043d\u0441\u043a\u0438\u0439'
+]);
 
+const normalizeGender = (value: unknown): Gender | null => {
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+  return ALLOWED_GENDERS.has(trimmed as Gender) ? (trimmed as Gender) : null;
+};
+
+const normalizeApiSkill = (entry: ApiUserSkill): UserSkill => {
   const id =
     typeof entry.id === 'string' && entry.id.trim().length > 0
       ? entry.id
@@ -52,12 +55,12 @@ const normalizeApiSkill = (entry: ApiUserSkillResponse): UserSkill => {
     categoryId: toNumberOrNull(entry.categoryId),
     subcategoryId: toNumberOrNull(entry.subcategoryId),
     description: entry.description?.trim() ?? '',
-    imageUrls: toStringArray(entry.imageUrls),
+    imageUrls: toStringArray(entry.imageUrls)
   };
 };
 
 export const normalizeApiSkillList = (
-  skills?: ApiUserSkillResponse[] | null,
+  skills?: ApiUserSkill[] | null
 ): UserSkill[] => {
   if (!Array.isArray(skills)) {
     return [];
@@ -74,8 +77,8 @@ export const mapApiToUser = (apiUser: ApiUserSource): User => ({
   avatarUrl: apiUser.avatarUrl ?? null,
   cityId: typeof apiUser.cityId === 'number' ? apiUser.cityId : null,
   birthDate: apiUser.birthDate ?? null,
-  gender: apiUser.gender ?? null,
+  gender: normalizeGender(apiUser.gender),
   bio: apiUser.bio ?? null,
   teachableSkills: normalizeApiSkillList(apiUser.teachableSkills),
-  learningSkills: normalizeApiSkillList(apiUser.learningSkills),
+  learningSkills: normalizeApiSkillList(apiUser.learningSkills)
 });

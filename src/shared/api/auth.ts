@@ -1,89 +1,44 @@
 import { request, authorizedRequest, ApiError } from '@/shared/api/request';
-import type { Gender } from '@/shared/types/gender';
-import type { UserRole } from '@/shared/types/userRole';
-
-export interface ApiUserSkill {
-  id: string;
-  title: string;
-  categoryId: number | null;
-  subcategoryId: number | null;
-  description: string;
-  imageUrls: string[];
-}
-
-export type ApiUserSkillResponse = ApiUserSkill | number;
-
-export interface ApiAuthUser {
-  id: string;
-  email: string;
-  name: string;
-  role: UserRole;
-  avatarUrl?: string | null;
-  cityId?: number | null;
-  birthDate?: string | null;
-  gender?: Gender | null;
-  bio?: string | null;
-  teachableSkills?: ApiUserSkillResponse[];
-  learningSkills?: ApiUserSkillResponse[];
-}
-
-export interface AuthSuccessResponse {
-  user: ApiAuthUser;
-  accessToken: string;
-}
-
-export interface LoginPayload {
-  email: string;
-  password: string;
-}
-
-export interface RegisterPayload extends LoginPayload {
-  name: string;
-  avatarUrl?: string | null;
-  cityId?: number | null;
-  birthDate?: string | null;
-  gender?: Gender | null;
-  bio?: string | null;
-  teachableSkills?: ApiUserSkill[];
-  learningSkills?: ApiUserSkill[];
-}
-
-export interface UpdateProfilePayload {
-  email?: string;
-  name?: string;
-  avatarUrl?: string | null;
-  cityId?: number | null;
-  birthDate?: string | null;
-  gender?: Gender | null;
-  bio?: string | null;
-  teachableSkills?: ApiUserSkill[];
-  learningSkills?: ApiUserSkill[];
-}
+export type {
+  ApiAuthUser,
+  ApiUserSkill,
+  AuthSuccessResponse,
+  LoginPayload,
+  RegisterPayload,
+  UpdateProfilePayload
+} from '@skillswap/contracts/auth';
+import type {
+  ApiAuthUser,
+  AuthSuccessResponse,
+  LoginPayload,
+  RegisterPayload,
+  UpdateProfilePayload
+} from '@skillswap/contracts/auth';
 
 export const authApi = {
   login(payload: LoginPayload) {
     return request<AuthSuccessResponse>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload)
     });
   },
 
   register(payload: RegisterPayload) {
     return request<AuthSuccessResponse>('/auth/register', {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload)
     });
   },
 
   refresh() {
     return request<AuthSuccessResponse>('/auth/refresh', {
-      method: 'POST',
+      method: 'POST'
     });
   },
 
   logout() {
     return request<void>('/auth/logout', {
-      method: 'POST',
+      method: 'POST'
     });
   },
 
@@ -94,9 +49,9 @@ export const authApi = {
   updateProfile(payload: UpdateProfilePayload, accessToken: string) {
     return authorizedRequest<{ user: ApiAuthUser }>('/auth/me', accessToken, {
       method: 'PATCH',
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload)
     });
-  },
+  }
 };
 
 export { ApiError };

@@ -17,38 +17,13 @@ import { isUserRole, type UserRole, USER_ROLE } from '../types/userRole.js';
 import { USER_SKILL_TYPE, type UserSkillType } from '../types/userSkillType.js';
 import { hashToken } from '../utils/tokenHash.js';
 import { normalizeEmail } from '../utils/normalizeEmail.js';
+import type {
+  LoginPayload,
+  RegisterPayload,
+  UpdateProfilePayload
+} from '@skillswap/contracts/auth';
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
-
-interface RegisterInput {
-  email: string;
-  password: string;
-  name: string;
-  avatarUrl?: string | undefined;
-  cityId?: number | undefined;
-  birthDate?: string | undefined;
-  gender?: string | undefined;
-  bio?: string | undefined;
-  teachableSkills?: UserSkillInput[] | undefined;
-  learningSkills?: UserSkillInput[] | undefined;
-}
-
-interface LoginInput {
-  email: string;
-  password: string;
-}
-
-type UpdateProfileInput = {
-  email?: string | undefined;
-  name?: string | undefined;
-  avatarUrl?: string | null | undefined;
-  cityId?: number | null | undefined;
-  birthDate?: string | null | undefined;
-  gender?: string | null | undefined;
-  bio?: string | null | undefined;
-  teachableSkills?: UserSkillInput[] | undefined;
-  learningSkills?: UserSkillInput[] | undefined;
-};
 
 const normalizeSkills = (skills?: UserSkillInput[]): UserSkill[] => {
   const list = normalizeUserSkillList(skills);
@@ -161,7 +136,7 @@ export const authService = {
     bio,
     teachableSkills,
     learningSkills
-  }: RegisterInput) {
+  }: RegisterPayload) {
     const normalizedEmail = normalizeEmail(email);
     const existing = await userRepository.findByEmail(normalizedEmail);
     if (existing) {
@@ -234,7 +209,7 @@ export const authService = {
     };
   },
 
-  async login({ email, password }: LoginInput) {
+  async login({ email, password }: LoginPayload) {
     const normalizedEmail = normalizeEmail(email);
     const user = await userRepository.findByEmail(normalizedEmail);
     if (!user) {
@@ -345,7 +320,7 @@ export const authService = {
     };
   },
 
-  async updateProfile(userId: string, updates: UpdateProfileInput) {
+  async updateProfile(userId: string, updates: UpdateProfilePayload) {
     const shouldUpdateSkills =
       'teachableSkills' in updates || 'learningSkills' in updates;
 

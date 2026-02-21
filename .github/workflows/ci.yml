@@ -41,9 +41,6 @@ jobs:
     timeout-minutes: 20
     env:
       DATABASE_URL: file:./ci.db
-    defaults:
-      run:
-        working-directory: backend
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -53,16 +50,16 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: backend/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
       - name: Prisma validate
-        run: npx prisma validate
+        run: npm exec --workspace backend prisma validate
 
       - name: Database init (migrate + seed)
-        run: npm run db:init
+        run: npm run --workspace backend db:init
 
       - name: Quality checks
-        run: npm run check
+        run: npm run --workspace backend check

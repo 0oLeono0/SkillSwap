@@ -54,7 +54,8 @@ export const serializeSkills = (
     sanitizeSkillsForSubmit(skills, subskillToCategory, subskillNameMap)
       .map((skill) => ({
         ...skill,
-        imageUrls: [...skill.imageUrls]
+        id: typeof skill.id === 'string' ? skill.id : '',
+        imageUrls: [...(skill.imageUrls ?? [])]
       }))
       .sort((a, b) => a.id.localeCompare(b.id))
   );

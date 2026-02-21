@@ -9,7 +9,7 @@ export interface RawUserSkill {
   imageUrls?: unknown;
 }
 
-export type UserSkillInput = RawUserSkill | number;
+export type UserSkillInput = RawUserSkill;
 
 export interface UserSkill {
   id: string;
@@ -67,17 +67,6 @@ export const serializeImageUrls = (value: string[] | undefined): string =>
   JSON.stringify(toStringArray(value ?? []));
 
 export const normalizeUserSkill = (skill: UserSkillInput): UserSkill => {
-  if (typeof skill === 'number') {
-    return {
-      id: generateSkillId(),
-      title: '',
-      categoryId: null,
-      subcategoryId: Number.isFinite(skill) ? skill : null,
-      description: '',
-      imageUrls: []
-    };
-  }
-
   const id =
     typeof skill.id === 'string' && skill.id.trim().length > 0
       ? skill.id
