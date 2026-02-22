@@ -9,6 +9,7 @@ import { ProtectedRoute } from '@/shared/lib/ProtectedRoute/ProtectedRoute';
 import Catalog from '@/pages/Catalog/ui/Catalog';
 import { AuthStepOne, AuthStepTwo, AuthStepThree } from '@/pages/Auth';
 import SkillDetails from '@/pages/SkillDetails/ui/SkillDetails';
+import Create from '@/pages/Create/ui/Create';
 import { AuthLayout } from '@/app/layouts/AuthLayout';
 import {
   ProfileExchanges,
@@ -17,7 +18,7 @@ import {
   ProfilePersonalData,
   ProfileRequests,
   ProfileSkills,
-  ProfileAdminPanel,
+  ProfileAdminPanel
 } from '@/pages/Profile';
 
 const Stub: FC<{ title: string }> = ({ title }) => {
@@ -36,7 +37,7 @@ export const router = createBrowserRouter([
   {
     path: ROUTES.LOGIN,
     element: <AuthLayout />,
-    children: [{ index: true, element: <AuthStepOne isRegistered /> }],
+    children: [{ index: true, element: <AuthStepOne isRegistered /> }]
   },
   {
     path: ROUTES.REGISTER,
@@ -44,22 +45,29 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <AuthStepOne /> },
       { path: 'step-2', element: <AuthStepTwo /> },
-      { path: 'step-3', element: <AuthStepThree /> },
-    ],
+      { path: 'step-3', element: <AuthStepThree /> }
+    ]
   },
   {
     path: ROUTES.HOME,
     element: <BaseLayout />,
     children: [
-      { index: true, element: <Catalog variant="home" /> },
-      { path: ROUTES.CATALOG, element: <Catalog variant="catalog" /> },
-      { path: ROUTES.CREATE, element: <Stub title="Create" /> },
-      { path: ROUTES.ABOUT, element: <Stub title="About" /> },
-      { path: ROUTES.CONTACTS, element: <Stub title="Contacts" /> },
-      { path: ROUTES.BLOG, element: <Stub title="Blog" /> },
+      { index: true, element: <Catalog variant='home' /> },
+      { path: ROUTES.CATALOG, element: <Catalog variant='catalog' /> },
+      {
+        path: ROUTES.CREATE,
+        element: (
+          <ProtectedRoute>
+            <Create />
+          </ProtectedRoute>
+        )
+      },
+      { path: ROUTES.ABOUT, element: <Stub title='About' /> },
+      { path: ROUTES.CONTACTS, element: <Stub title='Contacts' /> },
+      { path: ROUTES.BLOG, element: <Stub title='Blog' /> },
       { path: ROUTES.SKILL_DETAILS, element: <SkillDetails /> },
-      { path: ROUTES.POLICY, element: <Stub title="Policy" /> },
-      { path: ROUTES.TERMS, element: <Stub title="Terms" /> },
+      { path: ROUTES.POLICY, element: <Stub title='Policy' /> },
+      { path: ROUTES.TERMS, element: <Stub title='Terms' /> },
       {
         path: ROUTES.PROFILE.ROOT,
         element: (
@@ -75,27 +83,27 @@ export const router = createBrowserRouter([
               <ProtectedRoute allowedRoles={['owner']}>
                 <ProfileAdminPanel />
               </ProtectedRoute>
-            ),
+            )
           },
           {
             path: ROUTES.PROFILE.CHILDREN.REQUESTS,
-            element: <ProfileRequests />,
+            element: <ProfileRequests />
           },
           {
             path: ROUTES.PROFILE.CHILDREN.EXCHANGES,
-            element: <ProfileExchanges />,
+            element: <ProfileExchanges />
           },
           {
             path: ROUTES.PROFILE.CHILDREN.FAVORITES,
-            element: <ProfileFavorites />,
+            element: <ProfileFavorites />
           },
           {
             path: ROUTES.PROFILE.CHILDREN.SKILLS,
-            element: <ProfileSkills />,
-          },
-        ],
-      },
-    ],
+            element: <ProfileSkills />
+          }
+        ]
+      }
+    ]
   },
   {
     path: ROUTES.SERVER_ERROR,
@@ -103,7 +111,7 @@ export const router = createBrowserRouter([
       <Suspense fallback={<div>Loading...</div>}>
         <ServerError />
       </Suspense>
-    ),
+    )
   },
   {
     path: ROUTES.NOTFOUND,
@@ -111,7 +119,6 @@ export const router = createBrowserRouter([
       <Suspense fallback={<div>Loading...</div>}>
         <NotFound />
       </Suspense>
-    ),
-  },
+    )
+  }
 ]);
-

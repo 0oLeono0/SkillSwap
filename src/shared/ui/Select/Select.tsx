@@ -6,7 +6,7 @@ import {
   type ChangeEvent,
   type FocusEvent,
   type MouseEvent,
-  type FC,
+  type FC
 } from 'react';
 import '../../../app/styles/index.css';
 import './Select.css';
@@ -23,10 +23,12 @@ export const Select: FC<SelectProps> = ({
   options,
   value,
   onChange,
-  placeholder = 'Введите значение…',
+  placeholder = 'Введите значение...',
   disabled = false,
   label,
   variant = SelectVariant.Closed,
+  inputAriaDescribedBy,
+  inputAriaInvalid
 }) => {
   const selectRef = useRef<HTMLDivElement | null>(null);
   const uniqueId = useId();
@@ -74,7 +76,7 @@ export const Select: FC<SelectProps> = ({
         clearSearch();
       }
     },
-    [isMultiple, normalizedValue, onChange, close, clearSearch],
+    [isMultiple, normalizedValue, onChange, close, clearSearch]
   );
 
   const handleSelectByIndex = useCallback(
@@ -83,23 +85,19 @@ export const Select: FC<SelectProps> = ({
         handleOptionClick(filteredOptions[index].value);
       }
     },
-    [filteredOptions, handleOptionClick],
+    [filteredOptions, handleOptionClick]
   );
 
-  const {
-    highlightedIndex,
-    setHighlightedIndex,
-    handleKeyDown,
-    optionsRef,
-  } = useSelectKeyboard({
-    isOpen,
-    disabled,
-    optionsCount: filteredOptions.length,
-    onOpen: open,
-    onClose: close,
-    onSelect: handleSelectByIndex,
-    onClearSearch: clearSearch,
-  });
+  const { highlightedIndex, setHighlightedIndex, handleKeyDown, optionsRef } =
+    useSelectKeyboard({
+      isOpen,
+      disabled,
+      optionsCount: filteredOptions.length,
+      onOpen: open,
+      onClose: close,
+      onSelect: handleSelectByIndex,
+      onClearSearch: clearSearch
+    });
 
   useClickOutside(selectRef, () => {
     close();
@@ -153,7 +151,7 @@ export const Select: FC<SelectProps> = ({
 
   const multiSelectOptions: SelectOption[] = options.map((option, index) => ({
     id: index,
-    name: option.label,
+    name: option.label
   }));
 
   const selectedMultiIds = useMemo(() => {
@@ -179,7 +177,7 @@ export const Select: FC<SelectProps> = ({
   return (
     <div className={'custom-select-container'}>
       {label && (
-        <label htmlFor={uniqueId} className="custom-select__label">
+        <label htmlFor={uniqueId} className='custom-select__label'>
           {label}
         </label>
       )}
@@ -191,18 +189,20 @@ export const Select: FC<SelectProps> = ({
       >
         <div
           className={`custom-select ${isOpen ? 'custom-select--open' : ''}`}
-          aria-haspopup="listbox"
+          aria-haspopup='listbox'
           aria-expanded={isOpen}
           tabIndex={-1}
           onKeyDown={handleKeyDown}
         >
-          <div className="custom-select__selected-value">
+          <div className='custom-select__selected-value'>
             <SelectInput
               id={uniqueId}
               value={inputValue}
               placeholder={placeholder}
               disabled={disabled}
               readOnly={isInputReadOnly}
+              ariaDescribedBy={inputAriaDescribedBy}
+              ariaInvalid={inputAriaInvalid}
               hasValue={hasValue}
               isSearchable={isSearchable}
               isMultipleWithSelection={isMultipleWithSelection}
@@ -217,7 +217,7 @@ export const Select: FC<SelectProps> = ({
             />
           </div>
           {isOpen && (
-            <ul className="custom-select__options" role="listbox">
+            <ul className='custom-select__options' role='listbox'>
               <SelectOptionsList
                 uniqueId={uniqueId}
                 isMultiple={isMultiple}

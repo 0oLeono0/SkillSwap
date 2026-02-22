@@ -124,7 +124,6 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
       }),
     [favoriteAuthorSet]
   );
-  const currentUserId = authUser?.id ?? null;
   const pageSize =
     variant === 'catalog' ? CATALOG_PAGE_SIZE : HOME_AUTHORS_LIMIT;
 
@@ -167,10 +166,10 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
             gender: filters.gender,
             cityIds,
             skillIds: filters.skillIds,
+            excludeAuthorId: authUser?.id,
             search: searchQuery,
             page: nextPage,
-            pageSize,
-            excludeAuthorId: currentUserId ?? undefined
+            pageSize
           },
           { signal: controller.signal }
         );
@@ -207,7 +206,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
         }
       }
     },
-    [filters, cityOptions, searchQuery, currentUserId, pageSize]
+    [filters, cityOptions, searchQuery, pageSize, authUser?.id]
   );
 
   useEffect(() => {

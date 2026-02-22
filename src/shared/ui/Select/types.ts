@@ -19,4 +19,6 @@ export interface SelectProps {
   placeholder?: string;
   label?: string;
   variant?: SelectVariantType;
+  inputAriaDescribedBy?: string;
+  inputAriaInvalid?: boolean;
 }

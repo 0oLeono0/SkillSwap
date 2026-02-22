@@ -1,0 +1,249 @@
+@import '/src/app/styles/_variables.css';
+
+.create {
+  width: 100%;
+  padding: 48px 0 80px;
+}
+
+.container {
+  width: min(860px, 100%);
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--font-color-secondary);
+  font: var(--font-text-sm);
+}
+
+.form {
+  background: var(--bg-color-secondary);
+  border-radius: var(--border-radius);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.05);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.errorSummary {
+  border: 1px solid var(--error-color);
+  border-radius: 12px;
+  background: rgba(255, 0, 0, 0.04);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.errorSummaryTitle {
+  margin: 0;
+  color: var(--error-color);
+  font: var(--font-text-sm);
+}
+
+.errorSummaryList {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.errorSummaryButton {
+  border: none;
+  background: transparent;
+  color: var(--error-color);
+  cursor: pointer;
+  padding: 0;
+  font: var(--font-text-xs);
+  text-align: left;
+  text-decoration: underline;
+}
+
+.baseDataNotice {
+  border: 1px solid var(--button-border-color-accent);
+  border-radius: 12px;
+  background: rgba(0, 128, 255, 0.05);
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.baseDataNoticeText {
+  margin: 0;
+  color: var(--font-color-primary);
+  font: var(--font-text-sm);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fieldLabel {
+  color: var(--font-color-primary);
+  font: var(--font-text-sm);
+}
+
+.fieldInvalid {
+
+  :global(.custom-select-wrapper),
+  :global(.radioGroup_root) {
+    border-color: var(--error-color);
+  }
+
+  :global(.custom-select-wrapper) {
+    box-shadow: inset 0 0 0 1px var(--error-color);
+  }
+
+  :global(.radioGroup_root) {
+    border: 1px solid var(--error-color);
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+
+  .textarea,
+  .tagInput,
+  input[type='file'] {
+    border-color: var(--error-color);
+  }
+}
+
+.textarea {
+  width: 100%;
+  min-height: 140px;
+  resize: vertical;
+  border: 1px solid var(--select-color-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  color: var(--font-color-primary);
+  font: var(--font-text-sm);
+}
+
+.textarea:focus {
+  outline: 1px solid var(--button-color-accent);
+}
+
+.counter {
+  color: var(--font-color-secondary);
+  font: var(--font-text-xs);
+  align-self: flex-end;
+}
+
+.hintText {
+  color: var(--font-color-secondary);
+  font: var(--font-text-xs);
+  align-self: flex-start;
+}
+
+.imagePreview {
+  width: min(280px, 100%);
+  border-radius: 12px;
+  border: 1px solid var(--button-color-hover);
+}
+
+.tagInputRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.tagInput {
+  height: 52px;
+  border: 1px solid var(--select-color-border);
+  border-radius: 12px;
+  padding: 0 12px;
+  font: var(--font-text-sm);
+  color: var(--font-color-primary);
+  box-sizing: border-box;
+}
+
+.tagInput:focus {
+  outline: 1px solid var(--button-color-accent);
+}
+
+.tagInput:disabled {
+  background: var(--bg-color-primary);
+  color: var(--font-color-secondary);
+  cursor: not-allowed;
+}
+
+.tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tagItem {
+  border: 1px solid var(--button-border-color-accent);
+  background: var(--bg-color-primary);
+  color: var(--font-color-primary);
+  border-radius: 999px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font: var(--font-text-xs);
+}
+
+.tagItem:hover {
+  border-color: var(--button-border-color-active);
+}
+
+.errorText,
+.submitError {
+  color: var(--error-color);
+  font: var(--font-text-xs);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+@media (max-width: 760px) {
+  .create {
+    padding: 32px 0 56px;
+  }
+
+  .container {
+    padding: 0 16px;
+  }
+
+  .form {
+    padding: 20px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tagInputRow {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .baseDataNotice {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

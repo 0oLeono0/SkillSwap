@@ -5,6 +5,8 @@ import styles from './Input.module.css';
 export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   title?: string;
   hint?: string;
+  hintId?: string;
+  errorId?: string;
   leftIcon?: FC<SVGProps<SVGSVGElement>>;
   rightIcon?: FC<SVGProps<SVGSVGElement>>;
   error?: string | null;
@@ -16,6 +18,8 @@ export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
 export function Input({
   title,
   hint,
+  hintId,
+  errorId,
   className,
   inputWrapperClassName,
   value = '',
@@ -24,22 +28,19 @@ export function Input({
   rightIcon: RightIcon,
   error,
   searchInput,
-  onRightIconClick, 
+  onRightIconClick,
   ...rest
 }: InputProps) {
   const hasError = !!error;
+  const hintOrErrorId = hasError ? errorId : hintId;
 
   return (
     <fieldset
-      className={classNames(
-        styles.input,
-        className,
-        {
-          [styles.error]: hasError,
-          [styles.disabled]: disabled,
-          [styles.searchInput]: searchInput, 
-        }
-      )}
+      className={classNames(styles.input, className, {
+        [styles.error]: hasError,
+        [styles.disabled]: disabled,
+        [styles.searchInput]: searchInput
+      })}
       data-disabled={disabled ? '' : undefined}
     >
       {!!title && (
@@ -50,14 +51,14 @@ export function Input({
       <div
         className={classNames(styles.inputFormWrap, {
           [styles.error]: hasError,
-          [styles.searchInputWrap]: searchInput,
+          [styles.searchInputWrap]: searchInput
         })}
       >
         {!!LeftIcon && <LeftIcon className={styles.leftIcon} />}
         <input {...rest} value={value} className={styles.inputForm} />
         {!!RightIcon && (
           <button
-            type="button"
+            type='button'
             onClick={onRightIconClick}
             className={styles.iconButton}
           >
@@ -66,7 +67,9 @@ export function Input({
         )}
       </div>
       {(!!hint || hasError) && (
-        <div className={styles.inputHint}>{hasError ? error : hint}</div>
+        <div id={hintOrErrorId} className={styles.inputHint}>
+          {hasError ? error : hint}
+        </div>
       )}
     </fieldset>
   );

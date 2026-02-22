@@ -1,9 +1,4 @@
-import type {
-  ChangeEvent,
-  FocusEvent,
-  MouseEvent,
-  FC,
-} from 'react';
+import type { ChangeEvent, FocusEvent, MouseEvent, FC } from 'react';
 import CloseIcon from '../../../assets/icons/actions/cross.svg';
 import ChevronIcon from '../../../assets/icons/navigation/chevron.svg';
 
@@ -13,6 +8,8 @@ interface SelectInputProps {
   placeholder: string;
   disabled: boolean;
   readOnly: boolean;
+  ariaDescribedBy?: string;
+  ariaInvalid?: boolean;
   hasValue: boolean;
   isSearchable: boolean;
   isMultipleWithSelection: boolean;
@@ -30,6 +27,8 @@ export const SelectInput: FC<SelectInputProps> = ({
   placeholder,
   disabled,
   readOnly,
+  ariaDescribedBy,
+  ariaInvalid,
   hasValue,
   isSearchable,
   isMultipleWithSelection,
@@ -38,7 +37,7 @@ export const SelectInput: FC<SelectInputProps> = ({
   onFocus,
   onBlur,
   onClear,
-  onToggle,
+  onToggle
 }) => {
   const displayValue = isMultipleWithSelection
     ? `Выбрано: ${selectedCount}`
@@ -50,7 +49,7 @@ export const SelectInput: FC<SelectInputProps> = ({
     <>
       <input
         id={id}
-        className="custom-select__input"
+        className='custom-select__input'
         value={displayValue}
         onChange={onChange}
         onFocus={onFocus}
@@ -59,6 +58,8 @@ export const SelectInput: FC<SelectInputProps> = ({
         placeholder={placeholder}
         disabled={disabled}
         readOnly={readOnly || isMultipleWithSelection}
+        aria-describedby={ariaDescribedBy}
+        aria-invalid={ariaInvalid}
         style={
           readOnly || isMultipleWithSelection
             ? { caretColor: 'transparent' }
@@ -68,21 +69,21 @@ export const SelectInput: FC<SelectInputProps> = ({
       {hasValue && isSearchable && !isMultipleWithSelection && (
         <button
           onClick={onClear}
-          type="button"
-          className="custom-select__close-button"
-          aria-label="Очистить выбранное значение"
+          type='button'
+          className='custom-select__close-button'
+          aria-label='Очистить выбранное значение'
         >
-          <img src={CloseIcon} alt="Очистить" />
+          <img src={CloseIcon} alt='Очистить' />
         </button>
       )}
       {(!hasValue || !isSearchable || isMultipleWithSelection) && (
         <button
           onClick={onToggle}
-          type="button"
-          className="custom-select__chevron-button"
-          aria-label="Открыть список вариантов"
+          type='button'
+          className='custom-select__chevron-button'
+          aria-label='Открыть список вариантов'
         >
-          <img src={ChevronIcon} alt="Открыть" />
+          <img src={ChevronIcon} alt='Открыть' />
         </button>
       )}
     </>
