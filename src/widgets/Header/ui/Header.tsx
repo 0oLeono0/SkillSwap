@@ -27,6 +27,7 @@ import { useTheme } from '@/app/providers/theme';
 import { useFiltersBaseData } from '@/features/Filter/model/useFiltersBaseData';
 import { Title } from '@/shared/ui/Title';
 import fallbackAvatar from '@/shared/assets/images/avatars/avatar.jpg';
+import { useAuthRedirectState } from '@/shared/lib/router/useAuthEntryNavigation';
 
 const categoryIcons: Record<number, FC | undefined> = {
   1: IconBriefcase,
@@ -106,6 +107,7 @@ function Header() {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const authRedirectState = useAuthRedirectState();
   const [searchParams] = useSearchParams();
   const headerSearch = searchParams.get('search');
 
@@ -286,7 +288,9 @@ function Header() {
                 aria-haspopup='true'
                 aria-expanded={isUserMenuOpen}
               >
-                <span className={styles.userName}>{user?.name ?? 'Пользователь'}</span>
+                <span className={styles.userName}>
+                  {user?.name ?? 'Пользователь'}
+                </span>
                 <img
                   src={userAvatar}
                   alt='Аватар пользователя'
@@ -302,7 +306,11 @@ function Header() {
                   >
                     Личный кабинет
                   </button>
-                  <button type='button' className={styles.userMenuItem} onClick={handleLogout}>
+                  <button
+                    type='button'
+                    className={styles.userMenuItem}
+                    onClick={handleLogout}
+                  >
                     Выйти из аккаунта <IconLogOut aria-hidden />
                   </button>
                 </div>
@@ -310,10 +318,10 @@ function Header() {
             </div>
           ) : (
             <div className={styles.buttons}>
-              <NavLink to={ROUTES.LOGIN}>
+              <NavLink to={ROUTES.LOGIN} state={authRedirectState}>
                 <Button variant='secondary'>Войти</Button>
               </NavLink>
-              <NavLink to={ROUTES.REGISTER}>
+              <NavLink to={ROUTES.REGISTER} state={authRedirectState}>
                 <Button variant='primary'>Зарегистрироваться</Button>
               </NavLink>
             </div>

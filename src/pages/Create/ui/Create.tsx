@@ -1,10 +1,11 @@
-﻿import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import styles from './create.module.scss';
 import { useAuth } from '@/app/providers/auth';
 import { useFiltersBaseData } from '@/features/Filter/model/useFiltersBaseData';
 import { ROUTES } from '@/shared/constants';
 import { Button } from '@/shared/ui/button/Button';
 import { Title } from '@/shared/ui/Title';
+import { useAuthEntryNavigation } from '@/shared/lib/router/useAuthEntryNavigation';
 import { CREATE_SKILL_COPY } from '../model/content';
 import { useCreateSkillForm } from '../model/useCreateSkillForm';
 import { ErrorSummary } from './ErrorSummary';
@@ -17,6 +18,7 @@ import {
 
 const Create = () => {
   const navigate = useNavigate();
+  const { navigateToLogin } = useAuthEntryNavigation();
   const { user, updateProfile } = useAuth();
   const {
     skillGroups,
@@ -88,7 +90,7 @@ const Create = () => {
           </Title>
           <p className={styles.subtitle}>{CREATE_SKILL_COPY.guestSubtitle}</p>
           <div className={styles.actions}>
-            <Button variant='secondary' onClick={() => navigate(ROUTES.LOGIN)}>
+            <Button variant='secondary' onClick={() => navigateToLogin()}>
               {CREATE_SKILL_COPY.guestLoginButton}
             </Button>
           </div>

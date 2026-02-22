@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import styles from './authStepOne.module.scss';
 import { Button } from '@/shared/ui/button/Button';
 import { Input } from '@/shared/ui/Input';
@@ -11,6 +11,7 @@ import { useAuth } from '@/app/providers/auth';
 import { Title } from '@/shared/ui/Title';
 import { ApiError } from '@/shared/api/auth';
 import { useRegistrationDraft } from '@/pages/Auth/model/RegistrationContext';
+import { resolveAuthRedirectPath } from '@/shared/lib/router/authRedirect';
 
 interface AuthStepOneProps {
   isRegistered?: boolean;
@@ -20,6 +21,7 @@ const normalizeEmail = (value: string) => value.trim().toLowerCase();
 
 export const AuthStepOne = ({ isRegistered = false }: AuthStepOneProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const { setCredentials, clear } = useRegistrationDraft();
 
@@ -38,7 +40,8 @@ export const AuthStepOne = ({ isRegistered = false }: AuthStepOneProps) => {
         setIsSubmitting(true);
         await login({ email: normalizedEmail, password });
         clear();
-        navigate(ROUTES.HOME);
+        const nextPath = resolveAuthRedirectPath(location.state, ROUTES.HOME);
+        navigate(nextPath, { replace: true });
       } catch (loginError) {
         if (loginError instanceof ApiError) {
           setError(loginError.message);
@@ -52,7 +55,7 @@ export const AuthStepOne = ({ isRegistered = false }: AuthStepOneProps) => {
     }
 
     setCredentials({ email: normalizedEmail, password });
-    navigate(ROUTES.REGISTER_STEP_TWO);
+    navigate(ROUTES.REGISTER_STEP_TWO, { state: location.state });
   };
 
   return (

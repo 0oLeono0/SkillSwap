@@ -1,11 +1,14 @@
 import type { ReactElement } from 'react';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { AuthContext, type AuthContextType } from '@/app/providers/auth/context';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import {
+  AuthContext,
+  type AuthContextType
+} from '@/app/providers/auth/context';
 import { ProtectedRoute } from './ProtectedRoute';
 
 const createAuthContextValue = (
-  overrides: Partial<AuthContextType> = {},
+  overrides: Partial<AuthContextType> = {}
 ): AuthContextType => ({
   user: null,
   accessToken: null,
@@ -16,39 +19,83 @@ const createAuthContextValue = (
   logout: jest.fn().mockResolvedValue(undefined),
   refresh: jest.fn().mockResolvedValue(undefined),
   updateProfile: jest.fn().mockResolvedValue(undefined),
-  ...overrides,
+  ...overrides
 });
 
-const renderWithRouter = (ui: ReactElement, authValue?: Partial<AuthContextType>) => {
+const LoginPage = () => {
+  const location = useLocation();
+  const from = (
+    location.state as {
+      from?: { pathname?: string; search?: string; hash?: string };
+    } | null
+  )?.from;
+  const fromPath = from
+    ? `${from.pathname ?? ''}${from.search ?? ''}${from.hash ?? ''}`
+    : 'none';
+
+  return (
+    <>
+      <div>Login Page</div>
+      <div data-testid='redirect-from'>{fromPath}</div>
+    </>
+  );
+};
+
+const renderWithRouter = (
+  ui: ReactElement,
+  authValue?: Partial<AuthContextType>,
+  initialEntry:
+    | string
+    | {
+        pathname: string;
+        search?: string;
+        hash?: string;
+        state?: unknown;
+      } = '/protected'
+) => {
   return render(
     <AuthContext.Provider value={createAuthContextValue(authValue)}>
-      <MemoryRouter initialEntries={['/protected']}>
+      <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
-          <Route path="/protected" element={ui} />
-          <Route path="/login" element={<div>Login Page</div>} />
-          <Route path="/" element={<div>Home Page</div>} />
+          <Route path='/protected' element={ui} />
+          <Route path='/login' element={<LoginPage />} />
+          <Route path='/' element={<div>Home Page</div>} />
         </Routes>
       </MemoryRouter>
-    </AuthContext.Provider>,
+    </AuthContext.Provider>
   );
 };
 
 describe('ProtectedRoute', () => {
   it('renders fallback while auth is initializing', () => {
-    renderWithRouter(<ProtectedRoute fallback={<div>Loading...</div>}>Private</ProtectedRoute>, {
-      isInitializing: true,
-    });
+    renderWithRouter(
+      <ProtectedRoute fallback={<div>Loading...</div>}>Private</ProtectedRoute>,
+      {
+        isInitializing: true
+      }
+    );
 
     expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 
   it('redirects unauthenticated users to login', () => {
-    renderWithRouter(<ProtectedRoute>Private</ProtectedRoute>, {
-      isAuthenticated: false,
-      user: null,
-    });
+    renderWithRouter(
+      <ProtectedRoute>Private</ProtectedRoute>,
+      {
+        isAuthenticated: false,
+        user: null
+      },
+      {
+        pathname: '/protected',
+        search: '?tab=incoming',
+        hash: '#latest'
+      }
+    );
 
     expect(screen.getByText('Login Page')).toBeInTheDocument();
+    expect(screen.getByTestId('redirect-from')).toHaveTextContent(
+      '/protected?tab=incoming#latest'
+    );
   });
 
   it('allows access when user has allowed role', () => {
@@ -69,9 +116,9 @@ describe('ProtectedRoute', () => {
           gender: null,
           bio: null,
           teachableSkills: [],
-          learningSkills: [],
-        },
-      },
+          learningSkills: []
+        }
+      }
     );
 
     expect(screen.getByText('Private Content')).toBeInTheDocument();

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import styles from './authStepThree.module.scss';
 import { Button } from '@/shared/ui/button/Button';
 import { Input } from '@/shared/ui/Input';
@@ -16,6 +16,7 @@ import stockThird from '@/shared/assets/images/stock/stock3.jpg';
 import stockFourth from '@/shared/assets/images/stock/stock4.jpg';
 import { Modal } from '@/shared/ui/Modal/Modal';
 import { ApiError, type ApiUserSkill } from '@/shared/api/auth';
+import { resolveAuthRedirectPath } from '@/shared/lib/router/authRedirect';
 
 const STOCK_IMAGES = [stockMain, stockSecond, stockThird, stockFourth];
 
@@ -39,15 +40,16 @@ const fileToDataUrl = (file: File) =>
 
 const AuthStepThree = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { register } = useAuth();
   const { skillGroups } = useFiltersBaseData();
   const { credentials, stepTwo: stepTwoData, clear } = useRegistrationDraft();
 
   useEffect(() => {
     if (!stepTwoData || !credentials) {
-      navigate(ROUTES.REGISTER_STEP_TWO);
+      navigate(ROUTES.REGISTER_STEP_TWO, { state: location.state });
     }
-  }, [stepTwoData, credentials, navigate]);
+  }, [stepTwoData, credentials, location.state, navigate]);
 
   const [skillTitle, setSkillTitle] = useState('');
   const [categoryId, setCategoryId] = useState<number | null>(null);
@@ -71,14 +73,17 @@ const AuthStepThree = () => {
     setImagePreviews(files.map((file) => URL.createObjectURL(file)));
   };
 
-  useEffect(() => () => {
-    imagePreviews.forEach((url) => URL.revokeObjectURL(url));
-  }, [imagePreviews]);
+  useEffect(
+    () => () => {
+      imagePreviews.forEach((url) => URL.revokeObjectURL(url));
+    },
+    [imagePreviews]
+  );
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!stepTwoData) {
-      navigate(ROUTES.REGISTER_STEP_TWO);
+      navigate(ROUTES.REGISTER_STEP_TWO, { state: location.state });
       return;
     }
     setIsPreviewOpen(true);
@@ -91,9 +96,14 @@ const AuthStepThree = () => {
   };
 
   const findGroupById = (id: number | null | undefined) =>
-    typeof id === 'number' ? skillGroups.find((group) => group.id === id) : undefined;
+    typeof id === 'number'
+      ? skillGroups.find((group) => group.id === id)
+      : undefined;
 
-  const findSkillName = (category: number | null | undefined, subskill: number | null | undefined) => {
+  const findSkillName = (
+    category: number | null | undefined,
+    subskill: number | null | undefined
+  ) => {
     const group = findGroupById(category ?? null);
     if (!group) return null;
     return group.skills.find((skill) => skill.id === subskill)?.name ?? null;
@@ -104,7 +114,10 @@ const AuthStepThree = () => {
       return null;
     }
 
-    const groupId = typeof stepTwoData.categoryId === 'number' ? stepTwoData.categoryId : null;
+    const groupId =
+      typeof stepTwoData.categoryId === 'number'
+        ? stepTwoData.categoryId
+        : null;
     const subskillName = findSkillName(groupId, stepTwoData.subskillId);
     const title = subskillName ?? '';
 
@@ -114,7 +127,7 @@ const AuthStepThree = () => {
       categoryId: groupId,
       subcategoryId: stepTwoData.subskillId,
       description: 'Я хочу научиться этому навыку',
-      imageUrls: STOCK_IMAGES.slice(1),
+      imageUrls: STOCK_IMAGES.slice(1)
     };
   };
 
@@ -142,14 +155,15 @@ const AuthStepThree = () => {
       categoryId,
       subcategoryId: subskillId,
       description:
-      trimmedDescription || 'Я хочу обучиться навыку, описанному в этой категории',
-      imageUrls: imageUrls.length ? imageUrls : STOCK_IMAGES,
+        trimmedDescription ||
+        'Я хочу обучиться навыку, описанному в этой категории',
+      imageUrls: imageUrls.length ? imageUrls : STOCK_IMAGES
     };
   };
 
   const handleConfirm = async () => {
     if (!stepTwoData || !credentials) {
-      navigate(ROUTES.REGISTER_STEP_TWO);
+      navigate(ROUTES.REGISTER_STEP_TWO, { state: location.state });
       return;
     }
     const avatarUrlPayload =
@@ -177,27 +191,31 @@ const AuthStepThree = () => {
         gender: stepTwoData.gender || undefined,
         bio: trimmedDescription || undefined,
         learningSkills: learningSkill ? [learningSkill] : undefined,
-        teachableSkills: [teachableSkill],
+        teachableSkills: [teachableSkill]
       });
       clear();
       setIsPreviewOpen(false);
-      navigate(ROUTES.HOME);
+      const nextPath = resolveAuthRedirectPath(location.state, ROUTES.HOME);
+      navigate(nextPath, { replace: true });
     } catch (registerError) {
       if (registerError instanceof ApiError) {
         setError(registerError.message);
       } else {
-        setError('Произошла неизвестная ошибка при регистрации. Пожалуйста, попробуйте позже.');
+        setError(
+          'Произошла неизвестная ошибка при регистрации. Пожалуйста, попробуйте позже.'
+        );
       }
     } finally {
       setIsSubmitting(false);
     }
   };
-const previewCategoryName = categoryId
-  ? skillGroups.find((group) => group.id === categoryId)?.name ?? 'Неизвестная категория'
-  : 'Категория не выбрана';
+  const previewCategoryName = categoryId
+    ? (skillGroups.find((group) => group.id === categoryId)?.name ??
+      'Неизвестная категория')
+    : 'Категория не выбрана';
 
   const previewSubcategoryName = subskillId
-    ? skillOptions.find((skill) => skill.id === subskillId)?.name ?? ''
+    ? (skillOptions.find((skill) => skill.id === subskillId)?.name ?? '')
     : '';
 
   const usingFallbackImages = imagePreviews.length === 0;
@@ -214,7 +232,7 @@ const previewCategoryName = categoryId
       <div className={styles.card}>
         <div className={styles.stepIndicator}>Шаг 3 из 3</div>
         <div className={styles.layout}>
-            <form className={styles.form} onSubmit={handleSubmit}>
+          <form className={styles.form} onSubmit={handleSubmit}>
             <Input
               title='Название навыка'
               placeholder='Введите название вашего навыка'
@@ -226,11 +244,14 @@ const previewCategoryName = categoryId
 
             <Select
               label='Категория навыка'
-              options={skillGroups.map((group) => ({ value: group.id.toString(), label: group.name }))}
+              options={skillGroups.map((group) => ({
+                value: group.id.toString(),
+                label: group.name
+              }))}
               value={categoryId?.toString() ?? ''}
               onChange={(value) => {
-              setCategoryId(value ? Number(value) : null);
-              setSubskillId(null);
+                setCategoryId(value ? Number(value) : null);
+                setSubskillId(null);
               }}
               data-testid='category-select'
               placeholder='Выберите категорию навыка'
@@ -238,7 +259,10 @@ const previewCategoryName = categoryId
 
             <Select
               label='Подкатегория навыка'
-              options={skillOptions.map((skill) => ({ value: skill.id.toString(), label: skill.name }))}
+              options={skillOptions.map((skill) => ({
+                value: skill.id.toString(),
+                label: skill.name
+              }))}
               value={subskillId?.toString() ?? ''}
               onChange={(value) => setSubskillId(value ? Number(value) : null)}
               data-testid='subskill-select'
@@ -249,82 +273,138 @@ const previewCategoryName = categoryId
             <label className={styles.textareaLabel}>
               Описание
               <textarea
-              className={styles.textarea}
-              placeholder='Кратко опишите, чему вы можете научить'
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              rows={5}
-              data-testid='description-textarea'
+                className={styles.textarea}
+                placeholder='Кратко опишите, чему вы можете научить'
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                rows={5}
+                data-testid='description-textarea'
               />
             </label>
 
             <label className={styles.dropzone}>
-              <span className={styles.dropzoneTitle}>Загрузите или выберите изображения навыка</span>
+              <span className={styles.dropzoneTitle}>
+                Загрузите или выберите изображения навыка
+              </span>
               <span className={styles.dropzoneHint}>Выберите изображения</span>
-              <input type='file' accept='image/*' multiple hidden onChange={handleImagesChange} />
+              <input
+                type='file'
+                accept='image/*'
+                multiple
+                hidden
+                onChange={handleImagesChange}
+              />
               {images.length > 0 && (
-              <span className={styles.dropzoneMeta}>Выбрано файлов: {images.length}</span>
+                <span className={styles.dropzoneMeta}>
+                  Выбрано файлов: {images.length}
+                </span>
               )}
             </label>
 
             <div className={styles.actions}>
-              <Button type='button' variant='secondary' onClick={() => navigate(-1)}>
-              Назад
+              <Button
+                type='button'
+                variant='secondary'
+                onClick={() => navigate(-1)}
+              >
+                Назад
               </Button>
-              <Button type='submit' variant='primary' data-testid='preview-submit'>
-              Продолжить
+              <Button
+                type='submit'
+                variant='primary'
+                data-testid='preview-submit'
+              >
+                Продолжить
               </Button>
             </div>
-            </form>
+          </form>
 
           <div className={styles.preview}>
             <SchoolBoardIcon />
-            <Title tag='h2' variant='lg'>Предварительный просмотр вашего навыка</Title>
+            <Title tag='h2' variant='lg'>
+              Предварительный просмотр вашего навыка
+            </Title>
             <p>
-              Ниже показан предварительный просмотр вашего навыка. Убедитесь, что название, категория, описание и изображения выглядят так, как вы хотите. Любое изменение — нажмите «Редактировать», чтобы вернуться к форме редактирования — любое удаление — нажмите «Подтвердить», чтобы завершить регистрацию на SkillSwap.
+              Ниже показан предварительный просмотр вашего навыка. Убедитесь,
+              что название, категория, описание и изображения выглядят так, как
+              вы хотите. Любое изменение — нажмите «Редактировать», чтобы
+              вернуться к форме редактирования — любое удаление — нажмите
+              «Подтвердить», чтобы завершить регистрацию на SkillSwap.
             </p>
           </div>
         </div>
       </div>
 
-      <Modal isOpen={isPreviewOpen} onClose={handleEdit} className={styles.previewModal}>
+      <Modal
+        isOpen={isPreviewOpen}
+        onClose={handleEdit}
+        className={styles.previewModal}
+      >
         <div className={styles.previewModalHeader}>
-          <Title tag='h2' variant='lg'>Предварительный просмотр вашего навыка</Title>
-            <p>
-            Проверьте предварительный просмотр о навыке: название, категория, описание и изображения. Если что-то неправильно — нажмите «Редактировать» для возврата к форме редактирования; любое удаление — нажмите «Подтвердить» для завершения регистрации.
-            </p>
+          <Title tag='h2' variant='lg'>
+            Предварительный просмотр вашего навыка
+          </Title>
+          <p>
+            Проверьте предварительный просмотр о навыке: название, категория,
+            описание и изображения. Если что-то неправильно — нажмите
+            «Редактировать» для возврата к форме редактирования; любое удаление
+            — нажмите «Подтвердить» для завершения регистрации.
+          </p>
         </div>
         <div className={styles.previewModalBody}>
           <div className={styles.previewContent}>
-            <Title tag='h2' variant='lg'>{skillTitle || 'Название навыка'}</Title>
+            <Title tag='h2' variant='lg'>
+              {skillTitle || 'Название навыка'}
+            </Title>
             <span className={styles.previewCategory}>
               {previewCategoryName}
               {previewSubcategoryName ? ` / ${previewSubcategoryName}` : ''}
             </span>
             <p className={styles.previewDescription}>
-              {description || 'Описание навыка, которое вы предоставили здесь, должно быть актуальным и информативным. Используйте простые и понятные слова в описании профессионального навыка, избегайте сложных терминов. Данное описание играет важную роль в контексте вашего профиля.'}
+              {description ||
+                'Описание навыка, которое вы предоставили здесь, должно быть актуальным и информативным. Используйте простые и понятные слова в описании профессионального навыка, избегайте сложных терминов. Данное описание играет важную роль в контексте вашего профиля.'}
             </p>
             <div className={styles.previewActions}>
-                <Button type='button' variant='secondary' onClick={handleEdit} data-testid='edit-button'>
+              <Button
+                type='button'
+                variant='secondary'
+                onClick={handleEdit}
+                data-testid='edit-button'
+              >
                 Редактировать
-                </Button>
+              </Button>
               {error && <p className={styles.errorMessage}>{error}</p>}
-                <Button type='button' variant='primary' onClick={handleConfirm} disabled={isSubmitting} data-testid='confirm-button'>
+              <Button
+                type='button'
+                variant='primary'
+                onClick={handleConfirm}
+                disabled={isSubmitting}
+                data-testid='confirm-button'
+              >
                 Подтвердить
-                </Button>
+              </Button>
             </div>
           </div>
-            <div className={styles.previewGallery}>
-            <img src={mainImage} alt={skillTitle || 'Навык'} className={styles.previewMainImage} />
+          <div className={styles.previewGallery}>
+            <img
+              src={mainImage}
+              alt={skillTitle || 'Навык'}
+              className={styles.previewMainImage}
+            />
             <div className={styles.previewThumbs}>
               {secondaryImages.map((image) => (
-              <img key={image} src={image} alt='Изображение навыка' className={styles.previewThumb} />
+                <img
+                  key={image}
+                  src={image}
+                  alt='Изображение навыка'
+                  className={styles.previewThumb}
+                />
               ))}
               {!usingFallbackImages && remainingCount > 0 && (
-              <div className={styles.previewThumbMore}>+{remainingCount}</div>
+                <div className={styles.previewThumbMore}>+{remainingCount}</div>
               )}
             </div>
-            </div>
+          </div>
         </div>
       </Modal>
     </section>

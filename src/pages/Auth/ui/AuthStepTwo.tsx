@@ -1,5 +1,11 @@
-import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type FormEvent
+} from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import styles from './authStepTwo.module.scss';
 import { Button } from '@/shared/ui/button/Button';
 import { Input } from '@/shared/ui/Input';
@@ -12,42 +18,48 @@ import type { Gender } from '@/entities/User/types';
 import UserInfoIcon from '@/shared/assets/images/user-info.svg?react';
 import {
   useRegistrationDraft,
-  type RegistrationStepTwoData,
+  type RegistrationStepTwoData
 } from '@/pages/Auth/model/RegistrationContext';
 
 const GENDERS: Array<{ value: Gender | ''; label: string }> = [
   { value: '', label: 'Не указан' },
   { value: 'Мужской', label: 'Мужской' },
-  { value: 'Женский', label: 'Женский' },
+  { value: 'Женский', label: 'Женский' }
 ];
 
 const readFileAsDataUrl = (file: File) =>
   new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+    reader.onload = () =>
+      resolve(typeof reader.result === 'string' ? reader.result : '');
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(file);
   });
 
 const AuthStepTwo = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { cities: cityOptions, skillGroups } = useFiltersBaseData();
   const { credentials, stepTwo, setStepTwo } = useRegistrationDraft();
 
   useEffect(() => {
     if (!credentials) {
-      navigate(ROUTES.REGISTER);
+      navigate(ROUTES.REGISTER, { state: location.state });
     }
-  }, [credentials, navigate]);
+  }, [credentials, location.state, navigate]);
 
   const [avatarPreview, setAvatarPreview] = useState(stepTwo?.avatarUrl ?? '');
   const [name, setName] = useState(stepTwo?.name ?? '');
   const [birthDate, setBirthDate] = useState(stepTwo?.birthDate ?? '');
   const [gender, setGender] = useState<Gender | ''>(stepTwo?.gender ?? '');
   const [cityId, setCityId] = useState<number | null>(stepTwo?.cityId ?? null);
-  const [categoryId, setCategoryId] = useState<number | null>(stepTwo?.categoryId ?? null);
-  const [subskillId, setSubskillId] = useState<number | null>(stepTwo?.subskillId ?? null);
+  const [categoryId, setCategoryId] = useState<number | null>(
+    stepTwo?.categoryId ?? null
+  );
+  const [subskillId, setSubskillId] = useState<number | null>(
+    stepTwo?.subskillId ?? null
+  );
 
   const subskillOptions = useMemo(() => {
     if (!categoryId) return [];
@@ -80,11 +92,11 @@ const AuthStepTwo = () => {
       cityId,
       categoryId,
       subskillId,
-      avatarUrl: avatarPreview || '',
+      avatarUrl: avatarPreview || ''
     };
     setStepTwo(nextStepTwo);
 
-    navigate(ROUTES.REGISTER_STEP_THREE);
+    navigate(ROUTES.REGISTER_STEP_THREE, { state: location.state });
   };
 
   return (
@@ -99,7 +111,12 @@ const AuthStepTwo = () => {
               ) : (
                 <span className={styles.avatarPlaceholder}>+</span>
               )}
-              <input type='file' accept='image/*' onChange={handleAvatarChange} hidden />
+              <input
+                type='file'
+                accept='image/*'
+                onChange={handleAvatarChange}
+                hidden
+              />
             </label>
 
             <Input
@@ -128,7 +145,10 @@ const AuthStepTwo = () => {
 
             <Select
               label='Город'
-              options={cityOptions.map((city) => ({ value: city.id.toString(), label: city.name }))}
+              options={cityOptions.map((city) => ({
+                value: city.id.toString(),
+                label: city.name
+              }))}
               value={cityId?.toString() ?? ''}
               onChange={(value) => setCityId(value ? Number(value) : null)}
               placeholder='Не указан'
@@ -137,7 +157,10 @@ const AuthStepTwo = () => {
 
             <Select
               label='Категория навыка, которому хотите научиться'
-              options={skillGroups.map((group) => ({ value: group.id.toString(), label: group.name }))}
+              options={skillGroups.map((group) => ({
+                value: group.id.toString(),
+                label: group.name
+              }))}
               value={categoryId?.toString() ?? ''}
               onChange={(value) => {
                 setCategoryId(value ? Number(value) : null);
@@ -148,7 +171,10 @@ const AuthStepTwo = () => {
 
             <Select
               label='Подкатегория навыка, которому хотите научиться'
-              options={subskillOptions.map((skill) => ({ value: skill.id.toString(), label: skill.name }))}
+              options={subskillOptions.map((skill) => ({
+                value: skill.id.toString(),
+                label: skill.name
+              }))}
               value={subskillId?.toString() ?? ''}
               onChange={(value) => setSubskillId(value ? Number(value) : null)}
               disabled={!categoryId}
@@ -156,10 +182,18 @@ const AuthStepTwo = () => {
             />
 
             <div className={styles.actions}>
-              <Button type='button' variant='secondary' onClick={() => navigate(-1)}>
+              <Button
+                type='button'
+                variant='secondary'
+                onClick={() => navigate(-1)}
+              >
                 Назад
               </Button>
-              <Button type='submit' variant='primary' data-testid='step-two-submit'>
+              <Button
+                type='submit'
+                variant='primary'
+                data-testid='step-two-submit'
+              >
                 Продолжить
               </Button>
             </div>
@@ -167,8 +201,13 @@ const AuthStepTwo = () => {
 
           <div className={styles.preview}>
             <UserInfoIcon className={styles.previewIcon} />
-            <Title tag='h2' variant='lg'>Расскажите немного о себе</Title>
-            <p>Это поможет другим людям лучше узнать вас, чтобы быстрее подобрать партнёров для обмена.</p>
+            <Title tag='h2' variant='lg'>
+              Расскажите немного о себе
+            </Title>
+            <p>
+              Это поможет другим людям лучше узнать вас, чтобы быстрее подобрать
+              партнёров для обмена.
+            </p>
           </div>
         </div>
       </div>

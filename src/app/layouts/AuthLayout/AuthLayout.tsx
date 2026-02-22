@@ -1,10 +1,18 @@
-﻿import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import styles from './authLayout.module.scss';
 import { Logo } from '@/shared/ui/Logo/Logo';
 import { RegistrationProvider } from '@/pages/Auth/model/RegistrationContext';
+import { ROUTES } from '@/shared/constants';
+import { resolveAuthRedirectPath } from '@/shared/lib/router/authRedirect';
 
 const AuthLayout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleClose = () => {
+    const nextPath = resolveAuthRedirectPath(location.state, ROUTES.HOME);
+    navigate(nextPath, { replace: true });
+  };
 
   return (
     <div className={styles.authLayout}>
@@ -15,7 +23,7 @@ const AuthLayout = () => {
         <button
           type='button'
           className={styles.closeButton}
-          onClick={() => navigate('/')}
+          onClick={handleClose}
         >
           Закрыть ✕
         </button>

@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/app/providers/auth/useAuth';
 import type { UserRole } from '@/shared/types/userRole';
+import { ROUTES } from '@/shared/constants';
+import { buildAuthRedirectState } from '@/shared/lib/router/authRedirect';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -16,7 +18,7 @@ const defaultFallback = (
 export const ProtectedRoute = ({
   children,
   allowedRoles,
-  fallback = defaultFallback,
+  fallback = defaultFallback
 }: ProtectedRouteProps) => {
   const { isAuthenticated, isInitializing, user } = useAuth();
   const location = useLocation();
@@ -26,13 +28,19 @@ export const ProtectedRoute = ({
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return (
+      <Navigate
+        to={ROUTES.LOGIN}
+        state={buildAuthRedirectState(location)}
+        replace
+      />
+    );
   }
 
   if (allowedRoles?.length) {
     const hasAccess = user && allowedRoles.includes(user.role);
     if (!hasAccess) {
-      return <Navigate to="/" replace />;
+      return <Navigate to={ROUTES.HOME} replace />;
     }
   }
 

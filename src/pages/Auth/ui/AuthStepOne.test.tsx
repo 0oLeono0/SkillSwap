@@ -7,6 +7,7 @@ const loginMock = jest.fn();
 const setCredentialsMock = jest.fn();
 const clearMock = jest.fn();
 const navigateMock = jest.fn();
+let locationState: unknown = null;
 
 jest.mock('@/app/providers/auth', () => ({
   useAuth: () => ({
@@ -27,7 +28,8 @@ jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
   return {
     ...actual,
-    useNavigate: () => navigateMock
+    useNavigate: () => navigateMock,
+    useLocation: () => ({ state: locationState })
   };
 });
 
@@ -35,6 +37,7 @@ describe('AuthStepOne', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     loginMock.mockResolvedValue(undefined);
+    locationState = null;
   });
 
   it('stores credentials in context and navigates to step 2 for new registration', async () => {
@@ -51,11 +54,30 @@ describe('AuthStepOne', () => {
       email: 'test@example.com',
       password: 'password123'
     });
-    expect(navigateMock).toHaveBeenCalledWith(ROUTES.REGISTER_STEP_TWO);
+    expect(navigateMock).toHaveBeenCalledWith(ROUTES.REGISTER_STEP_TWO, {
+      state: null
+    });
     expect(setItemSpy).not.toHaveBeenCalled();
   });
 
-  it('logs in existing user, clears draft and navigates home', async () => {
+  it('preserves redirect state when moving from register step 1 to step 2', async () => {
+    const user = userEvent.setup();
+    locationState = {
+      from: { pathname: '/create', search: '', hash: '' }
+    };
+
+    render(<AuthStepOne />);
+
+    await user.type(screen.getByTestId('email-input'), 'Test@Example.com  ');
+    await user.type(screen.getByTestId('password-input'), 'password123');
+    await user.click(screen.getByTestId('submit-button'));
+
+    expect(navigateMock).toHaveBeenCalledWith(ROUTES.REGISTER_STEP_TWO, {
+      state: locationState
+    });
+  });
+
+  it('logs in existing user, clears draft and navigates to fallback home', async () => {
     const user = userEvent.setup();
 
     render(<AuthStepOne isRegistered />);
@@ -71,6 +93,35 @@ describe('AuthStepOne', () => {
       });
     });
     expect(clearMock).toHaveBeenCalled();
-    expect(navigateMock).toHaveBeenCalledWith(ROUTES.HOME);
+    expect(navigateMock).toHaveBeenCalledWith(ROUTES.HOME, { replace: true });
+  });
+
+  it('logs in existing user and redirects to state.from path', async () => {
+    const user = userEvent.setup();
+    locationState = {
+      from: {
+        pathname: '/profile/requests',
+        search: '?tab=incoming',
+        hash: '#latest'
+      }
+    };
+
+    render(<AuthStepOne isRegistered />);
+
+    await user.type(screen.getByTestId('email-input'), 'User@Example.com ');
+    await user.type(screen.getByTestId('password-input'), 'secret');
+    await user.click(screen.getByTestId('submit-button'));
+
+    await waitFor(() => {
+      expect(loginMock).toHaveBeenCalledWith({
+        email: 'user@example.com',
+        password: 'secret'
+      });
+    });
+    expect(clearMock).toHaveBeenCalled();
+    expect(navigateMock).toHaveBeenCalledWith(
+      '/profile/requests?tab=incoming#latest',
+      { replace: true }
+    );
   });
 });

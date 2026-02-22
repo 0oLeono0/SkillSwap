@@ -6,18 +6,17 @@ import { ROUTES } from '@/shared/constants';
 const mockNavigate = jest.fn();
 const mockRegister = jest.fn();
 const mockClear = jest.fn();
+let locationState: unknown = null;
 type Credentials = { email: string; password: string } | null;
-type StepTwo =
-  | {
-      name: string;
-      birthDate: string;
-      gender: string;
-      cityId: number;
-      categoryId: number;
-      subskillId: number;
-      avatarUrl: string;
-    }
-  | null;
+type StepTwo = {
+  name: string;
+  birthDate: string;
+  gender: string;
+  cityId: number;
+  categoryId: number;
+  subskillId: number;
+  avatarUrl: string;
+} | null;
 
 let registrationMock: { credentials: Credentials; stepTwo: StepTwo } = {
   credentials: { email: 'user@example.com', password: 'secret' },
@@ -28,8 +27,8 @@ let registrationMock: { credentials: Credentials; stepTwo: StepTwo } = {
     cityId: 1,
     categoryId: 1,
     subskillId: 10,
-    avatarUrl: '',
-  },
+    avatarUrl: ''
+  }
 };
 
 jest.mock('react-router-dom', () => {
@@ -37,13 +36,14 @@ jest.mock('react-router-dom', () => {
   return {
     ...actual,
     useNavigate: () => mockNavigate,
+    useLocation: () => ({ state: locationState })
   };
 });
 
 jest.mock('@/app/providers/auth', () => ({
   useAuth: () => ({
-    register: mockRegister,
-  }),
+    register: mockRegister
+  })
 }));
 
 jest.mock('@/features/Filter/model/useFiltersBaseData', () => ({
@@ -52,14 +52,16 @@ jest.mock('@/features/Filter/model/useFiltersBaseData', () => ({
       {
         id: 1,
         name: 'Group',
-        skills: [{ id: 10, name: 'Skill' }],
-      },
-    ],
-  }),
+        skills: [{ id: 10, name: 'Skill' }]
+      }
+    ]
+  })
 }));
 
 jest.mock('@/shared/ui/Modal/Modal', () => ({
-  Modal: ({ children }: { children: React.ReactNode }) => <div data-testid="modal">{children}</div>,
+  Modal: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid='modal'>{children}</div>
+  )
 }));
 
 jest.mock('@/shared/ui/Select', () => ({
@@ -67,7 +69,7 @@ jest.mock('@/shared/ui/Select', () => ({
     onChange,
     value,
     label,
-    'data-testid': dataTestId,
+    'data-testid': dataTestId
   }: {
     onChange: (v: string) => void;
     value: string;
@@ -81,27 +83,35 @@ jest.mock('@/shared/ui/Select', () => ({
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >
-        <option value="">--</option>
-        <option value="1">Group</option>
-        <option value="10">Skill</option>
+        <option value=''>--</option>
+        <option value='1'>Group</option>
+        <option value='10'>Skill</option>
       </select>
     </label>
   ),
-  SelectVariant: { Search: 'search' },
+  SelectVariant: { Search: 'search' }
 }));
 
 jest.mock('@/pages/Auth/model/RegistrationContext', () => ({
   useRegistrationDraft: () => ({
     credentials: registrationMock.credentials,
     stepTwo: registrationMock.stepTwo,
-    clear: mockClear,
-  }),
+    clear: mockClear
+  })
 }));
 
-jest.mock('@/shared/assets/images/stock/stock.jpg', () => 'stock-main', { virtual: true });
-jest.mock('@/shared/assets/images/stock/stock2.jpg', () => 'stock-second', { virtual: true });
-jest.mock('@/shared/assets/images/stock/stock3.jpg', () => 'stock-third', { virtual: true });
-jest.mock('@/shared/assets/images/stock/stock4.jpg', () => 'stock-fourth', { virtual: true });
+jest.mock('@/shared/assets/images/stock/stock.jpg', () => 'stock-main', {
+  virtual: true
+});
+jest.mock('@/shared/assets/images/stock/stock2.jpg', () => 'stock-second', {
+  virtual: true
+});
+jest.mock('@/shared/assets/images/stock/stock3.jpg', () => 'stock-third', {
+  virtual: true
+});
+jest.mock('@/shared/assets/images/stock/stock4.jpg', () => 'stock-fourth', {
+  virtual: true
+});
 
 import AuthStepThree from './AuthStepThree';
 
@@ -109,6 +119,7 @@ describe('AuthStepThree', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.spyOn(console, 'error').mockImplementation(() => {});
+    locationState = null;
     registrationMock = {
       credentials: { email: 'user@example.com', password: 'secret' },
       stepTwo: {
@@ -118,8 +129,8 @@ describe('AuthStepThree', () => {
         cityId: 1,
         categoryId: 1,
         subskillId: 10,
-        avatarUrl: '',
-      },
+        avatarUrl: ''
+      }
     };
   });
 
@@ -131,7 +142,9 @@ describe('AuthStepThree', () => {
     registrationMock = { credentials: null, stepTwo: null };
     const { default: Component } = await import('./AuthStepThree');
     render(<Component />);
-    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.REGISTER_STEP_TWO);
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.REGISTER_STEP_TWO, {
+      state: null
+    });
   });
 
   it('submits registration using context data and form values', async () => {
@@ -147,6 +160,31 @@ describe('AuthStepThree', () => {
 
     expect(mockRegister).toHaveBeenCalled();
     expect(mockClear).toHaveBeenCalled();
-    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.HOME);
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.HOME, { replace: true });
+  });
+
+  it('redirects to saved path after successful registration', async () => {
+    const user = userEvent.setup();
+    locationState = {
+      from: {
+        pathname: '/profile/requests',
+        search: '?tab=incoming',
+        hash: '#latest'
+      }
+    };
+
+    render(<AuthStepThree />);
+
+    await user.type(screen.getByTestId('skill-title-input'), 'My Skill');
+    await user.type(screen.getByTestId('description-textarea'), 'About skill');
+    await user.selectOptions(screen.getByTestId('category-select'), '1');
+    await user.selectOptions(screen.getByTestId('subskill-select'), '10');
+    await user.click(screen.getByTestId('preview-submit'));
+    await user.click(screen.getByTestId('confirm-button'));
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/profile/requests?tab=incoming#latest',
+      { replace: true }
+    );
   });
 });

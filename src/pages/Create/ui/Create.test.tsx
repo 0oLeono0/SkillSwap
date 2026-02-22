@@ -32,11 +32,18 @@ import {
 import { createSkillA11yIds } from '../model/useCreateSkillForm';
 import Create from './Create';
 
+const mockLocation = {
+  pathname: ROUTES.CREATE,
+  search: '',
+  hash: ''
+};
+
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
   return {
     ...actual,
-    useNavigate: () => mockNavigate
+    useNavigate: () => mockNavigate,
+    useLocation: () => mockLocation
   };
 });
 
@@ -92,7 +99,11 @@ describe('Create page', () => {
       await user.click(
         screen.getByRole('button', { name: CREATE_SKILL_COPY.guestLoginButton })
       );
-      expect(mockNavigate).toHaveBeenCalledWith(ROUTES.LOGIN);
+      expect(mockNavigate).toHaveBeenCalledWith(ROUTES.LOGIN, {
+        state: {
+          from: mockLocation
+        }
+      });
     });
   });
 

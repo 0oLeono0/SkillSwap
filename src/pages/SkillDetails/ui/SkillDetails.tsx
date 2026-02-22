@@ -32,6 +32,7 @@ import stock3 from '@/shared/assets/images/stock/stock3.jpg';
 import stock4 from '@/shared/assets/images/stock/stock4.jpg';
 import OkIcon from '@/shared/assets/icons/status/done.svg?react';
 import NotificationIcon from '@/shared/assets/icons/content/notification.svg?react';
+import { useAuthEntryNavigation } from '@/shared/lib/router/useAuthEntryNavigation';
 
 const RELATED_AUTHORS_LIMIT = 4;
 
@@ -41,6 +42,7 @@ const SkillDetails = (): ReactElement => {
   const { authorId: authorIdParam } = useParams();
   const authorId = authorIdParam ?? '';
   const navigate = useNavigate();
+  const { navigateToLogin, navigateToRegister } = useAuthEntryNavigation();
   const { isAuthenticated, user, accessToken } = useAuth();
 
   const { toggleFavorite, isFavorite } = useFavorites();
@@ -264,13 +266,13 @@ const SkillDetails = (): ReactElement => {
 
   const handleLoginRedirect = useCallback(() => {
     setIsAuthModalOpen(false);
-    navigate(ROUTES.LOGIN);
-  }, [navigate]);
+    navigateToLogin();
+  }, [navigateToLogin]);
 
   const handleRegisterRedirect = useCallback(() => {
     setIsAuthModalOpen(false);
-    navigate(ROUTES.REGISTER);
-  }, [navigate]);
+    navigateToRegister();
+  }, [navigateToRegister]);
 
   if (isLoading) {
     return <div className={styles.state}>Загрузка данных…</div>;
