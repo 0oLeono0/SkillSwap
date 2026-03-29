@@ -290,6 +290,8 @@ const SkillDetails = (): ReactElement => {
     ? selectedSkill.description
     : 'Привет! Я увлекаюсь этим навыком уже больше 10 лет — от первых занятий дома до выступлений на сцене. Научу вас основам, поделюсь любимыми техниками и помогу уверенно чувствовать себя даже без подготовки.';
 
+  const authorBio = authorInfo.bio?.trim() || skillDescription;
+
   const proposeButtonLabel = isProposalSent
     ? 'Обмен предложен'
     : 'Предложить обмен';
@@ -324,9 +326,7 @@ const SkillDetails = (): ReactElement => {
               </p>
             </div>
           </div>
-          <p className={styles.authorBio}>
-            {authorInfo.bio ?? skillDescription ?? ''}
-          </p>
+          <p className={styles.authorBio}>{authorBio}</p>
 
           <div className={styles.authorSkills}>
             <span>Может научить:</span>
