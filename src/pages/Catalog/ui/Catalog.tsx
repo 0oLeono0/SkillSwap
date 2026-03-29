@@ -40,6 +40,7 @@ import { adminApi } from '@/shared/api/admin';
 import { ApiError } from '@/shared/api/request';
 import { isElevatedRole } from '@/shared/types/userRole';
 import { loadFiltersBaseData } from '@/features/Filter/model/filterBaseDataStore';
+import { useAuthEntryNavigation } from '@/shared/lib/router/useAuthEntryNavigation';
 
 type CatalogVariant = 'home' | 'catalog';
 
@@ -86,6 +87,7 @@ const limitAuthors = (
 };
 
 const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
+  const navigateToLogin = useAuthEntryNavigation().navigateToLogin;
   const navigate = useNavigate();
   const [filters, dispatchFilters] = useReducer(
     filterReducer,
@@ -103,7 +105,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
   const [error, setError] = useState<string | null>(null);
   const [moderationError, setModerationError] = useState<string | null>(null);
   const [deletingAuthorIds, setDeletingAuthorIds] = useState<string[]>([]);
-  const { user: authUser, accessToken } = useAuth();
+  const { user: authUser, accessToken, isAuthenticated } = useAuth();
   const { toggleFavorite, favoriteAuthorIds } = useFavorites();
   const searchAbortRef = useRef<AbortController | null>(null);
   const requestIdRef = useRef(0);
@@ -449,9 +451,13 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
 
   const handleToggleFavorite = useCallback(
     (authorId: string) => {
-      toggleFavorite(authorId);
+      if (isAuthenticated) {
+        toggleFavorite(authorId);
+      } else {
+        navigateToLogin();
+      }
     },
-    [toggleFavorite]
+    [toggleFavorite, isAuthenticated, navigateToLogin]
   );
 
   const handleDeleteUser = useCallback(
