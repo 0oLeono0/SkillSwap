@@ -210,10 +210,14 @@ const SkillDetails = (): ReactElement => {
   );
 
   const handleAuthorFavoriteClick = useCallback(() => {
-    if (authorId) {
-      handleToggleFavorite(authorId);
+    if (isAuthenticated) {
+      if (authorId) {
+        handleToggleFavorite(authorId);
+      }
+    } else {
+      setIsAuthModalOpen(true);
     }
-  }, [authorId, handleToggleFavorite]);
+  }, [authorId, handleToggleFavorite, isAuthenticated]);
 
   const isCurrentAuthorFavorite = useMemo(
     () => (authorId ? isFavorite(authorId) : false),
