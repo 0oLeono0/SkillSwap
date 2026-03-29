@@ -396,7 +396,7 @@ const SkillDetails = (): ReactElement => {
               <div className={styles.galleryThumbs}>
                 {galleryImages.slice(1).map((image, index) => (
                   <img
-                    key={image}
+                    key={`${image}-${index}`}
                     src={image}
                     alt={`${selectedSkill.title} ${index + 2}`}
                   />
