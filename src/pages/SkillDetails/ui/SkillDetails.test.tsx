@@ -4,6 +4,7 @@ import { ROUTES } from '@/shared/constants';
 import { SkillCategories } from '@/shared/lib/constants';
 import { loadCatalogAuthors } from '@/pages/Catalog/model/catalogData';
 import SkillDetails from './SkillDetails';
+import userEvent from '@testing-library/user-event';
 
 const mockToggleFavorite = jest.fn();
 const mockIsFavorite = jest.fn(() => false);
@@ -118,5 +119,24 @@ describe('SkillDetails description', () => {
     expect(
       await screen.findByText(/увлекаюсь этим навыком уже больше 10 лет/i)
     ).toBeInTheDocument();
+  });
+
+  it('opens auth modal for guest favorite action', async () => {
+    const user = userEvent.setup();
+    mockLoadCatalogAuthors
+      .mockResolvedValueOnce(makeCatalogResponse('...'))
+      .mockResolvedValueOnce(relatedEmptyResponse);
+    renderPage();
+
+    const favoriteButton = await screen.findByRole('button', {
+      name: 'Добавить в избранное'
+    });
+    await user.click(favoriteButton);
+    expect(
+      await screen.findByText(
+        'Чтобы предложить обмен, войдите или зарегистрируйтесь'
+      )
+    ).toBeInTheDocument();
+    expect(mockToggleFavorite).not.toHaveBeenCalled();
   });
 });
