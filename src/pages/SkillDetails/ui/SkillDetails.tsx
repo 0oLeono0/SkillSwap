@@ -286,8 +286,9 @@ const SkillDetails = (): ReactElement => {
     );
   }
 
-  const placeholderDescription =
-    'Привет! Я увлекаюсь этим навыком уже больше 10 лет — от первых занятий дома до выступлений на сцене. Научу вас основам, поделюсь любимыми техниками и помогу уверенно чувствовать себя даже без подготовки.';
+  const skillDescription = selectedSkill.description.trim()
+    ? selectedSkill.description
+    : 'Привет! Я увлекаюсь этим навыком уже больше 10 лет — от первых занятий дома до выступлений на сцене. Научу вас основам, поделюсь любимыми техниками и помогу уверенно чувствовать себя даже без подготовки.';
 
   const proposeButtonLabel = isProposalSent
     ? 'Обмен предложен'
@@ -324,7 +325,7 @@ const SkillDetails = (): ReactElement => {
             </div>
           </div>
           <p className={styles.authorBio}>
-            {authorInfo.bio ?? selectedSkill.description ?? ''}
+            {authorInfo.bio ?? skillDescription ?? ''}
           </p>
 
           <div className={styles.authorSkills}>
@@ -377,9 +378,7 @@ const SkillDetails = (): ReactElement => {
                 {selectedSkill.title}
               </Title>
               <p className={styles.skillCategory}>{selectedSkill.category}</p>
-              <p className={styles.skillDescription}>
-                {placeholderDescription}
-              </p>
+              <p className={styles.skillDescription}>{skillDescription}</p>
               <Button
                 variant='primary'
                 onClick={handleProposeExchange}
