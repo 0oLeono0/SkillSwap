@@ -13,6 +13,14 @@
     "./authSchemas": {
       "types": "./authSchemas.d.ts",
       "default": "./authSchemas.js"
+    },
+    "./materials": {
+      "types": "./materials.d.ts",
+      "default": "./materials.js"
+    },
+    "./materialSchemas": {
+      "types": "./materialSchemas.d.ts",
+      "default": "./materialSchemas.js"
     }
   }
 }
