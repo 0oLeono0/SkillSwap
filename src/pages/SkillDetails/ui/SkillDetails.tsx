@@ -22,6 +22,11 @@ import { Title } from '@/shared/ui/Title';
 import { Modal } from '@/shared/ui/Modal/Modal';
 import { ROUTES } from '@/shared/constants';
 import type { SkillCategory } from '@/shared/lib/constants';
+import {
+  materialsApi,
+  type MaterialDto,
+  type MaterialType
+} from '@/shared/api/materials';
 import { SkillsList } from '@/widgets/SkillsList';
 import GalleryIcon from '@/shared/assets/icons/actions/like.svg?react';
 import ShareIcon from '@/shared/assets/icons/actions/share.svg?react';
@@ -37,6 +42,12 @@ import { useAuthEntryNavigation } from '@/shared/lib/router/useAuthEntryNavigati
 const RELATED_AUTHORS_LIMIT = 4;
 
 const GALLERY_IMAGES = [stock1, stock2, stock3, stock4];
+const MATERIAL_TYPE_LABELS: Record<MaterialType, string> = {
+  theory: 'Теория',
+  practice: 'Практика',
+  testing: 'Тестирование'
+};
+const MATERIAL_TYPE_ORDER: MaterialType[] = ['theory', 'practice', 'testing'];
 
 const SkillDetails = (): ReactElement => {
   const { authorId: authorIdParam } = useParams();
@@ -52,6 +63,9 @@ const SkillDetails = (): ReactElement => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
+  const [materials, setMaterials] = useState<MaterialDto[]>([]);
+  const [isMaterialsLoading, setIsMaterialsLoading] = useState(false);
+  const [materialsError, setMaterialsError] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [isProposalSent, setIsProposalSent] = useState(false);
@@ -141,6 +155,44 @@ const SkillDetails = (): ReactElement => {
     [teachSkills, selectedSkillId]
   );
 
+  useEffect(() => {
+    const userSkillId = selectedSkill?.userSkillId;
+    if (!userSkillId) {
+      setMaterials([]);
+      setMaterialsError(null);
+      setIsMaterialsLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+    setMaterials([]);
+    setMaterialsError(null);
+    setIsMaterialsLoading(true);
+
+    const fetchMaterials = async () => {
+      try {
+        const response = await materialsApi.listByUserSkill(userSkillId);
+        if (!isMounted) return;
+        setMaterials(response.materials);
+      } catch (err) {
+        if (!isMounted) return;
+        console.error('[SkillDetails] Failed to load materials', err);
+        setMaterials([]);
+        setMaterialsError('Не удалось загрузить материалы');
+      } finally {
+        if (isMounted) {
+          setIsMaterialsLoading(false);
+        }
+      }
+    };
+
+    fetchMaterials();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedSkill?.userSkillId]);
+
   const galleryImages = useMemo(() => {
     if (selectedSkill?.imageUrls && selectedSkill.imageUrls.length > 0) {
       return selectedSkill.imageUrls;
@@ -156,6 +208,16 @@ const SkillDetails = (): ReactElement => {
 
     return GALLERY_IMAGES;
   }, [authorInfo, selectedSkill]);
+
+  const materialsByType = useMemo(
+    () =>
+      MATERIAL_TYPE_ORDER.map((type) => ({
+        type,
+        label: MATERIAL_TYPE_LABELS[type],
+        items: materials.filter((material) => material.type === type)
+      })).filter((group) => group.items.length > 0),
+    [materials]
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -336,9 +398,21 @@ const SkillDetails = (): ReactElement => {
             <span>Может научить:</span>
             <div className={styles.tags}>
               {teachSkills.map((skill) => (
-                <Tag key={skill.id} category={skill.category as SkillCategory}>
-                  {skill.title}
-                </Tag>
+                <button
+                  key={skill.id}
+                  type='button'
+                  className={
+                    skill.id === selectedSkill.id
+                      ? `${styles.skillTagButton} ${styles.skillTagButtonActive}`
+                      : styles.skillTagButton
+                  }
+                  onClick={() => setSelectedSkillId(skill.id)}
+                  aria-pressed={skill.id === selectedSkill.id}
+                >
+                  <Tag category={skill.category as SkillCategory}>
+                    {skill.title}
+                  </Tag>
+                </button>
               ))}
             </div>
           </div>
@@ -409,6 +483,62 @@ const SkillDetails = (): ReactElement => {
             </div>
           </div>
         </article>
+      </div>
+
+      <div className={styles.materialsSection}>
+        <Title tag='h2' variant='lg'>
+          Методические материалы
+        </Title>
+        {isMaterialsLoading ? (
+          <div className={styles.state}>Загрузка материалов…</div>
+        ) : materialsError ? (
+          <div className={styles.stateError}>{materialsError}</div>
+        ) : materials.length === 0 ? (
+          <div className={styles.state}>
+            Материалы для этого навыка пока не добавлены
+          </div>
+        ) : (
+          <div className={styles.materialGroups}>
+            {materialsByType.map((group) => (
+              <section key={group.type} className={styles.materialGroup}>
+                <h3 className={styles.materialGroupTitle}>{group.label}</h3>
+                <div className={styles.materialCards}>
+                  {group.items.map((material) => (
+                    <article key={material.id} className={styles.materialCard}>
+                      <h4>{material.title}</h4>
+                      {material.description ? (
+                        <p className={styles.materialText}>
+                          {material.description}
+                        </p>
+                      ) : null}
+                      {material.content ? (
+                        <p className={styles.materialContent}>
+                          {material.content}
+                        </p>
+                      ) : null}
+                      {material.type === 'testing' ? (
+                        <div className={styles.testQuestions}>
+                          <span>
+                            Вопросов: {material.questions?.length ?? 0}
+                          </span>
+                          {material.questions?.length ? (
+                            <ol>
+                              {material.questions.map((question) => (
+                                <li key={question.id}>{question.text}</li>
+                              ))}
+                            </ol>
+                          ) : (
+                            <p>Вопросы пока не добавлены</p>
+                          )}
+                        </div>
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className={styles.relatedSection}>
