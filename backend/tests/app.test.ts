@@ -62,6 +62,50 @@ const mockRequestService: {
   updateStatus: jest.fn()
 };
 
+const mockMaterialService: {
+  listForUserSkill: jest.MockedFunction<
+    (userSkillId: string) => Promise<unknown>
+  >;
+  createMaterial: jest.MockedFunction<
+    (actor: unknown, payload: unknown) => Promise<unknown>
+  >;
+  updateMaterial: jest.MockedFunction<
+    (actor: unknown, materialId: string, payload: unknown) => Promise<unknown>
+  >;
+  deleteMaterial: jest.MockedFunction<
+    (actor: unknown, materialId: string) => Promise<void>
+  >;
+  createQuestion: jest.MockedFunction<
+    (actor: unknown, payload: unknown) => Promise<unknown>
+  >;
+  updateQuestion: jest.MockedFunction<
+    (actor: unknown, questionId: string, payload: unknown) => Promise<unknown>
+  >;
+  deleteQuestion: jest.MockedFunction<
+    (actor: unknown, questionId: string) => Promise<void>
+  >;
+  createAnswerOption: jest.MockedFunction<
+    (actor: unknown, payload: unknown) => Promise<unknown>
+  >;
+  updateAnswerOption: jest.MockedFunction<
+    (actor: unknown, optionId: string, payload: unknown) => Promise<unknown>
+  >;
+  deleteAnswerOption: jest.MockedFunction<
+    (actor: unknown, optionId: string) => Promise<void>
+  >;
+} = {
+  listForUserSkill: jest.fn(),
+  createMaterial: jest.fn(),
+  updateMaterial: jest.fn(),
+  deleteMaterial: jest.fn(),
+  createQuestion: jest.fn(),
+  updateQuestion: jest.fn(),
+  deleteQuestion: jest.fn(),
+  createAnswerOption: jest.fn(),
+  updateAnswerOption: jest.fn(),
+  deleteAnswerOption: jest.fn()
+};
+
 jest.unstable_mockModule('../src/services/userService.js', () => ({
   userService: mockUserService,
   sanitizeUser: mockSanitizeUser
@@ -78,6 +122,10 @@ jest.unstable_mockModule('../src/services/catalogService.js', () => ({
 
 jest.unstable_mockModule('../src/services/requestService.js', () => ({
   requestService: mockRequestService
+}));
+
+jest.unstable_mockModule('../src/services/materialService.js', () => ({
+  materialService: mockMaterialService
 }));
 
 const { app } = await import('../src/app.js');
@@ -467,5 +515,205 @@ describe('Requests routes', () => {
     expect(response.body).toEqual({
       request: { id: 'req-1', status: 'accepted' }
     });
+  });
+});
+
+describe('Material routes', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockTokenService.verifyAccessToken.mockReturnValue({
+      sub: 'user-1',
+      email: 'u@example.com',
+      name: 'User',
+      role: 'user'
+    });
+  });
+
+  it('returns user skill materials without auth', async () => {
+    mockMaterialService.listForUserSkill.mockResolvedValue([
+      {
+        id: 'material-1',
+        userSkillId: 'skill-1',
+        type: 'testing',
+        title: 'Test',
+        questions: []
+      }
+    ]);
+
+    const response = await request(app).get(
+      '/api/user-skills/skill-1/materials'
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockMaterialService.listForUserSkill).toHaveBeenCalledWith(
+      'skill-1'
+    );
+    expect(response.body).toEqual({
+      materials: [
+        {
+          id: 'material-1',
+          userSkillId: 'skill-1',
+          type: 'testing',
+          title: 'Test',
+          questions: []
+        }
+      ]
+    });
+  });
+
+  it('rejects unauthenticated material create', async () => {
+    const response = await request(app)
+      .post('/api/user-skills/skill-1/materials')
+      .send({ type: 'theory', title: 'Theory' });
+
+    expect(response.status).toBe(401);
+    expect(mockMaterialService.createMaterial).not.toHaveBeenCalled();
+  });
+
+  it('creates material with route userSkillId injected into contract payload', async () => {
+    mockMaterialService.createMaterial.mockResolvedValue({
+      id: 'material-1',
+      userSkillId: 'skill-1',
+      type: 'theory',
+      title: 'Theory'
+    });
+
+    const response = await request(app)
+      .post('/api/user-skills/skill-1/materials')
+      .set('Authorization', 'Bearer token')
+      .send({ type: 'theory', title: 'Theory' });
+
+    expect(response.status).toBe(201);
+    expect(mockMaterialService.createMaterial).toHaveBeenCalledWith(
+      { userId: 'user-1', role: 'user' },
+      { userSkillId: 'skill-1', type: 'theory', title: 'Theory' }
+    );
+  });
+
+  it('rejects mismatched body userSkillId', async () => {
+    const response = await request(app)
+      .post('/api/user-skills/skill-1/materials')
+      .set('Authorization', 'Bearer token')
+      .send({ userSkillId: 'other-skill', type: 'theory', title: 'Theory' });
+
+    expect(response.status).toBe(400);
+    expect(mockMaterialService.createMaterial).not.toHaveBeenCalled();
+  });
+
+  it('updates and deletes material for authenticated user', async () => {
+    mockMaterialService.updateMaterial.mockResolvedValue({
+      id: 'material-1',
+      title: 'Updated'
+    });
+
+    const updateResponse = await request(app)
+      .patch('/api/materials/material-1')
+      .set('Authorization', 'Bearer token')
+      .send({ title: 'Updated' });
+
+    expect(updateResponse.status).toBe(200);
+    expect(mockMaterialService.updateMaterial).toHaveBeenCalledWith(
+      { userId: 'user-1', role: 'user' },
+      'material-1',
+      { title: 'Updated' }
+    );
+
+    const deleteResponse = await request(app)
+      .delete('/api/materials/material-1')
+      .set('Authorization', 'Bearer token');
+
+    expect(deleteResponse.status).toBe(204);
+    expect(mockMaterialService.deleteMaterial).toHaveBeenCalledWith(
+      { userId: 'user-1', role: 'user' },
+      'material-1'
+    );
+  });
+
+  it('creates question and answer option with route ids injected', async () => {
+    mockMaterialService.createQuestion.mockResolvedValue({ id: 'question-1' });
+    mockMaterialService.createAnswerOption.mockResolvedValue({
+      id: 'option-1'
+    });
+
+    const questionResponse = await request(app)
+      .post('/api/materials/material-1/questions')
+      .set('Authorization', 'Bearer token')
+      .send({ text: 'Question' });
+
+    expect(questionResponse.status).toBe(201);
+    expect(mockMaterialService.createQuestion).toHaveBeenCalledWith(
+      { userId: 'user-1', role: 'user' },
+      { materialId: 'material-1', text: 'Question' }
+    );
+
+    const optionResponse = await request(app)
+      .post('/api/material-questions/question-1/options')
+      .set('Authorization', 'Bearer token')
+      .send({ text: 'Answer', isCorrect: true });
+
+    expect(optionResponse.status).toBe(201);
+    expect(mockMaterialService.createAnswerOption).toHaveBeenCalledWith(
+      { userId: 'user-1', role: 'user' },
+      { questionId: 'question-1', text: 'Answer', isCorrect: true }
+    );
+  });
+
+  it('updates and deletes question and answer option', async () => {
+    mockMaterialService.updateQuestion.mockResolvedValue({ id: 'question-1' });
+    mockMaterialService.updateAnswerOption.mockResolvedValue({
+      id: 'option-1'
+    });
+
+    const questionResponse = await request(app)
+      .patch('/api/material-questions/question-1')
+      .set('Authorization', 'Bearer token')
+      .send({ text: 'Updated question' });
+
+    expect(questionResponse.status).toBe(200);
+    expect(mockMaterialService.updateQuestion).toHaveBeenCalledWith(
+      { userId: 'user-1', role: 'user' },
+      'question-1',
+      { text: 'Updated question' }
+    );
+
+    const optionResponse = await request(app)
+      .patch('/api/material-answer-options/option-1')
+      .set('Authorization', 'Bearer token')
+      .send({ isCorrect: false });
+
+    expect(optionResponse.status).toBe(200);
+    expect(mockMaterialService.updateAnswerOption).toHaveBeenCalledWith(
+      { userId: 'user-1', role: 'user' },
+      'option-1',
+      { isCorrect: false }
+    );
+
+    const deleteQuestionResponse = await request(app)
+      .delete('/api/material-questions/question-1')
+      .set('Authorization', 'Bearer token');
+    const deleteOptionResponse = await request(app)
+      .delete('/api/material-answer-options/option-1')
+      .set('Authorization', 'Bearer token');
+
+    expect(deleteQuestionResponse.status).toBe(204);
+    expect(deleteOptionResponse.status).toBe(204);
+    expect(mockMaterialService.deleteQuestion).toHaveBeenCalledWith(
+      { userId: 'user-1', role: 'user' },
+      'question-1'
+    );
+    expect(mockMaterialService.deleteAnswerOption).toHaveBeenCalledWith(
+      { userId: 'user-1', role: 'user' },
+      'option-1'
+    );
+  });
+
+  it('rejects unknown fields using contract schemas', async () => {
+    const response = await request(app)
+      .post('/api/materials/material-1/questions')
+      .set('Authorization', 'Bearer token')
+      .send({ text: 'Question', score: 5 });
+
+    expect(response.status).toBe(400);
+    expect(mockMaterialService.createQuestion).not.toHaveBeenCalled();
   });
 });

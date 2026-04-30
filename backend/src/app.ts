@@ -11,6 +11,7 @@ import { adminRouter } from './routes/admin.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { catalogRouter } from './routes/catalog.js';
 import { referenceRouter } from './routes/reference.js';
+import { materialsRouter } from './routes/materials.js';
 
 export const app = express();
 
@@ -25,10 +26,12 @@ app.use(
       if (allowedOrigins.has(origin)) {
         return callback(null, true);
       }
-      return callback(new Error(`Origin ${origin} is not allowed by CORS policy`));
+      return callback(
+        new Error(`Origin ${origin} is not allowed by CORS policy`)
+      );
     },
-    credentials: true,
-  }),
+    credentials: true
+  })
 );
 app.use(cookieParser());
 app.use(express.json({ limit: '100mb' }));
@@ -44,6 +47,7 @@ app.use('/api/favorites', favoritesRouter);
 app.use('/api/exchanges', exchangesRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/catalog', catalogRouter);
+app.use('/api', materialsRouter);
 app.use('/api', referenceRouter);
 
 app.use(errorHandler);
