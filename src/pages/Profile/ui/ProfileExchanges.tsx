@@ -4,9 +4,11 @@ import {
   useEffect,
   useState,
   type ChangeEvent,
+  type FormEvent,
   type ReactElement
 } from 'react';
 import clsx from 'clsx';
+import type { CreateExchangeRatingPayload } from '@skillswap/contracts/ratings';
 import styles from './profileExchanges.module.scss';
 import { Title } from '@/shared/ui/Title';
 import { Button } from '@/shared/ui/button/Button';
@@ -99,6 +101,13 @@ export function ProfileExchanges(): ReactElement {
   const [messageDraft, setMessageDraft] = useState('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [ratingScore, setRatingScore] = useState(5);
+  const [ratingComment, setRatingComment] = useState('');
+  const [ratingError, setRatingError] = useState<string | null>(null);
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+  const [ratedExchangeIds, setRatedExchangeIds] = useState<Set<string>>(
+    () => new Set()
+  );
   const [skillNames, setSkillNames] = useState<Map<number, string>>(new Map());
 
   useEffect(() => {
@@ -205,10 +214,23 @@ export function ProfileExchanges(): ReactElement {
     setSelectedExchangeId(exchangeId);
     setChatError(null);
     setMessageDraft('');
+    setRatingScore(5);
+    setRatingComment('');
+    setRatingError(null);
   }, []);
 
   const handleDraftChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     setMessageDraft(event.target.value);
+  };
+
+  const handleRatingScoreChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setRatingScore(Number(event.target.value));
+  };
+
+  const handleRatingCommentChange = (
+    event: ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    setRatingComment(event.target.value);
   };
 
   const handleSendMessage = useCallback(async () => {
@@ -278,6 +300,76 @@ export function ProfileExchanges(): ReactElement {
     }
   }, [accessToken, loadExchanges, selectedExchange]);
 
+  const handleSubmitRating = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      if (!selectedExchange) {
+        return;
+      }
+
+      if (!accessToken) {
+        setRatingError('Для оценки обмена нужно войти в аккаунт.');
+        return;
+      }
+
+      if (selectedExchange.status !== 'completed') {
+        setRatingError('Оценить можно только завершённый обмен.');
+        return;
+      }
+
+      if (ratedExchangeIds.has(selectedExchange.id)) {
+        return;
+      }
+
+      const payload: CreateExchangeRatingPayload = {
+        score: ratingScore
+      };
+      const comment = ratingComment.trim();
+      if (comment) {
+        payload.comment = comment;
+      }
+
+      setIsSubmittingRating(true);
+      try {
+        await exchangesApi.rate(accessToken, selectedExchange.id, payload);
+        setRatedExchangeIds((current) => {
+          const next = new Set(current);
+          next.add(selectedExchange.id);
+          return next;
+        });
+        setRatingError(null);
+      } catch (err) {
+        console.error('[ProfileExchanges] Failed to rate exchange', err);
+        const status =
+          typeof err === 'object' &&
+          err !== null &&
+          'status' in err &&
+          typeof (err as { status?: unknown }).status === 'number'
+            ? (err as { status: number }).status
+            : null;
+
+        if (status === 409) {
+          setRatingError('Вы уже оценили этот обмен.');
+        } else if (status === 400) {
+          setRatingError('Оценить можно только завершённый обмен.');
+        } else if (status === 401) {
+          setRatingError('Для оценки обмена нужно войти в аккаунт.');
+        } else {
+          setRatingError('Не удалось сохранить оценку. Попробуйте ещё раз.');
+        }
+      } finally {
+        setIsSubmittingRating(false);
+      }
+    },
+    [
+      accessToken,
+      ratedExchangeIds,
+      ratingComment,
+      ratingScore,
+      selectedExchange
+    ]
+  );
+
   const renderMessage = (message: ExchangeMessage) => {
     const isOwn = message.senderId === user?.id;
     return (
@@ -304,6 +396,9 @@ export function ProfileExchanges(): ReactElement {
   const selectedSkillMeta = selectedExchange
     ? parseSkillMeta(selectedExchange.request.skill, skillNames)
     : null;
+  const isCurrentExchangeRated = selectedExchange
+    ? ratedExchangeIds.has(selectedExchange.id)
+    : false;
 
   if (isInitializing) {
     return (
@@ -484,6 +579,76 @@ export function ProfileExchanges(): ReactElement {
               </p>
 
               {detailsError && <p className={styles.error}>{detailsError}</p>}
+
+              {selectedExchange.status === 'completed' && (
+                <section className={styles.ratingSection}>
+                  <div>
+                    <h4>Оцените обмен</h4>
+                    <p>
+                      Оценка поможет участникам понимать качество завершённых
+                      обменов.
+                    </p>
+                  </div>
+
+                  {isCurrentExchangeRated ? (
+                    <p className={styles.ratingSuccess}>
+                      Оценка сохранена. Спасибо за обратную связь.
+                    </p>
+                  ) : (
+                    <form
+                      className={styles.ratingForm}
+                      onSubmit={handleSubmitRating}
+                    >
+                      <fieldset
+                        className={styles.ratingFieldset}
+                        disabled={isSubmittingRating}
+                      >
+                        <legend>Оценка</legend>
+                        <div className={styles.scoreOptions}>
+                          {[1, 2, 3, 4, 5].map((score) => (
+                            <label key={score} className={styles.scoreOption}>
+                              <input
+                                type='radio'
+                                name='exchange-rating-score'
+                                value={score}
+                                checked={ratingScore === score}
+                                onChange={handleRatingScoreChange}
+                              />
+                              <span>{score}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </fieldset>
+
+                      <label className={styles.ratingComment}>
+                        Комментарий к оценке
+                        <textarea
+                          value={ratingComment}
+                          onChange={handleRatingCommentChange}
+                          maxLength={500}
+                          placeholder='Можно оставить короткий отзыв'
+                          disabled={isSubmittingRating}
+                        />
+                      </label>
+
+                      <div className={styles.ratingActions}>
+                        <Button
+                          variant='primary'
+                          type='submit'
+                          disabled={isSubmittingRating}
+                        >
+                          {isSubmittingRating
+                            ? 'Сохраняем…'
+                            : 'Сохранить оценку'}
+                        </Button>
+                        {ratingError && (
+                          <p className={styles.error}>{ratingError}</p>
+                        )}
+                      </div>
+                    </form>
+                  )}
+                </section>
+              )}
 
               <div className={styles.chat}>
                 <ul className={styles.messages}>
