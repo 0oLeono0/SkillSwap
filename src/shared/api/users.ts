@@ -1,6 +1,13 @@
-import { request } from '@/shared/api/request';
+import type { UserRatingsResponse } from '@skillswap/contracts/ratings';
+import { request } from './request';
 import type { ApiAuthUser } from './auth';
 import type { UserRole } from '@/shared/types/userRole';
+
+export type {
+  RatingAuthorDto,
+  UserRatingDto,
+  UserRatingsResponse
+} from '@skillswap/contracts/ratings';
 
 export type ApiCatalogUser = Omit<ApiAuthUser, 'email'>;
 
@@ -31,5 +38,9 @@ export interface AdminUsersListResponse {
 export const usersApi = {
   fetchAll() {
     return request<UsersListResponse>('/users/public');
+  },
+
+  getRatings(userId: string) {
+    return request<UserRatingsResponse>(`/users/${userId}/ratings`);
   }
 };
