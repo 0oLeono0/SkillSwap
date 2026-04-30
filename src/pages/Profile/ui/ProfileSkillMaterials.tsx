@@ -1,5 +1,6 @@
 import type { FormEvent, ReactElement } from 'react';
 import { useSkillMaterials } from '../model/useSkillMaterials';
+import { ProfileTestQuestionsEditor } from './ProfileTestQuestionsEditor';
 import styles from './profileSkillMaterials.module.scss';
 import { Button } from '@/shared/ui/button/Button';
 import { Input } from '@/shared/ui/Input';
@@ -23,7 +24,8 @@ export function ProfileSkillMaterials({
     resetForm,
     startEdit,
     saveMaterial,
-    deleteMaterial
+    deleteMaterial,
+    refreshMaterials
   } = useSkillMaterials(skillId);
 
   const isEditingMaterial = Boolean(form.editingMaterialId);
@@ -75,6 +77,12 @@ export function ProfileSkillMaterials({
               {material.description ? <p>{material.description}</p> : null}
               {material.content ? (
                 <p className={styles.materialContent}>{material.content}</p>
+              ) : null}
+              {material.type === 'testing' ? (
+                <ProfileTestQuestionsEditor
+                  material={material}
+                  onRefresh={refreshMaterials}
+                />
               ) : null}
             </article>
           ))}

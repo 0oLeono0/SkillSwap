@@ -238,6 +238,7 @@ export const useSkillMaterials = (skillId: string) => {
     resetForm,
     startEdit,
     saveMaterial,
-    deleteMaterial
+    deleteMaterial,
+    refreshMaterials: loadMaterials
   };
 };
