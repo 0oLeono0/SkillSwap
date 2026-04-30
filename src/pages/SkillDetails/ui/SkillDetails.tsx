@@ -22,11 +22,11 @@ import { Title } from '@/shared/ui/Title';
 import { Modal } from '@/shared/ui/Modal/Modal';
 import { ROUTES } from '@/shared/constants';
 import type { SkillCategory } from '@/shared/lib/constants';
+import { materialsApi, type MaterialDto } from '@/shared/api/materials';
 import {
-  materialsApi,
-  type MaterialDto,
-  type MaterialType
-} from '@/shared/api/materials';
+  MATERIAL_TYPE_LABELS,
+  MATERIAL_TYPE_ORDER
+} from '@/shared/lib/materials';
 import { SkillsList } from '@/widgets/SkillsList';
 import GalleryIcon from '@/shared/assets/icons/actions/like.svg?react';
 import ShareIcon from '@/shared/assets/icons/actions/share.svg?react';
@@ -42,12 +42,6 @@ import { useAuthEntryNavigation } from '@/shared/lib/router/useAuthEntryNavigati
 const RELATED_AUTHORS_LIMIT = 4;
 
 const GALLERY_IMAGES = [stock1, stock2, stock3, stock4];
-const MATERIAL_TYPE_LABELS: Record<MaterialType, string> = {
-  theory: 'Теория',
-  practice: 'Практика',
-  testing: 'Тестирование'
-};
-const MATERIAL_TYPE_ORDER: MaterialType[] = ['theory', 'practice', 'testing'];
 
 const SkillDetails = (): ReactElement => {
   const { authorId: authorIdParam } = useParams();

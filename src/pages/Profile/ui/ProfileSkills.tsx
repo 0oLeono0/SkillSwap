@@ -19,6 +19,7 @@ import {
   sanitizeSkillsForSubmit,
   serializeSkills
 } from './profileSkills.helpers';
+import { ProfileSkillMaterials } from './ProfileSkillMaterials';
 const CATEGORY_NAME_TO_CONSTANT = new Map<string, SkillCategory>(
   Object.values(SkillCategories).map((value) => [value, value])
 );
@@ -68,6 +69,7 @@ const enrichSkillsWithCategory = (
     return skill;
   });
 type SkillType = 'teach' | 'learn';
+
 export function ProfileSkills(): ReactElement {
   const { user, updateProfile } = useAuth();
   const { skillGroups } = useFiltersBaseData();
@@ -108,6 +110,7 @@ export function ProfileSkills(): ReactElement {
     skill: UserSkill;
   } | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!isEditing) {
       setTeachableDraft(
@@ -359,6 +362,7 @@ export function ProfileSkills(): ReactElement {
         <h4 className={styles.skillTitle}>{title}</h4>
         <p className={styles.skillDescription}>{description}</p>
         {renderSkillGallery(skill.imageUrls)}
+        <ProfileSkillMaterials skillId={skill.id} />
       </article>
     );
   };

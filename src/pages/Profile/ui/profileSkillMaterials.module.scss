@@ -1,0 +1,133 @@
+.materialsBlock {
+  border-top: 1px solid #e4e8df;
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.materialsHeader,
+.materialFormHeader,
+.materialCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.materialsHeader h5,
+.materialFormHeader h5,
+.materialCard h6 {
+  margin: 0;
+  color: var(--font-color-primary);
+}
+
+.materialsHeader span {
+  min-width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(80, 136, 38, 0.12);
+  color: var(--button-color-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.materialState,
+.materialStateError {
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(80, 136, 38, 0.04);
+  color: var(--font-color-secondary);
+}
+
+.materialStateError {
+  background: rgba(179, 38, 30, 0.1);
+  color: #b3261e;
+}
+
+.materialList,
+.materialForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.materialCard {
+  border: 1px solid #e4e8df;
+  border-radius: 12px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  p {
+    margin: 0;
+    color: var(--font-color-secondary);
+    line-height: 1.5;
+  }
+}
+
+.materialType {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--button-color-accent);
+  font-weight: 700;
+}
+
+.materialActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.materialContent {
+  white-space: pre-wrap;
+}
+
+.materialForm {
+  border: 1px dashed #dfe5d8;
+  border-radius: 12px;
+  padding: 14px;
+  background: rgba(80, 136, 38, 0.04);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--font-color-primary);
+}
+
+.select {
+  border: 1px solid #dfe5d8;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 16px;
+  background: var(--bg-color-primary);
+  color: var(--font-color-primary);
+}
+
+.textarea {
+  border: 1px solid #dfe5d8;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 16px;
+  resize: vertical;
+  min-height: 120px;
+  font-family: inherit;
+  color: var(--font-color-primary);
+}
