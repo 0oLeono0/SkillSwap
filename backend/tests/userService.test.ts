@@ -12,6 +12,7 @@ describe('userService.sanitizeUser', () => {
     passwordHash: 'hashed',
     name: 'User',
     role: 'user',
+    status: 'active',
     avatarUrl: '',
     cityId: null,
     birthDate: null,
@@ -29,6 +30,11 @@ describe('userService.sanitizeUser', () => {
   it('normalizes empty avatar to null', () => {
     const result = sanitizeUser(baseUser);
     expect(result?.avatarUrl).toBeNull();
+  });
+
+  it('keeps active user status', () => {
+    const result = sanitizeUser(baseUser);
+    expect(result?.status).toBe('active');
   });
 
   it('keeps non-empty avatar', () => {

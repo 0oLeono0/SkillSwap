@@ -103,6 +103,7 @@ describe('Users routes', () => {
           id: 'user-1',
           name: 'User',
           role: 'user',
+          status: 'active',
           avatarUrl: null,
           cityId: null,
           teachableSkills: [],
@@ -119,6 +120,7 @@ describe('Users routes', () => {
             id: 'user-1',
             name: 'User',
             role: 'user',
+            status: 'active',
             avatarUrl: null,
             cityId: null,
             teachableSkills: [],
@@ -149,6 +151,7 @@ describe('Users routes', () => {
           email: 'hidden@example.com',
           name: 'Hidden',
           role: 'user',
+          status: 'active',
           avatarUrl: null,
           cityId: null,
           birthDate: null,
@@ -176,6 +179,7 @@ describe('Users routes', () => {
             email: 'hidden@example.com',
             name: 'Hidden',
             role: 'user',
+            status: 'active',
             avatarUrl: null,
             cityId: null,
             birthDate: null,
@@ -309,7 +313,13 @@ describe('Admin routes', () => {
     });
     mockUserService.listUsersForAdmin.mockResolvedValue({
       users: [
-        { id: 'u1', name: 'Alice', email: 'alice@example.com', role: 'admin' }
+        {
+          id: 'u1',
+          name: 'Alice',
+          email: 'alice@example.com',
+          role: 'admin',
+          status: 'active'
+        }
       ],
       page: 2,
       pageSize: 10,
@@ -338,7 +348,13 @@ describe('Admin routes', () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
       users: [
-        { id: 'u1', name: 'Alice', email: 'alice@example.com', role: 'admin' }
+        {
+          id: 'u1',
+          name: 'Alice',
+          email: 'alice@example.com',
+          role: 'admin',
+          status: 'active'
+        }
       ],
       page: 2,
       pageSize: 10,

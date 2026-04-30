@@ -22,6 +22,7 @@ type AdminUserRow = {
   email: string;
   name: string;
   role: string;
+  status: string;
 };
 
 const getClient = (client?: DbClient) => client ?? prisma;
@@ -91,7 +92,8 @@ export const userRepository = {
         id: true,
         email: true,
         name: true,
-        role: true
+        role: true,
+        status: true
       }
     };
 

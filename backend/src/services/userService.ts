@@ -9,6 +9,11 @@ import {
 } from '../repositories/userRepository.js';
 import { parseImageUrls, type UserSkill } from '../types/userSkill.js';
 import { isUserRole, type UserRole, USER_ROLE } from '../types/userRole.js';
+import {
+  isUserStatus,
+  type UserStatus,
+  USER_STATUS
+} from '../types/userStatus.js';
 import { USER_SKILL_TYPE } from '../types/userSkillType.js';
 
 type UserRecord = PrismaUser & { userSkills?: PrismaUserSkill[] | null };
@@ -23,8 +28,12 @@ const mapSkillRecord = (record: PrismaUserSkill): UserSkill => ({
   imageUrls: parseImageUrls(record.imageUrls)
 });
 
-export type SanitizedUser = Omit<PrismaUser, 'passwordHash' | 'role'> & {
+export type SanitizedUser = Omit<
+  PrismaUser,
+  'passwordHash' | 'role' | 'status'
+> & {
   role: UserRole;
+  status: UserStatus;
   teachableSkills: UserSkill[];
   learningSkills: UserSkill[];
 };
@@ -35,6 +44,7 @@ export type AdminListUser = {
   email: string;
   name: string;
   role: UserRole;
+  status: UserStatus;
 };
 
 export type AdminUsersListResult = {
@@ -87,11 +97,13 @@ const toAdminListUser = (user: {
   email: string;
   name: string;
   role: string;
+  status: string;
 }): AdminListUser => ({
   id: user.id,
   email: user.email,
   name: user.name,
-  role: isUserRole(user.role) ? user.role : USER_ROLE.user
+  role: isUserRole(user.role) ? user.role : USER_ROLE.user,
+  status: isUserStatus(user.status) ? user.status : USER_STATUS.active
 });
 
 export const sanitizeUser = (user: UserRecord | null): SanitizedUser | null => {
@@ -99,7 +111,13 @@ export const sanitizeUser = (user: UserRecord | null): SanitizedUser | null => {
     return null;
   }
 
-  const { passwordHash: _passwordHash, avatarUrl, userSkills, ...rest } = user;
+  const {
+    passwordHash: _passwordHash,
+    status,
+    avatarUrl,
+    userSkills,
+    ...rest
+  } = user;
   const normalizeNullableString = (value?: string | null) =>
     value && value.trim().length > 0 ? value : null;
   const normalizedSkills = Array.isArray(userSkills) ? userSkills : [];
@@ -118,6 +136,7 @@ export const sanitizeUser = (user: UserRecord | null): SanitizedUser | null => {
     ...rest,
     avatarUrl: normalizeNullableString(avatarUrl),
     role: isUserRole(user.role) ? user.role : USER_ROLE.user,
+    status: isUserStatus(status) ? status : USER_STATUS.active,
     teachableSkills,
     learningSkills
   };

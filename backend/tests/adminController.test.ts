@@ -26,6 +26,7 @@ const mockUserService = {
         name: string;
         email: string;
         role: 'user' | 'admin' | 'owner';
+        status: 'active' | 'inactive';
       }>;
       page: number;
       pageSize: number;
@@ -149,7 +150,13 @@ describe('adminController', () => {
 
       mockUserService.listUsersForAdmin.mockResolvedValue({
         users: [
-          { id: 'u1', name: 'Alice', email: 'alice@example.com', role: 'admin' }
+          {
+            id: 'u1',
+            name: 'Alice',
+            email: 'alice@example.com',
+            role: 'admin',
+            status: 'active'
+          }
         ],
         page: 2,
         pageSize: 10,
@@ -171,7 +178,13 @@ describe('adminController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         users: [
-          { id: 'u1', name: 'Alice', email: 'alice@example.com', role: 'admin' }
+          {
+            id: 'u1',
+            name: 'Alice',
+            email: 'alice@example.com',
+            role: 'admin',
+            status: 'active'
+          }
         ],
         page: 2,
         pageSize: 10,

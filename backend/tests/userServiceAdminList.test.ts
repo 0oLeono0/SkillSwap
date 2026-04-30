@@ -5,6 +5,7 @@ type AdminUserRow = {
   email: string;
   name: string;
   role: string;
+  status: string;
 };
 
 type AdminUsersQuery = {
@@ -38,12 +39,19 @@ describe('userService.listUsersForAdmin', () => {
 
   it('returns lightweight paginated users and normalizes role', async () => {
     mockUserRepository.findAdminUsers.mockResolvedValue([
-      { id: 'u1', email: 'alice@example.com', name: 'Alice', role: 'admin' },
+      {
+        id: 'u1',
+        email: 'alice@example.com',
+        name: 'Alice',
+        role: 'admin',
+        status: 'active'
+      },
       {
         id: 'u2',
         email: 'bob@example.com',
         name: 'Bob',
-        role: 'unexpected-role'
+        role: 'unexpected-role',
+        status: 'unexpected-status'
       }
     ]);
     mockUserRepository.countAdminUsers.mockResolvedValue(12);
@@ -67,8 +75,20 @@ describe('userService.listUsersForAdmin', () => {
 
     expect(result).toEqual({
       users: [
-        { id: 'u1', email: 'alice@example.com', name: 'Alice', role: 'admin' },
-        { id: 'u2', email: 'bob@example.com', name: 'Bob', role: 'user' }
+        {
+          id: 'u1',
+          email: 'alice@example.com',
+          name: 'Alice',
+          role: 'admin',
+          status: 'active'
+        },
+        {
+          id: 'u2',
+          email: 'bob@example.com',
+          name: 'Bob',
+          role: 'user',
+          status: 'active'
+        }
       ],
       page: 2,
       pageSize: 5,
