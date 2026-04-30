@@ -136,5 +136,54 @@ export const exchangeRepository = {
         sender: participantSelect
       }
     });
+  },
+
+  findRatingByExchangeAndRater(
+    exchangeId: string,
+    raterId: string,
+    client?: DbClient
+  ) {
+    return getClient(client).exchangeRating.findUnique({
+      where: {
+        exchangeId_raterId: {
+          exchangeId,
+          raterId
+        }
+      }
+    });
+  },
+
+  createRating(
+    data: Prisma.ExchangeRatingUncheckedCreateInput,
+    client?: DbClient
+  ) {
+    return getClient(client).exchangeRating.create({
+      data
+    });
+  },
+
+  listRatingsForUser(ratedUserId: string, client?: DbClient) {
+    return getClient(client).exchangeRating.findMany({
+      where: {
+        ratedUserId
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+  },
+
+  getAverageRatingForUser(ratedUserId: string, client?: DbClient) {
+    return getClient(client).exchangeRating.aggregate({
+      where: {
+        ratedUserId
+      },
+      _avg: {
+        score: true
+      },
+      _count: {
+        score: true
+      }
+    });
   }
 };

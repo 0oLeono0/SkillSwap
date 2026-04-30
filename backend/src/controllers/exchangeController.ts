@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { createExchangeRatingPayloadSchema } from '@skillswap/contracts/ratingSchemas';
 import { asyncHandler } from '../middleware/asyncHandler.js';
 import { requireCurrentUser } from '../utils/currentUser.js';
 import { BAD_REQUEST_MESSAGES } from '../utils/errorMessages.js';
@@ -63,4 +64,21 @@ export const completeExchange = asyncHandler(async (req, res) => {
     currentUser.sub
   );
   return res.status(200).json({ exchange });
+});
+
+export const rateExchange = asyncHandler(async (req, res) => {
+  const currentUser = requireCurrentUser(req);
+  const exchangeId = parseExchangeId(req.params);
+  const payload = parseOrBadRequest(
+    createExchangeRatingPayloadSchema,
+    req.body,
+    BAD_REQUEST_MESSAGES.invalidRatingPayload
+  );
+
+  const rating = await exchangeService.rateExchange(
+    exchangeId,
+    currentUser.sub,
+    payload
+  );
+  return res.status(201).json({ rating });
 });

@@ -21,6 +21,13 @@
     "./materialSchemas": {
       "types": "./materialSchemas.d.ts",
       "default": "./materialSchemas.js"
+    },
+    "./ratings": {
+      "types": "./ratings.d.ts"
+    },
+    "./ratingSchemas": {
+      "types": "./ratingSchemas.d.ts",
+      "default": "./ratingSchemas.js"
     }
   }
 }

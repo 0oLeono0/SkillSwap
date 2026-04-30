@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 const mockExchangeRepository: {
   findByRequestId: jest.MockedFunction<(requestId: string) => Promise<unknown>>;
   createFromRequest: jest.MockedFunction<(data: unknown) => Promise<unknown>>;
@@ -13,6 +13,16 @@ const mockExchangeRepository: {
   createMessage: jest.MockedFunction<
     (exchangeId: string, senderId: string, content: string) => Promise<unknown>
   >;
+  findRatingByExchangeAndRater: jest.MockedFunction<
+    (exchangeId: string, raterId: string) => Promise<unknown>
+  >;
+  createRating: jest.MockedFunction<(data: unknown) => Promise<unknown>>;
+  listRatingsForUser: jest.MockedFunction<
+    (ratedUserId: string) => Promise<unknown>
+  >;
+  getAverageRatingForUser: jest.MockedFunction<
+    (ratedUserId: string) => Promise<unknown>
+  >;
 } = {
   findByRequestId: jest.fn(),
   createFromRequest: jest.fn(),
@@ -20,7 +30,11 @@ const mockExchangeRepository: {
   findDetailedById: jest.fn(),
   findSummaryById: jest.fn(),
   markCompleted: jest.fn(),
-  createMessage: jest.fn()
+  createMessage: jest.fn(),
+  findRatingByExchangeAndRater: jest.fn(),
+  createRating: jest.fn(),
+  listRatingsForUser: jest.fn(),
+  getAverageRatingForUser: jest.fn()
 };
 
 jest.unstable_mockModule('../src/repositories/exchangeRepository.js', () => ({
@@ -62,6 +76,18 @@ describe('exchangeService', () => {
     request: buildRequest(),
     initiator: buildParticipant({ id: 'user' }),
     recipient: buildParticipant({ id: 'other' }),
+    ...overrides
+  });
+
+  const buildRating = (overrides = {}) => ({
+    id: 'rating-1',
+    exchangeId: 'ex',
+    raterId: 'user',
+    ratedUserId: 'other',
+    score: 5,
+    comment: 'Спасибо за обмен',
+    createdAt: new Date(0),
+    updatedAt: new Date(0),
     ...overrides
   });
 
@@ -268,6 +294,125 @@ describe('exchangeService', () => {
           skill: { id: 'skill-1', title: 'Skill', type: 'teach' }
         }
       });
+    });
+  });
+
+  describe('rateExchange', () => {
+    beforeEach(() => {
+      mockExchangeRepository.findRatingByExchangeAndRater.mockResolvedValue(
+        null
+      );
+      mockExchangeRepository.createRating.mockResolvedValue(buildRating());
+    });
+
+    it('creates rating for completed exchange participant', async () => {
+      mockExchangeRepository.findSummaryById.mockResolvedValue(
+        buildExchange({ id: 'ex', status: 'completed' })
+      );
+
+      const result = await exchangeService.rateExchange('ex', 'user', {
+        score: 5,
+        comment: '  Спасибо за обмен  '
+      });
+
+      expect(
+        mockExchangeRepository.findRatingByExchangeAndRater
+      ).toHaveBeenCalledWith('ex', 'user');
+      expect(mockExchangeRepository.createRating).toHaveBeenCalledWith({
+        exchangeId: 'ex',
+        raterId: 'user',
+        ratedUserId: 'other',
+        score: 5,
+        comment: 'Спасибо за обмен'
+      });
+      expect(result).toMatchObject({
+        id: 'rating-1',
+        exchangeId: 'ex',
+        raterId: 'user',
+        ratedUserId: 'other',
+        score: 5
+      });
+    });
+
+    it('rejects rating when exchange is not completed', async () => {
+      mockExchangeRepository.findSummaryById.mockResolvedValue(
+        buildExchange({ id: 'ex', status: 'active' })
+      );
+
+      await expect(
+        exchangeService.rateExchange('ex', 'user', { score: 5 })
+      ).rejects.toMatchObject({ status: 400 });
+
+      expect(mockExchangeRepository.createRating).not.toHaveBeenCalled();
+    });
+
+    it('rejects rating from non-participant', async () => {
+      mockExchangeRepository.findSummaryById.mockResolvedValue(
+        buildExchange({ id: 'ex', status: 'completed' })
+      );
+
+      await expect(
+        exchangeService.rateExchange('ex', 'outsider', { score: 5 })
+      ).rejects.toMatchObject({ status: 403 });
+
+      expect(
+        mockExchangeRepository.findRatingByExchangeAndRater
+      ).not.toHaveBeenCalled();
+      expect(mockExchangeRepository.createRating).not.toHaveBeenCalled();
+    });
+
+    it('rejects duplicate rating by same rater for exchange', async () => {
+      mockExchangeRepository.findSummaryById.mockResolvedValue(
+        buildExchange({ id: 'ex', status: 'completed' })
+      );
+      mockExchangeRepository.findRatingByExchangeAndRater.mockResolvedValue(
+        buildRating()
+      );
+
+      await expect(
+        exchangeService.rateExchange('ex', 'user', { score: 5 })
+      ).rejects.toMatchObject({ status: 409 });
+
+      expect(mockExchangeRepository.createRating).not.toHaveBeenCalled();
+    });
+
+    it('automatically rates the second participant', async () => {
+      mockExchangeRepository.findSummaryById.mockResolvedValue(
+        buildExchange({ id: 'ex', status: 'completed' })
+      );
+      mockExchangeRepository.createRating.mockResolvedValue(
+        buildRating({
+          raterId: 'other',
+          ratedUserId: 'user',
+          comment: null
+        })
+      );
+
+      await exchangeService.rateExchange('ex', 'other', { score: 4 });
+
+      expect(mockExchangeRepository.createRating).toHaveBeenCalledWith({
+        exchangeId: 'ex',
+        raterId: 'other',
+        ratedUserId: 'user',
+        score: 4
+      });
+    });
+
+    it('rejects invalid score and comment', async () => {
+      mockExchangeRepository.findSummaryById.mockResolvedValue(
+        buildExchange({ id: 'ex', status: 'completed' })
+      );
+
+      await expect(
+        exchangeService.rateExchange('ex', 'user', { score: 6 })
+      ).rejects.toMatchObject({ status: 400 });
+
+      await expect(
+        exchangeService.rateExchange('ex', 'user', {
+          score: 5,
+          comment: 'x'.repeat(501)
+        })
+      ).rejects.toMatchObject({ status: 400 });
     });
   });
 });

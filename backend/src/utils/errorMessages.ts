@@ -3,6 +3,7 @@
   invalidQueryParams: 'Invalid query params',
   invalidExchangeId: 'Invalid exchange id',
   invalidMessagePayload: 'Invalid message payload',
+  invalidRatingPayload: 'Invalid rating payload',
   userIdRequired: 'User id is required',
   cannotDeleteOwnAccount: 'You cannot delete your own account',
   cannotChangeOwnRole: 'You cannot change your own role',

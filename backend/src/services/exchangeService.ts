@@ -1,7 +1,12 @@
 ﻿import { Prisma, type PrismaClient, type Request } from '@prisma/client';
+import type {
+  CreateExchangeRatingPayload,
+  ExchangeRatingDto
+} from '@skillswap/contracts/ratings';
 import { exchangeRepository } from '../repositories/exchangeRepository.js';
 import {
   createBadRequest,
+  createConflict,
   createForbidden,
   createNotFound
 } from '../utils/httpErrors.js';
@@ -54,6 +59,17 @@ type ExchangeDetailRecord = ExchangeRecord & {
   messages: ExchangeMessage[];
 };
 
+type ExchangeRatingRecord = {
+  id: string;
+  exchangeId: string;
+  raterId: string;
+  ratedUserId: string;
+  score: number;
+  comment: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 const mapExchangeRequest = (request: ExchangeRequestRecord) => ({
   id: request.id,
   userSkillId: request.userSkillId,
@@ -76,6 +92,19 @@ const mapExchangeDetails = (exchange: ExchangeDetailRecord) => ({
   messages: exchange.messages
 });
 
+const mapExchangeRating = (
+  rating: ExchangeRatingRecord
+): ExchangeRatingDto => ({
+  id: rating.id,
+  exchangeId: rating.exchangeId,
+  raterId: rating.raterId,
+  ratedUserId: rating.ratedUserId,
+  score: rating.score,
+  comment: rating.comment,
+  createdAt: rating.createdAt.toISOString(),
+  updatedAt: rating.updatedAt.toISOString()
+});
+
 const ensureParticipant = (
   exchange: { initiatorId: string; recipientId: string },
   userId: string
@@ -83,6 +112,48 @@ const ensureParticipant = (
   if (exchange.initiatorId !== userId && exchange.recipientId !== userId) {
     throw createForbidden('Недостаточно прав для работы с этим обменом');
   }
+};
+
+const getRatedUserId = (
+  exchange: { initiatorId: string; recipientId: string },
+  raterId: string
+) =>
+  exchange.initiatorId === raterId
+    ? exchange.recipientId
+    : exchange.initiatorId;
+
+const normalizeRatingPayload = (payload: CreateExchangeRatingPayload) => {
+  if (
+    !Number.isInteger(payload.score) ||
+    payload.score < 1 ||
+    payload.score > 5
+  ) {
+    throw createBadRequest('Оценка должна быть целым числом от 1 до 5');
+  }
+
+  const data: { score: number; comment?: string | null } = {
+    score: payload.score
+  };
+
+  if (payload.comment === undefined) {
+    return data;
+  }
+
+  if (payload.comment === null) {
+    data.comment = null;
+    return data;
+  }
+
+  const comment = payload.comment.trim();
+  if (!comment) {
+    throw createBadRequest('Комментарий не может быть пустым');
+  }
+  if (comment.length > 500) {
+    throw createBadRequest('Комментарий не должен быть длиннее 500 символов');
+  }
+
+  data.comment = comment;
+  return data;
 };
 
 export const exchangeService = {
@@ -185,5 +256,62 @@ export const exchangeService = {
       exchangeId
     )) as ExchangeRecord;
     return mapExchange(updated);
+  },
+
+  async rateExchange(
+    exchangeId: string,
+    raterId: string,
+    payload: CreateExchangeRatingPayload
+  ) {
+    const exchange = (await exchangeRepository.findSummaryById(
+      exchangeId
+    )) as ExchangeRecord | null;
+    if (!exchange) {
+      throw createNotFound(NOT_FOUND_MESSAGES.exchangeNotFound);
+    }
+
+    ensureParticipant(exchange, raterId);
+    if (exchange.status !== EXCHANGE_STATUS.completed) {
+      throw createBadRequest('Оценить можно только завершенный обмен');
+    }
+
+    const ratedUserId = getRatedUserId(exchange, raterId);
+    if (ratedUserId === raterId) {
+      throw createBadRequest('Нельзя оценить самого себя');
+    }
+
+    const existing = await exchangeRepository.findRatingByExchangeAndRater(
+      exchangeId,
+      raterId
+    );
+    if (existing) {
+      throw createConflict('Вы уже оценили этот обмен');
+    }
+
+    const normalizedPayload = normalizeRatingPayload(payload);
+    const data: Prisma.ExchangeRatingUncheckedCreateInput = {
+      exchangeId,
+      raterId,
+      ratedUserId,
+      score: normalizedPayload.score
+    };
+    if (normalizedPayload.comment !== undefined) {
+      data.comment = normalizedPayload.comment;
+    }
+
+    try {
+      const rating = (await exchangeRepository.createRating(
+        data
+      )) as ExchangeRatingRecord;
+      return mapExchangeRating(rating);
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw createConflict('Вы уже оценили этот обмен');
+      }
+      throw error;
+    }
   }
 };

@@ -62,6 +62,28 @@ const mockRequestService: {
   updateStatus: jest.fn()
 };
 
+const mockExchangeService: {
+  listForUser: jest.MockedFunction<(userId: string) => Promise<unknown>>;
+  getDetails: jest.MockedFunction<
+    (exchangeId: string, userId: string) => Promise<unknown>
+  >;
+  sendMessage: jest.MockedFunction<
+    (exchangeId: string, userId: string, content: string) => Promise<unknown>
+  >;
+  completeExchange: jest.MockedFunction<
+    (exchangeId: string, userId: string) => Promise<unknown>
+  >;
+  rateExchange: jest.MockedFunction<
+    (exchangeId: string, raterId: string, payload: unknown) => Promise<unknown>
+  >;
+} = {
+  listForUser: jest.fn(),
+  getDetails: jest.fn(),
+  sendMessage: jest.fn(),
+  completeExchange: jest.fn(),
+  rateExchange: jest.fn()
+};
+
 const mockMaterialService: {
   listForUserSkill: jest.MockedFunction<
     (userSkillId: string) => Promise<unknown>
@@ -122,6 +144,10 @@ jest.unstable_mockModule('../src/services/catalogService.js', () => ({
 
 jest.unstable_mockModule('../src/services/requestService.js', () => ({
   requestService: mockRequestService
+}));
+
+jest.unstable_mockModule('../src/services/exchangeService.js', () => ({
+  exchangeService: mockExchangeService
 }));
 
 jest.unstable_mockModule('../src/services/materialService.js', () => ({
@@ -515,6 +541,75 @@ describe('Requests routes', () => {
     expect(response.body).toEqual({
       request: { id: 'req-1', status: 'accepted' }
     });
+  });
+});
+
+describe('Exchange routes', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockTokenService.verifyAccessToken.mockReturnValue({
+      sub: 'user-1',
+      email: 'u@example.com',
+      name: 'User',
+      role: 'user'
+    });
+  });
+
+  it('rejects unauthenticated rating create', async () => {
+    const response = await request(app)
+      .post('/api/exchanges/ex-1/rating')
+      .send({ score: 5 });
+
+    expect(response.status).toBe(401);
+    expect(mockExchangeService.rateExchange).not.toHaveBeenCalled();
+  });
+
+  it('creates exchange rating for authenticated user', async () => {
+    mockExchangeService.rateExchange.mockResolvedValue({
+      id: 'rating-1',
+      exchangeId: 'ex-1',
+      raterId: 'user-1',
+      ratedUserId: 'user-2',
+      score: 5,
+      comment: 'Спасибо',
+      createdAt: new Date(0),
+      updatedAt: new Date(0)
+    });
+
+    const response = await request(app)
+      .post('/api/exchanges/ex-1/rating')
+      .set('Authorization', 'Bearer token')
+      .send({ score: 5, comment: 'Спасибо' });
+
+    expect(response.status).toBe(201);
+    expect(mockExchangeService.rateExchange).toHaveBeenCalledWith(
+      'ex-1',
+      'user-1',
+      { score: 5, comment: 'Спасибо' }
+    );
+    expect(response.body).toEqual({
+      rating: {
+        id: 'rating-1',
+        exchangeId: 'ex-1',
+        raterId: 'user-1',
+        ratedUserId: 'user-2',
+        score: 5,
+        comment: 'Спасибо',
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String)
+      }
+    });
+  });
+
+  it('rejects invalid rating payload before service call', async () => {
+    const response = await request(app)
+      .post('/api/exchanges/ex-1/rating')
+      .set('Authorization', 'Bearer token')
+      .send({ score: 6, ratedUserId: 'user-2' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe('Invalid rating payload');
+    expect(mockExchangeService.rateExchange).not.toHaveBeenCalled();
   });
 });
 
