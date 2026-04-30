@@ -1,4 +1,8 @@
 import type {
+  UserRatingsResponse,
+  UserRatingDto
+} from '@skillswap/contracts/ratings';
+import type {
   User as PrismaUser,
   UserSkill as PrismaUserSkill
 } from '@prisma/client';
@@ -7,6 +11,7 @@ import {
   type AdminUsersSortBy,
   type AdminUsersSortDirection
 } from '../repositories/userRepository.js';
+import { exchangeRepository } from '../repositories/exchangeRepository.js';
 import { parseImageUrls, type UserSkill } from '../types/userSkill.js';
 import { isUserRole, type UserRole, USER_ROLE } from '../types/userRole.js';
 import {
@@ -15,6 +20,8 @@ import {
   USER_STATUS
 } from '../types/userStatus.js';
 import { USER_SKILL_TYPE } from '../types/userSkillType.js';
+import { createNotFound } from '../utils/httpErrors.js';
+import { NOT_FOUND_MESSAGES } from '../utils/errorMessages.js';
 
 type UserRecord = PrismaUser & { userSkills?: PrismaUserSkill[] | null };
 
@@ -63,6 +70,22 @@ type ListAdminUsersOptions = {
   sortBy?: AdminUsersSortBy;
   sortDirection?: AdminUsersSortDirection;
   search?: string;
+};
+
+type RatingRaterRecord = {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+};
+
+type UserRatingRecord = {
+  id: string;
+  exchangeId: string;
+  score: number;
+  comment: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  rater: RatingRaterRecord;
 };
 
 const normalizePagination = (value: number, fallback: number, max?: number) => {
@@ -147,6 +170,23 @@ const toPublicUser = (user: SanitizedUser): PublicUser => {
   return rest;
 };
 
+const toUserRatingDto = (rating: UserRatingRecord): UserRatingDto => ({
+  id: rating.id,
+  exchangeId: rating.exchangeId,
+  score: rating.score,
+  comment: rating.comment,
+  rater: {
+    id: rating.rater.id,
+    name: rating.rater.name,
+    avatarUrl:
+      rating.rater.avatarUrl && rating.rater.avatarUrl.trim().length > 0
+        ? rating.rater.avatarUrl
+        : null
+  },
+  createdAt: rating.createdAt.toISOString(),
+  updatedAt: rating.updatedAt.toISOString()
+});
+
 export const userService = {
   async listUsers(): Promise<SanitizedUser[]> {
     const users = await userRepository.findAll();
@@ -196,6 +236,26 @@ export const userService = {
       totalPages,
       sortBy,
       sortDirection
+    };
+  },
+
+  async getUserRatings(userId: string): Promise<UserRatingsResponse> {
+    const user = await userRepository.findPublicById(userId);
+    if (!user) {
+      throw createNotFound(NOT_FOUND_MESSAGES.userNotFound);
+    }
+
+    const [ratingsRaw, aggregate] = await Promise.all([
+      exchangeRepository.listRatingsForUser(userId),
+      exchangeRepository.getAverageRatingForUser(userId)
+    ]);
+
+    const ratingsCount = aggregate._count.score;
+
+    return {
+      averageRating: aggregate._avg.score ?? null,
+      ratingsCount,
+      ratings: (ratingsRaw as UserRatingRecord[]).map(toUserRatingDto)
     };
   }
 };

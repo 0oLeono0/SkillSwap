@@ -119,6 +119,15 @@ export const userRepository = {
     });
   },
 
+  findPublicById(id: string, client?: DbClient) {
+    return getClient(client).user.findUnique({
+      where: { id },
+      select: {
+        id: true
+      }
+    });
+  },
+
   create(data: Prisma.UserCreateInput, client?: DbClient) {
     return getClient(client).user.create({ data, include: includeSkills });
   },

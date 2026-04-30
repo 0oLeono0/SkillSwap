@@ -13,10 +13,12 @@ const mockUserService: {
       sortDirection?: 'asc' | 'desc';
     }) => Promise<unknown>
   >;
+  getUserRatings: jest.MockedFunction<(userId: string) => Promise<unknown>>;
 } = {
   listUsers: jest.fn(),
   listPublicUsers: jest.fn(),
-  listUsersForAdmin: jest.fn()
+  listUsersForAdmin: jest.fn(),
+  getUserRatings: jest.fn()
 };
 const mockSanitizeUser: jest.Mock = jest.fn();
 const mockCatalogService: {
@@ -154,6 +156,7 @@ jest.unstable_mockModule('../src/services/materialService.js', () => ({
   materialService: mockMaterialService
 }));
 
+const { HttpError } = await import('../src/utils/httpErrors.js');
 const { app } = await import('../src/app.js');
 
 describe('GET /api/health', () => {
@@ -203,6 +206,65 @@ describe('Users routes', () => {
           }
         ]
       });
+    });
+  });
+
+  describe('GET /api/users/:userId/ratings', () => {
+    it('returns public user ratings without auth', async () => {
+      mockUserService.getUserRatings.mockResolvedValue({
+        averageRating: 4.5,
+        ratingsCount: 2,
+        ratings: [
+          {
+            id: 'rating-1',
+            exchangeId: 'exchange-1',
+            score: 5,
+            comment: 'Отличный обмен',
+            rater: {
+              id: 'rater-1',
+              name: 'Автор оценки',
+              avatarUrl: null
+            },
+            createdAt: '2026-04-30T00:00:00.000Z',
+            updatedAt: '2026-04-30T00:00:00.000Z'
+          }
+        ]
+      });
+
+      const response = await request(app).get('/api/users/user-1/ratings');
+
+      expect(response.status).toBe(200);
+      expect(mockUserService.getUserRatings).toHaveBeenCalledWith('user-1');
+      expect(response.body).toEqual({
+        averageRating: 4.5,
+        ratingsCount: 2,
+        ratings: [
+          {
+            id: 'rating-1',
+            exchangeId: 'exchange-1',
+            score: 5,
+            comment: 'Отличный обмен',
+            rater: {
+              id: 'rater-1',
+              name: 'Автор оценки',
+              avatarUrl: null
+            },
+            createdAt: '2026-04-30T00:00:00.000Z',
+            updatedAt: '2026-04-30T00:00:00.000Z'
+          }
+        ]
+      });
+    });
+
+    it('returns 404 when rated user is missing', async () => {
+      mockUserService.getUserRatings.mockRejectedValue(
+        new HttpError(404, 'Пользователь не найден')
+      );
+
+      const response = await request(app).get('/api/users/missing/ratings');
+
+      expect(response.status).toBe(404);
+      expect(response.body.message).toBe('Пользователь не найден');
     });
   });
 

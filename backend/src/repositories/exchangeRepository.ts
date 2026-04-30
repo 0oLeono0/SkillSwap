@@ -167,6 +167,9 @@ export const exchangeRepository = {
       where: {
         ratedUserId
       },
+      include: {
+        rater: participantSelect
+      },
       orderBy: {
         createdAt: 'desc'
       }
