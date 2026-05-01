@@ -10,6 +10,10 @@ import { mapCityNamesToCityIds, selectedSkillsByGroup } from '../utils.ts';
 import { GroupedMultiSelect } from '@/shared/ui/GroupedMultiSelect/GroupedMultiSelect';
 import { ToggleMore } from '@/features/Filter/ui/ToggleMore/ToggleMore.tsx';
 import type { UserStatusFilter } from '@/shared/types/userStatus';
+import {
+  CATALOG_SORT_LABELS,
+  type CatalogSortOption
+} from '@/shared/types/catalogSort';
 
 export const FilterPanel: FC<FilterPanelProps> = (props: FilterPanelProps) => {
   const {
@@ -19,6 +23,7 @@ export const FilterPanel: FC<FilterPanelProps> = (props: FilterPanelProps) => {
     filtersCount,
     onGenderChange,
     onModeChange,
+    onSortByChange,
     onStatusChange,
     onCitySelect,
     onSkillSelect,
@@ -55,6 +60,22 @@ export const FilterPanel: FC<FilterPanelProps> = (props: FilterPanelProps) => {
           <Radio title={'Хочу научиться'} value={'wantToLearn'}></Radio>
           <Radio title={'Могу научить'} value={'canTeach'}></Radio>
         </RadioGroup>
+        <div className={styles.filter}>
+          <Title tag={'h3'} variant={'md'}>
+            Сортировка
+          </Title>
+          <RadioGroup
+            name={'catalog-sort'}
+            value={filters.sortBy}
+            onChange={(_, value) => onSortByChange(value as CatalogSortOption)}
+          >
+            <Radio
+              title={CATALOG_SORT_LABELS.default}
+              value={'default'}
+            ></Radio>
+            <Radio title={CATALOG_SORT_LABELS.rating} value={'rating'}></Radio>
+          </RadioGroup>
+        </div>
         <div className={styles.filter}>
           <Title tag={'h3'} variant={'md'}>
             Статус автора

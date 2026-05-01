@@ -87,9 +87,22 @@ export interface CatalogSearchOptions {
   excludeAuthorId?: string;
   search?: string;
   status?: UserStatus;
+  sortBy?: 'rating';
   page?: number;
   pageSize?: number;
 }
+
+type CatalogAuthorSortCandidate = {
+  id: string;
+  createdAt: Date;
+};
+
+type RatingAverageRow = {
+  ratedUserId: string;
+  _avg: {
+    score: number | null;
+  };
+};
 
 const mapCity = (city: NamedEntity): CityOption => ({
   id: city.id,
@@ -320,6 +333,75 @@ const mapCatalogAuthor = (user: CatalogAuthorRecord): CatalogAuthor => {
   return payload;
 };
 
+const buildCatalogAuthorSelect = (skillFilters: Prisma.UserSkillWhereInput) =>
+  ({
+    id: true,
+    name: true,
+    status: true,
+    avatarUrl: true,
+    bio: true,
+    birthDate: true,
+    city: { select: { name: true } },
+    userSkills: {
+      where: skillFilters,
+      include: {
+        category: { select: { id: true, name: true } },
+        subcategory: {
+          select: {
+            id: true,
+            name: true,
+            groupId: true,
+            group: { select: { id: true, name: true } }
+          }
+        }
+      }
+    }
+  }) satisfies Prisma.UserSelect;
+
+const buildPageUserWhere = (
+  userWhere: Prisma.UserWhereInput,
+  authorIds: string[]
+): Prisma.UserWhereInput => ({
+  AND: [userWhere, { id: { in: authorIds } }]
+});
+
+const sortAuthorCandidatesByRating = (
+  candidates: CatalogAuthorSortCandidate[],
+  ratingRows: RatingAverageRow[]
+) => {
+  const fallbackOrder = new Map(
+    candidates.map((candidate, index) => [candidate.id, index])
+  );
+  const averageRatingByUserId = new Map(
+    ratingRows
+      .filter((row) => typeof row._avg.score === 'number')
+      .map((row) => [row.ratedUserId, row._avg.score as number])
+  );
+
+  return [...candidates].sort((left, right) => {
+    const leftAverage = averageRatingByUserId.get(left.id);
+    const rightAverage = averageRatingByUserId.get(right.id);
+    const leftHasRating = typeof leftAverage === 'number';
+    const rightHasRating = typeof rightAverage === 'number';
+
+    if (leftHasRating !== rightHasRating) {
+      return leftHasRating ? -1 : 1;
+    }
+
+    if (
+      typeof leftAverage === 'number' &&
+      typeof rightAverage === 'number' &&
+      leftAverage !== rightAverage
+    ) {
+      return rightAverage - leftAverage;
+    }
+
+    return (
+      (fallbackOrder.get(left.id) ?? 0) - (fallbackOrder.get(right.id) ?? 0)
+    );
+  });
+};
+
 export const catalogService = {
   async getFiltersBaseData() {
     const [cities, skillGroups] = await Promise.all([
@@ -452,35 +534,60 @@ export const catalogService = {
       return { authors: [], page, pageSize, totalAuthors };
     }
 
-    const authors = await prisma.user.findMany({
-      where: userWhere,
-      select: {
-        id: true,
-        name: true,
-        status: true,
-        avatarUrl: true,
-        bio: true,
-        birthDate: true,
-        city: { select: { name: true } },
-        userSkills: {
-          where: skillFilters,
-          include: {
-            category: { select: { id: true, name: true } },
-            subcategory: {
-              select: {
-                id: true,
-                name: true,
-                groupId: true,
-                group: { select: { id: true, name: true } }
-              }
-            }
+    const authorSelect = buildCatalogAuthorSelect(skillFilters);
+    let authors: CatalogAuthorRecord[];
+
+    if (options.sortBy === 'rating') {
+      const candidates = (await prisma.user.findMany({
+        where: userWhere,
+        select: {
+          id: true,
+          createdAt: true
+        },
+        orderBy: { createdAt: 'desc' }
+      })) as CatalogAuthorSortCandidate[];
+      const candidateIds = candidates.map((candidate) => candidate.id);
+      let ratingRows: RatingAverageRow[] = [];
+      if (candidateIds.length) {
+        const fetchedRatingRows = await prisma.exchangeRating.groupBy({
+          by: ['ratedUserId'],
+          where: {
+            ratedUserId: { in: candidateIds }
+          },
+          _avg: {
+            score: true
           }
-        }
-      },
-      orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * pageSize,
-      take: pageSize
-    });
+        });
+        ratingRows = fetchedRatingRows;
+      }
+      const pageAuthorIds = sortAuthorCandidatesByRating(candidates, ratingRows)
+        .slice((page - 1) * pageSize, page * pageSize)
+        .map((candidate) => candidate.id);
+
+      if (pageAuthorIds.length === 0) {
+        return { authors: [], page, pageSize, totalAuthors };
+      }
+
+      const pageAuthors = (await prisma.user.findMany({
+        where: buildPageUserWhere(userWhere, pageAuthorIds),
+        select: authorSelect
+      })) as CatalogAuthorRecord[];
+      const authorById = new Map(
+        pageAuthors.map((author) => [author.id, author])
+      );
+
+      authors = pageAuthorIds
+        .map((authorId) => authorById.get(authorId))
+        .filter((author): author is CatalogAuthorRecord => Boolean(author));
+    } else {
+      authors = (await prisma.user.findMany({
+        where: userWhere,
+        select: authorSelect,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize
+      })) as CatalogAuthorRecord[];
+    }
 
     const mapped = authors.map(mapCatalogAuthor);
 

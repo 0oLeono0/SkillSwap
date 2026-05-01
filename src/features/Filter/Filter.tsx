@@ -9,6 +9,7 @@ import {
 import { useFiltersBaseData } from './model/useFiltersBaseData';
 import { filterReducer, filtersInitialState } from './model/filterReducer';
 import type { UserStatusFilter } from '@/shared/types/userStatus';
+import type { CatalogSortOption } from '@/shared/types/catalogSort';
 
 export const Filter: FC = () => {
   const [filters, dispatchFilters] = useReducer(
@@ -20,6 +21,10 @@ export const Filter: FC = () => {
 
   const handleModeChange = (mode: SearchMode) => {
     dispatchFilters({ type: 'setMode', mode });
+  };
+
+  const handleSortByChange = (sortBy: CatalogSortOption) => {
+    dispatchFilters({ type: 'setSortBy', sortBy });
   };
 
   const handleStatusChange = (status: UserStatusFilter) => {
@@ -56,6 +61,7 @@ export const Filter: FC = () => {
       skillGroups={skillCategories}
       filtersCount={countActiveFilters(filters)}
       onModeChange={handleModeChange}
+      onSortByChange={handleSortByChange}
       onStatusChange={handleStatusChange}
       onGenderChange={handleGenderChange}
       onCitySelect={handleCitySelect}

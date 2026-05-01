@@ -1,5 +1,6 @@
 import { request, type RequestOptions } from '@/shared/api/request';
 import type { UserStatus } from '@/shared/types/userStatus';
+import type { CatalogSortBy } from '@/shared/types/catalogSort';
 
 export interface CatalogFilterBaseData {
   cities: Array<{ id: number; name: string }>;
@@ -54,6 +55,7 @@ export interface CatalogSearchParams {
   excludeAuthorId?: string;
   search?: string;
   status?: UserStatus;
+  sortBy?: CatalogSortBy;
   page?: number;
   pageSize?: number;
 }
@@ -86,6 +88,9 @@ const buildCatalogSearchQuery = (params: CatalogSearchParams): string => {
   }
   if (params.status) {
     query.set('status', params.status);
+  }
+  if (params.sortBy) {
+    query.set('sortBy', params.sortBy);
   }
   if (typeof params.excludeAuthorId === 'string') {
     query.set('excludeAuthorId', params.excludeAuthorId);

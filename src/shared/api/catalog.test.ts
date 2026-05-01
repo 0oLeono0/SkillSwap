@@ -21,12 +21,13 @@ describe('catalogApi', () => {
     await catalogApi.search({
       mode: 'all',
       status: 'active',
+      sortBy: 'rating',
       page: 1,
       pageSize: 12
     });
 
     expect(mockRequest).toHaveBeenCalledWith(
-      '/catalog/search?mode=all&status=active&page=1&pageSize=12',
+      '/catalog/search?mode=all&status=active&sortBy=rating&page=1&pageSize=12',
       undefined
     );
   });

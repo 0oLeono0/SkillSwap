@@ -413,6 +413,26 @@ describe('Catalog routes', () => {
     );
   });
 
+  it('passes rating sort to catalog search', async () => {
+    mockCatalogService.searchCatalogSkills.mockResolvedValue({
+      authors: [],
+      page: 1,
+      pageSize: 12,
+      totalAuthors: 0
+    });
+
+    const response = await request(app).get(
+      '/api/catalog/search?sortBy=rating'
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockCatalogService.searchCatalogSkills).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sortBy: 'rating'
+      })
+    );
+  });
+
   it('returns skill categories list', async () => {
     mockCatalogService.getSkillCategories.mockResolvedValue([
       { id: 1, name: 'Cat', subskills: [] }

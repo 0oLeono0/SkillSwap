@@ -9,6 +9,7 @@ const buildProps = (
   filters: {
     mode: 'all',
     status: 'all',
+    sortBy: 'default',
     gender: undefined,
     cities: [],
     skillIds: []
@@ -17,6 +18,7 @@ const buildProps = (
   skillGroups: [],
   filtersCount: 0,
   onModeChange: jest.fn(),
+  onSortByChange: jest.fn(),
   onStatusChange: jest.fn(),
   onGenderChange: jest.fn(),
   onCitySelect: jest.fn(),
@@ -34,5 +36,15 @@ describe('FilterPanel', () => {
     await user.click(screen.getByRole('radio', { name: 'Активные' }));
 
     expect(onStatusChange).toHaveBeenCalledWith('active');
+  });
+
+  it('calls onSortByChange when catalog sorting changes', async () => {
+    const user = userEvent.setup();
+    const onSortByChange = jest.fn();
+    render(<FilterPanel {...buildProps({ onSortByChange })} />);
+
+    await user.click(screen.getByRole('radio', { name: 'По рейтингу' }));
+
+    expect(onSortByChange).toHaveBeenCalledWith('rating');
   });
 });

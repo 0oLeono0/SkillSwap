@@ -42,6 +42,10 @@ import { isElevatedRole } from '@/shared/types/userRole';
 import { loadFiltersBaseData } from '@/features/Filter/model/filterBaseDataStore';
 import { useAuthEntryNavigation } from '@/shared/lib/router/useAuthEntryNavigation';
 import type { UserStatusFilter } from '@/shared/types/userStatus';
+import {
+  CATALOG_SORT_LABELS,
+  type CatalogSortOption
+} from '@/shared/types/catalogSort';
 
 type CatalogVariant = 'home' | 'catalog';
 
@@ -173,6 +177,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
             mode: filters.mode,
             gender: filters.gender,
             status: filters.status === 'all' ? undefined : filters.status,
+            sortBy: filters.sortBy === 'default' ? undefined : filters.sortBy,
             cityIds,
             skillIds: filters.skillIds,
             excludeAuthorId: authUser?.id,
@@ -380,6 +385,10 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
       labels.push(MODE_LABELS[filters.mode] ?? filters.mode);
     }
 
+    if (filters.sortBy !== 'default') {
+      labels.push(CATALOG_SORT_LABELS[filters.sortBy]);
+    }
+
     if (filters.gender) {
       labels.push(filters.gender);
     }
@@ -424,6 +433,10 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
 
   const handleModeChange = useCallback((mode: SearchMode) => {
     dispatchFilters({ type: 'setMode', mode });
+  }, []);
+
+  const handleSortByChange = useCallback((sortBy: CatalogSortOption) => {
+    dispatchFilters({ type: 'setSortBy', sortBy });
   }, []);
 
   const handleGenderChange = useCallback((gender: string) => {
@@ -623,6 +636,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
             skillGroups={skillGroups}
             filtersCount={filtersCount}
             onModeChange={handleModeChange}
+            onSortByChange={handleSortByChange}
             onStatusChange={handleStatusChange}
             onGenderChange={handleGenderChange}
             onCitySelect={handleCitySelect}

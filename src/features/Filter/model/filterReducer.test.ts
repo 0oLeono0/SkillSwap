@@ -15,6 +15,14 @@ describe('filterReducer', () => {
     expect(next.mode).toBe<Exclude<SearchMode, 'wantToLearn'>>('canTeach');
   });
 
+  it('sets sort by', () => {
+    const next = filterReducer(filtersInitialState, {
+      type: 'setSortBy',
+      sortBy: 'rating'
+    });
+    expect(next.sortBy).toBe('rating');
+  });
+
   it('sets author status', () => {
     const next = filterReducer(filtersInitialState, {
       type: 'setStatus',
@@ -48,6 +56,7 @@ describe('filterReducer', () => {
   it('replaces filters atomically', () => {
     const replacement: Filters = {
       mode: 'wantToLearn',
+      sortBy: 'rating',
       status: 'active',
       gender: 'male',
       cities: ['Vilnius'],
@@ -64,6 +73,7 @@ describe('filterReducer', () => {
   it('resets to initial state', () => {
     const dirty = buildState({
       mode: 'wantToLearn',
+      sortBy: 'rating',
       status: 'inactive',
       gender: 'male',
       cities: ['Minsk'],

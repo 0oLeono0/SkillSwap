@@ -36,6 +36,7 @@ describe('Filter utils', () => {
   describe('countActiveFilters', () => {
     const baseFilters: Filters = {
       mode: 'all',
+      sortBy: 'default',
       status: 'all',
       gender: undefined,
       cities: [],
@@ -49,13 +50,14 @@ describe('Filter utils', () => {
     it('counts mode, gender, cities and skills separately', () => {
       const filters: Filters = {
         mode: 'wantToLearn',
+        sortBy: 'rating',
         status: 'active',
         gender: 'female',
         cities: ['Moscow', 'Voronezh'],
         skillIds: [101, 202, 203]
       };
 
-      expect(countActiveFilters(filters)).toBe(1 + 1 + 1 + 2 + 3);
+      expect(countActiveFilters(filters)).toBe(1 + 1 + 1 + 1 + 2 + 3);
     });
   });
 

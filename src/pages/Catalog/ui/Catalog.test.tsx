@@ -224,11 +224,17 @@ jest.mock('@/widgets/SkillsList', () => ({
 }));
 
 jest.mock('@/features/Filter/ui/FilterPanel.tsx', () => ({
-  FilterPanel: (props: { onStatusChange: (status: 'active') => void }) => (
+  FilterPanel: (props: {
+    onStatusChange: (status: 'active') => void;
+    onSortByChange: (sortBy: 'rating') => void;
+  }) => (
     <div>
       filter
       <button type='button' onClick={() => props.onStatusChange('active')}>
         status-active
+      </button>
+      <button type='button' onClick={() => props.onSortByChange('rating')}>
+        sort-rating
       </button>
     </div>
   )
@@ -361,6 +367,27 @@ describe('Catalog favorite action', () => {
       expect(mockLoadCatalogAuthors).toHaveBeenLastCalledWith(
         expect.objectContaining({
           status: 'active',
+          page: 1
+        }),
+        expect.any(Object)
+      );
+    });
+  });
+
+  it('passes selected rating sort to catalog search', async () => {
+    const user = userEvent.setup();
+    renderCatalog();
+
+    await waitFor(() => {
+      expect(mockLoadCatalogAuthors).toHaveBeenCalled();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'sort-rating' }));
+
+    await waitFor(() => {
+      expect(mockLoadCatalogAuthors).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          sortBy: 'rating',
           page: 1
         }),
         expect.any(Object)

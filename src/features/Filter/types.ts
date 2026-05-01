@@ -1,4 +1,5 @@
 import type { UserStatusFilter } from '@/shared/types/userStatus';
+import type { CatalogSortOption } from '@/shared/types/catalogSort';
 
 export type SearchMode = 'all' | 'wantToLearn' | 'canTeach';
 
@@ -20,6 +21,7 @@ export interface SkillCategories {
 
 export interface Filters {
   mode: SearchMode;
+  sortBy: CatalogSortOption;
   status: UserStatusFilter;
   gender: string | undefined;
   cities: string[];
@@ -27,6 +29,7 @@ export interface Filters {
 }
 
 type ModeChangeHandler = (mode: SearchMode) => void;
+type SortByChangeHandler = (sortBy: CatalogSortOption) => void;
 type StatusChangeHandler = (status: UserStatusFilter) => void;
 type GenderChangeHandler = (gender: string) => void;
 type CitySelectHandler = (cityIds: number[]) => void;
@@ -38,6 +41,7 @@ export interface FilterPanelProps {
   skillGroups: SkillCategories[];
   filtersCount: number;
   onModeChange: ModeChangeHandler;
+  onSortByChange: SortByChangeHandler;
   onStatusChange: StatusChangeHandler;
   onGenderChange: GenderChangeHandler;
   onCitySelect: CitySelectHandler;

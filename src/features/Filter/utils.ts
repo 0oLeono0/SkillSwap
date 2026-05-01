@@ -6,6 +6,9 @@ export const countActiveFilters = (filters: Filters): number => {
   if (filters.mode !== 'all') {
     count++;
   }
+  if (filters.sortBy !== 'default') {
+    count++;
+  }
   if (filters.status !== 'all') {
     count++;
   }

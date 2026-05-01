@@ -31,6 +31,7 @@ const parsePositiveNumber = (value: unknown): number | undefined => {
 };
 
 const allowedModes = new Set(['all', 'wantToLearn', 'canTeach']);
+const allowedSortBy = new Set(['rating']);
 
 export const getFiltersBaseData = asyncHandler(async (_req, res) => {
   const data = await catalogService.getFiltersBaseData();
@@ -76,6 +77,10 @@ export const searchCatalogSkills = asyncHandler(async (req, res) => {
     typeof req.query.status === 'string' && isUserStatus(req.query.status)
       ? req.query.status
       : undefined;
+  const sortBy =
+    typeof req.query.sortBy === 'string' && allowedSortBy.has(req.query.sortBy)
+      ? (req.query.sortBy as 'rating')
+      : undefined;
   const excludeAuthorId =
     typeof req.query.excludeAuthorId === 'string'
       ? req.query.excludeAuthorId
@@ -109,6 +114,9 @@ export const searchCatalogSkills = asyncHandler(async (req, res) => {
   }
   if (status) {
     options.status = status;
+  }
+  if (sortBy) {
+    options.sortBy = sortBy;
   }
   if (excludeAuthorId) {
     options.excludeAuthorId = excludeAuthorId;
