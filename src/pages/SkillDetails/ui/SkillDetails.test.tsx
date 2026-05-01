@@ -392,8 +392,10 @@ describe('SkillDetails description', () => {
 
     renderPage();
 
-    expect(await screen.findByText('4.8')).toBeInTheDocument();
-    expect(screen.getByText('12 отзывов')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getAllByText('4.8').length).toBeGreaterThan(0);
+    });
+    expect(screen.getAllByText('12 отзывов').length).toBeGreaterThan(0);
   });
 
   it('renders latest author reviews and limits the list', async () => {
@@ -467,6 +469,22 @@ describe('SkillDetails description', () => {
     renderPage();
 
     expect(await screen.findByText('Нет оценок')).toBeInTheDocument();
+    expect(screen.getByText('Пока нет отзывов')).toBeInTheDocument();
+  });
+
+  it('renders reviews loading state', async () => {
+    mockUseUserRatings.mockReturnValue(
+      makeRatingsState({
+        isLoading: true
+      })
+    );
+    mockLoadCatalogAuthors
+      .mockResolvedValueOnce(makeCatalogResponse('React description'))
+      .mockResolvedValueOnce(relatedEmptyResponse);
+
+    renderPage();
+
+    expect(await screen.findByText('Загрузка отзывов...')).toBeInTheDocument();
   });
 
   it('renders author rating fallback on error', async () => {
@@ -482,6 +500,7 @@ describe('SkillDetails description', () => {
     renderPage();
 
     expect(await screen.findByText('Рейтинг недоступен')).toBeInTheDocument();
+    expect(screen.getByText('Не удалось загрузить отзывы')).toBeInTheDocument();
   });
 
   it('renders author status', async () => {

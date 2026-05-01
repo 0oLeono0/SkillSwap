@@ -451,30 +451,6 @@ const SkillDetails = (): ReactElement => {
               <span className={styles.authorRatingStatus}>Нет оценок</span>
             )}
           </div>
-          {!isRatingsLoading && !ratingsError && latestRatings.length > 0 && (
-            <div className={styles.authorReviews}>
-              {latestRatings.map((rating) => (
-                <article key={rating.id} className={styles.authorReview}>
-                  <div className={styles.authorReviewHeader}>
-                    <span className={styles.authorReviewName}>
-                      {rating.rater.name}
-                    </span>
-                    <span className={styles.authorReviewScore}>
-                      Оценка: {rating.score}
-                    </span>
-                  </div>
-                  <span className={styles.authorReviewDate}>
-                    {formatReviewDate(rating.createdAt)}
-                  </span>
-                  {rating.comment ? (
-                    <p className={styles.authorReviewComment}>
-                      {rating.comment}
-                    </p>
-                  ) : null}
-                </article>
-              ))}
-            </div>
-          )}
           <p className={styles.authorBio}>{authorBio}</p>
 
           <div className={styles.authorSkills}>
@@ -623,6 +599,55 @@ const SkillDetails = (): ReactElement => {
           </div>
         )}
       </div>
+
+      <section className={styles.reviewsSection}>
+        <div className={styles.reviewsHeader}>
+          <Title tag='h2' variant='lg'>
+            Отзывы
+          </Title>
+          {!isRatingsLoading &&
+            !ratingsError &&
+            ratingsCount > 0 &&
+            averageRating !== null && (
+              <div
+                className={styles.reviewsSummary}
+                aria-label='Средний рейтинг автора'
+              >
+                <span className={styles.reviewsAverage}>
+                  {formatAverageRating(averageRating)}
+                </span>
+                <span>{formatReviewsCount(ratingsCount)}</span>
+              </div>
+            )}
+        </div>
+
+        {isRatingsLoading ? (
+          <div className={styles.state}>Загрузка отзывов...</div>
+        ) : ratingsError ? (
+          <div className={styles.stateError}>Не удалось загрузить отзывы</div>
+        ) : latestRatings.length === 0 ? (
+          <div className={styles.state}>Пока нет отзывов</div>
+        ) : (
+          <div className={styles.reviewList}>
+            {latestRatings.map((rating) => (
+              <article key={rating.id} className={styles.reviewItem}>
+                <div className={styles.reviewHeader}>
+                  <span className={styles.reviewName}>{rating.rater.name}</span>
+                  <span className={styles.reviewScore}>
+                    Оценка: {rating.score}
+                  </span>
+                </div>
+                <span className={styles.reviewDate}>
+                  {formatReviewDate(rating.createdAt)}
+                </span>
+                {rating.comment ? (
+                  <p className={styles.reviewComment}>{rating.comment}</p>
+                ) : null}
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
 
       <div className={styles.relatedSection}>
         <div className={styles.relatedHeader}>
