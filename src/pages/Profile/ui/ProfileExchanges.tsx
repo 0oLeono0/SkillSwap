@@ -20,6 +20,7 @@ import type {
   ExchangeStatus,
   ExchangeWithMessages
 } from '@/entities/Exchange/types';
+import { useUserRatings } from '@/entities/User/model/useUserRatings';
 import { getSubskillNameMap } from '@/entities/Skill/mappers';
 import { loadFiltersBaseData } from '@/features/Filter/model/filterBaseDataStore';
 import { ProfileReceivedReviews } from './ProfileReceivedReviews';
@@ -110,6 +111,8 @@ export function ProfileExchanges(): ReactElement {
     () => new Set()
   );
   const [skillNames, setSkillNames] = useState<Map<number, string>>(new Map());
+  const receivedRatings = useUserRatings(user?.id);
+  const refetchReceivedRatings = receivedRatings.refetch;
 
   useEffect(() => {
     let isMounted = true;
@@ -339,6 +342,7 @@ export function ProfileExchanges(): ReactElement {
           return next;
         });
         setRatingError(null);
+        void refetchReceivedRatings();
       } catch (err) {
         console.error('[ProfileExchanges] Failed to rate exchange', err);
         const status =
@@ -365,6 +369,7 @@ export function ProfileExchanges(): ReactElement {
     [
       accessToken,
       ratedExchangeIds,
+      refetchReceivedRatings,
       ratingComment,
       ratingScore,
       selectedExchange
@@ -449,7 +454,7 @@ export function ProfileExchanges(): ReactElement {
 
       {listError && <p className={styles.error}>{listError}</p>}
 
-      <ProfileReceivedReviews userId={user?.id} />
+      <ProfileReceivedReviews ratingsState={receivedRatings} />
 
       <div className={styles.layout}>
         <div className={styles.listWrapper}>

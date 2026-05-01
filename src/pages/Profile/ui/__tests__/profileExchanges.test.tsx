@@ -177,6 +177,13 @@ describe('ProfileExchanges rating form', () => {
   });
 
   it('shows success state and blocks repeat submit after rating', async () => {
+    const refetchRatings = jest.fn(() => Promise.resolve());
+    mockUseUserRatings.mockReturnValue(
+      makeRatingsState({
+        refetch: refetchRatings
+      })
+    );
+
     await setupProfileExchanges(createExchangeDetails('completed'));
 
     fireEvent.click(screen.getByRole('button', { name: 'Сохранить оценку' }));
@@ -187,6 +194,7 @@ describe('ProfileExchanges rating form', () => {
     expect(
       screen.queryByRole('button', { name: 'Сохранить оценку' })
     ).not.toBeInTheDocument();
+    expect(refetchRatings).toHaveBeenCalledTimes(1);
     expect(mockRateExchange).toHaveBeenCalledTimes(1);
   });
 

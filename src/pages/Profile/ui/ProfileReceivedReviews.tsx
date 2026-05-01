@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import styles from './profileReceivedReviews.module.scss';
-import { useUserRatings } from '@/entities/User/model/useUserRatings';
+import type { UseUserRatingsResult } from '@/entities/User/model/useUserRatings';
 import {
   formatAverageRating,
   formatReviewDate,
@@ -8,14 +8,14 @@ import {
 } from '@/shared/lib/ratings';
 
 interface ProfileReceivedReviewsProps {
-  userId?: string | null;
+  ratingsState: UseUserRatingsResult;
 }
 
 export function ProfileReceivedReviews({
-  userId
+  ratingsState
 }: ProfileReceivedReviewsProps): ReactElement {
   const { ratings, averageRating, ratingsCount, isLoading, error } =
-    useUserRatings(userId);
+    ratingsState;
 
   const hasRatings = ratingsCount > 0 && averageRating !== null;
 
