@@ -373,6 +373,46 @@ describe('Catalog routes', () => {
     });
   });
 
+  it('passes valid user status to catalog search', async () => {
+    mockCatalogService.searchCatalogSkills.mockResolvedValue({
+      authors: [],
+      page: 1,
+      pageSize: 12,
+      totalAuthors: 0
+    });
+
+    const response = await request(app).get(
+      '/api/catalog/search?status=active'
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockCatalogService.searchCatalogSkills).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'active'
+      })
+    );
+  });
+
+  it('ignores unknown catalog user status', async () => {
+    mockCatalogService.searchCatalogSkills.mockResolvedValue({
+      authors: [],
+      page: 1,
+      pageSize: 12,
+      totalAuthors: 0
+    });
+
+    const response = await request(app).get(
+      '/api/catalog/search?status=archived'
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockCatalogService.searchCatalogSkills).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        status: expect.anything()
+      })
+    );
+  });
+
   it('returns skill categories list', async () => {
     mockCatalogService.getSkillCategories.mockResolvedValue([
       { id: 1, name: 'Cat', subskills: [] }

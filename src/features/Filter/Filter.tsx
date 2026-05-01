@@ -1,16 +1,29 @@
 import { FilterPanel } from './ui/FilterPanel.tsx';
 import { type FC, useReducer } from 'react';
 import type { SearchMode } from './types.ts';
-import { collectSkillIds, countActiveFilters, mapCityIdsToCityNames } from './utils.ts';
+import {
+  collectSkillIds,
+  countActiveFilters,
+  mapCityIdsToCityNames
+} from './utils.ts';
 import { useFiltersBaseData } from './model/useFiltersBaseData';
 import { filterReducer, filtersInitialState } from './model/filterReducer';
+import type { UserStatusFilter } from '@/shared/types/userStatus';
 
 export const Filter: FC = () => {
-  const [filters, dispatchFilters] = useReducer(filterReducer, filtersInitialState);
-  const { cities: cityOptions, skillGroups: skillCategories } = useFiltersBaseData();
+  const [filters, dispatchFilters] = useReducer(
+    filterReducer,
+    filtersInitialState
+  );
+  const { cities: cityOptions, skillGroups: skillCategories } =
+    useFiltersBaseData();
 
   const handleModeChange = (mode: SearchMode) => {
     dispatchFilters({ type: 'setMode', mode });
+  };
+
+  const handleStatusChange = (status: UserStatusFilter) => {
+    dispatchFilters({ type: 'setStatus', status });
   };
 
   const handleGenderChange = (gender: string) => {
@@ -27,7 +40,7 @@ export const Filter: FC = () => {
       skillCategories,
       filters.skillIds,
       categoryId,
-      skillIds,
+      skillIds
     );
     dispatchFilters({ type: 'setSkillIds', skillIds: nextSkillIds });
   };
@@ -43,6 +56,7 @@ export const Filter: FC = () => {
       skillGroups={skillCategories}
       filtersCount={countActiveFilters(filters)}
       onModeChange={handleModeChange}
+      onStatusChange={handleStatusChange}
       onGenderChange={handleGenderChange}
       onCitySelect={handleCitySelect}
       onSkillSelect={handleSkillSelect}

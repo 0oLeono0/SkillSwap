@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import type { AuthContextType, AuthUser } from '@/app/providers/auth/context';
@@ -220,7 +220,14 @@ jest.mock('@/widgets/SkillsList', () => ({
 }));
 
 jest.mock('@/features/Filter/ui/FilterPanel.tsx', () => ({
-  FilterPanel: () => <div>filter</div>
+  FilterPanel: (props: { onStatusChange: (status: 'active') => void }) => (
+    <div>
+      filter
+      <button type='button' onClick={() => props.onStatusChange('active')}>
+        status-active
+      </button>
+    </div>
+  )
 }));
 
 jest.mock('@/app/providers/auth', () => ({
@@ -334,5 +341,26 @@ describe('Catalog favorite action', () => {
     ).not.toBeInTheDocument();
     expect(mockToggleFavorite).not.toHaveBeenCalled();
     expect(mockNavigateToLogin).not.toHaveBeenCalled();
+  });
+
+  it('passes selected author status to catalog search', async () => {
+    const user = userEvent.setup();
+    renderCatalog();
+
+    await waitFor(() => {
+      expect(mockLoadCatalogAuthors).toHaveBeenCalled();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'status-active' }));
+
+    await waitFor(() => {
+      expect(mockLoadCatalogAuthors).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          status: 'active',
+          page: 1
+        }),
+        expect.any(Object)
+      );
+    });
   });
 });

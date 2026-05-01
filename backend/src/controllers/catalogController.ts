@@ -3,6 +3,7 @@ import { catalogService } from '../services/catalogService.js';
 import { createNotFound } from '../utils/httpErrors.js';
 import { NOT_FOUND_MESSAGES } from '../utils/errorMessages.js';
 import { parseNumberParamOrNotFound } from '../utils/routeParams.js';
+import { isUserStatus } from '../types/userStatus.js';
 
 const parseStringList = (value: unknown): string[] => {
   if (Array.isArray(value)) {
@@ -71,6 +72,10 @@ export const searchCatalogSkills = asyncHandler(async (req, res) => {
     typeof req.query.gender === 'string' ? req.query.gender : undefined;
   const search =
     typeof req.query.search === 'string' ? req.query.search : undefined;
+  const status =
+    typeof req.query.status === 'string' && isUserStatus(req.query.status)
+      ? req.query.status
+      : undefined;
   const excludeAuthorId =
     typeof req.query.excludeAuthorId === 'string'
       ? req.query.excludeAuthorId
@@ -101,6 +106,9 @@ export const searchCatalogSkills = asyncHandler(async (req, res) => {
   }
   if (search) {
     options.search = search;
+  }
+  if (status) {
+    options.status = status;
   }
   if (excludeAuthorId) {
     options.excludeAuthorId = excludeAuthorId;

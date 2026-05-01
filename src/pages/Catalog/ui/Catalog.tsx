@@ -41,6 +41,7 @@ import { ApiError } from '@/shared/api/request';
 import { isElevatedRole } from '@/shared/types/userRole';
 import { loadFiltersBaseData } from '@/features/Filter/model/filterBaseDataStore';
 import { useAuthEntryNavigation } from '@/shared/lib/router/useAuthEntryNavigation';
+import type { UserStatusFilter } from '@/shared/types/userStatus';
 
 type CatalogVariant = 'home' | 'catalog';
 
@@ -68,6 +69,11 @@ const SECTION_META: Record<string, string> = {
 const MODE_LABELS: Record<Exclude<SearchMode, 'all'>, string> = {
   wantToLearn: 'Хочу учить',
   canTeach: 'Могу научить'
+};
+
+const STATUS_FILTER_LABELS: Record<Exclude<UserStatusFilter, 'all'>, string> = {
+  active: 'Активные',
+  inactive: 'Неактивные'
 };
 
 const searchModeValues: SearchMode[] = ['all', 'wantToLearn', 'canTeach'];
@@ -166,6 +172,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
           {
             mode: filters.mode,
             gender: filters.gender,
+            status: filters.status === 'all' ? undefined : filters.status,
             cityIds,
             skillIds: filters.skillIds,
             excludeAuthorId: authUser?.id,
@@ -377,6 +384,10 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
       labels.push(filters.gender);
     }
 
+    if (filters.status !== 'all') {
+      labels.push(STATUS_FILTER_LABELS[filters.status]);
+    }
+
     if (filters.cities.length) {
       labels.push(...filters.cities);
     }
@@ -417,6 +428,10 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
 
   const handleGenderChange = useCallback((gender: string) => {
     dispatchFilters({ type: 'setGender', gender: gender || undefined });
+  }, []);
+
+  const handleStatusChange = useCallback((status: UserStatusFilter) => {
+    dispatchFilters({ type: 'setStatus', status });
   }, []);
 
   const handleCitySelect = useCallback(
@@ -608,6 +623,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
             skillGroups={skillGroups}
             filtersCount={filtersCount}
             onModeChange={handleModeChange}
+            onStatusChange={handleStatusChange}
             onGenderChange={handleGenderChange}
             onCitySelect={handleCitySelect}
             onSkillSelect={handleSkillSelect}

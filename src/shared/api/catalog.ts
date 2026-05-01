@@ -1,4 +1,5 @@
 import { request, type RequestOptions } from '@/shared/api/request';
+import type { UserStatus } from '@/shared/types/userStatus';
 
 export interface CatalogFilterBaseData {
   cities: Array<{ id: number; name: string }>;
@@ -51,6 +52,7 @@ export interface CatalogSearchParams {
   authorIds?: string[];
   excludeAuthorId?: string;
   search?: string;
+  status?: UserStatus;
   page?: number;
   pageSize?: number;
 }
@@ -80,6 +82,9 @@ const buildCatalogSearchQuery = (params: CatalogSearchParams): string => {
   }
   if (params.search) {
     query.set('search', params.search);
+  }
+  if (params.status) {
+    query.set('status', params.status);
   }
   if (typeof params.excludeAuthorId === 'string') {
     query.set('excludeAuthorId', params.excludeAuthorId);

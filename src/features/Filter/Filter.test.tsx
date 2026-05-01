@@ -5,6 +5,7 @@ import { Filter } from './Filter';
 interface MockFilterPanelProps {
   filtersCount: number;
   onModeChange: (mode: 'canTeach') => void;
+  onStatusChange: (status: 'active') => void;
   onGenderChange: (gender: string) => void;
   onCitySelect: (ids: number[]) => void;
   onSkillSelect: (categoryId: number, skillIds: number[]) => void;
@@ -14,21 +15,22 @@ interface MockFilterPanelProps {
 jest.mock('./ui/FilterPanel.tsx', () => ({
   FilterPanel: (props: MockFilterPanelProps) => (
     <div>
-      <div data-testid="filters-count">{props.filtersCount}</div>
+      <div data-testid='filters-count'>{props.filtersCount}</div>
       <button onClick={() => props.onModeChange('canTeach')}>mode</button>
+      <button onClick={() => props.onStatusChange('active')}>status</button>
       <button onClick={() => props.onGenderChange('female')}>gender</button>
       <button onClick={() => props.onCitySelect([2])}>city</button>
       <button onClick={() => props.onSkillSelect(1, [101, 102])}>skills</button>
       <button onClick={props.onFilterReset}>reset</button>
     </div>
-  ),
+  )
 }));
 
 jest.mock('./model/useFiltersBaseData', () => ({
   useFiltersBaseData: () => ({
     cities: [
       { id: 1, name: 'Minsk' },
-      { id: 2, name: 'Vilnius' },
+      { id: 2, name: 'Vilnius' }
     ],
     skillGroups: [
       {
@@ -36,14 +38,14 @@ jest.mock('./model/useFiltersBaseData', () => ({
         name: 'Group',
         skills: [
           { id: 101, name: 'One' },
-          { id: 102, name: 'Two' },
-        ],
-      },
+          { id: 102, name: 'Two' }
+        ]
+      }
     ],
     isLoading: false,
     error: null,
-    refetch: jest.fn(),
-  }),
+    refetch: jest.fn()
+  })
 }));
 
 describe('Filter', () => {
@@ -57,14 +59,17 @@ describe('Filter', () => {
     await user.click(screen.getByRole('button', { name: 'mode' }));
     expect(count).toHaveTextContent('1');
 
-    await user.click(screen.getByRole('button', { name: 'gender' }));
+    await user.click(screen.getByRole('button', { name: 'status' }));
     expect(count).toHaveTextContent('2');
 
-    await user.click(screen.getByRole('button', { name: 'city' }));
+    await user.click(screen.getByRole('button', { name: 'gender' }));
     expect(count).toHaveTextContent('3');
 
+    await user.click(screen.getByRole('button', { name: 'city' }));
+    expect(count).toHaveTextContent('4');
+
     await user.click(screen.getByRole('button', { name: 'skills' }));
-    expect(count).toHaveTextContent('5');
+    expect(count).toHaveTextContent('6');
 
     await user.click(screen.getByRole('button', { name: 'reset' }));
     expect(count).toHaveTextContent('0');

@@ -6,6 +6,9 @@ export const countActiveFilters = (filters: Filters): number => {
   if (filters.mode !== 'all') {
     count++;
   }
+  if (filters.status !== 'all') {
+    count++;
+  }
   if (filters.gender) {
     count++;
   }
@@ -19,15 +22,28 @@ export const countActiveFilters = (filters: Filters): number => {
   return count;
 };
 
-export const mapCityIdsToCityNames = (cityOptions: CityOption[], cityIds: number[]) => {
-  return cityOptions.filter((city) => cityIds.includes(city.id)).map((city) => city.name);
+export const mapCityIdsToCityNames = (
+  cityOptions: CityOption[],
+  cityIds: number[]
+) => {
+  return cityOptions
+    .filter((city) => cityIds.includes(city.id))
+    .map((city) => city.name);
 };
 
-export const mapCityNamesToCityIds = (cityOptions: CityOption[], cityNames: string[]) => {
-  return cityOptions.filter((city) => cityNames.includes(city.name)).map((city) => city.id);
+export const mapCityNamesToCityIds = (
+  cityOptions: CityOption[],
+  cityNames: string[]
+) => {
+  return cityOptions
+    .filter((city) => cityNames.includes(city.name))
+    .map((city) => city.id);
 };
 
-export const selectedSkillsByGroup = (group: SkillCategories, skillIds: number[]) => {
+export const selectedSkillsByGroup = (
+  group: SkillCategories,
+  skillIds: number[]
+) => {
   return skillIds.filter((id) => group.skills.some((skill) => skill.id === id));
 };
 
@@ -35,11 +51,13 @@ export const collectSkillIds = (
   categories: SkillCategories[],
   selectedSkillIds: number[],
   categoryId: number,
-  skillIds: number[],
+  skillIds: number[]
 ) => {
   const otherCategorySelected = categories
     .filter((category) => category.id !== categoryId)
-    .flatMap((category) => selectedSkillIds.filter((id) => category.skills.some((s) => s.id === id)));
+    .flatMap((category) =>
+      selectedSkillIds.filter((id) => category.skills.some((s) => s.id === id))
+    );
 
   return [...otherCategorySelected, ...skillIds];
 };

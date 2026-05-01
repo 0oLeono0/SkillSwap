@@ -121,4 +121,24 @@ describe('catalogService.searchCatalogSkills', () => {
       })
     );
   });
+
+  it('filters catalog authors by user status', async () => {
+    mockPrisma.user.count.mockResolvedValue(0);
+
+    await catalogService.searchCatalogSkills({
+      status: 'inactive'
+    });
+
+    expect(mockPrisma.user.count).toHaveBeenCalledWith({
+      where: expect.objectContaining({
+        status: 'inactive',
+        userSkills: {
+          some: {
+            subcategoryId: { not: null }
+          }
+        }
+      })
+    });
+    expect(mockPrisma.user.findMany).not.toHaveBeenCalled();
+  });
 });

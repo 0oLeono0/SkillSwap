@@ -1,3 +1,5 @@
+import type { UserStatusFilter } from '@/shared/types/userStatus';
+
 export type SearchMode = 'all' | 'wantToLearn' | 'canTeach';
 
 export interface CityOption {
@@ -18,12 +20,14 @@ export interface SkillCategories {
 
 export interface Filters {
   mode: SearchMode;
+  status: UserStatusFilter;
   gender: string | undefined;
   cities: string[];
   skillIds: number[];
 }
 
 type ModeChangeHandler = (mode: SearchMode) => void;
+type StatusChangeHandler = (status: UserStatusFilter) => void;
 type GenderChangeHandler = (gender: string) => void;
 type CitySelectHandler = (cityIds: number[]) => void;
 type SkillSelectHandler = (categoryId: number, skillIds: number[]) => void;
@@ -34,6 +38,7 @@ export interface FilterPanelProps {
   skillGroups: SkillCategories[];
   filtersCount: number;
   onModeChange: ModeChangeHandler;
+  onStatusChange: StatusChangeHandler;
   onGenderChange: GenderChangeHandler;
   onCitySelect: CitySelectHandler;
   onSkillSelect: SkillSelectHandler;

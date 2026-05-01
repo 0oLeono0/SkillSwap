@@ -6,6 +6,7 @@ import {
   type UserSkillType,
   isUserSkillType
 } from '../types/userSkillType.js';
+import { isUserStatus, type UserStatus } from '../types/userStatus.js';
 
 export interface CityOption {
   id: number;
@@ -80,6 +81,7 @@ export interface CatalogSearchOptions {
   authorIds?: string[];
   excludeAuthorId?: string;
   search?: string;
+  status?: UserStatus;
   page?: number;
   pageSize?: number;
 }
@@ -399,6 +401,10 @@ export const catalogService = {
 
     if (options.gender) {
       userWhere.gender = options.gender;
+    }
+
+    if (isUserStatus(options.status)) {
+      userWhere.status = options.status;
     }
 
     if (cityIds.length) {

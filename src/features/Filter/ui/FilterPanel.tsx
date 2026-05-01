@@ -9,6 +9,7 @@ import type { Gender } from '@/shared/types/gender';
 import { mapCityNamesToCityIds, selectedSkillsByGroup } from '../utils.ts';
 import { GroupedMultiSelect } from '@/shared/ui/GroupedMultiSelect/GroupedMultiSelect';
 import { ToggleMore } from '@/features/Filter/ui/ToggleMore/ToggleMore.tsx';
+import type { UserStatusFilter } from '@/shared/types/userStatus';
 
 export const FilterPanel: FC<FilterPanelProps> = (props: FilterPanelProps) => {
   const {
@@ -18,6 +19,7 @@ export const FilterPanel: FC<FilterPanelProps> = (props: FilterPanelProps) => {
     filtersCount,
     onGenderChange,
     onModeChange,
+    onStatusChange,
     onCitySelect,
     onSkillSelect,
     onFilterReset
@@ -53,6 +55,20 @@ export const FilterPanel: FC<FilterPanelProps> = (props: FilterPanelProps) => {
           <Radio title={'Хочу научиться'} value={'wantToLearn'}></Radio>
           <Radio title={'Могу научить'} value={'canTeach'}></Radio>
         </RadioGroup>
+        <div className={styles.filter}>
+          <Title tag={'h3'} variant={'md'}>
+            Статус автора
+          </Title>
+          <RadioGroup
+            name={'author-status'}
+            value={filters.status}
+            onChange={(_, value) => onStatusChange(value as UserStatusFilter)}
+          >
+            <Radio title={'Все'} value={'all'}></Radio>
+            <Radio title={'Активные'} value={'active'}></Radio>
+            <Radio title={'Неактивные'} value={'inactive'}></Radio>
+          </RadioGroup>
+        </div>
         <div className={styles.filter}>
           <Title tag={'h3'} variant={'md'}>
             Навыки
