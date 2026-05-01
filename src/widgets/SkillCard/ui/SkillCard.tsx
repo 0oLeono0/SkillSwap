@@ -7,23 +7,7 @@ import { ageToString } from '@/shared/lib/helpers';
 import { Button } from '@/shared/ui/button/Button';
 import { Tag } from '@/shared/ui/Tag/Tag';
 import { useUserRatings } from '@/entities/User/model/useUserRatings';
-
-const formatReviewsCount = (count: number) => {
-  const absCount = Math.abs(count);
-  const lastTwoDigits = absCount % 100;
-  const lastDigit = absCount % 10;
-
-  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
-    return `${count} отзывов`;
-  }
-  if (lastDigit === 1) {
-    return `${count} отзыв`;
-  }
-  if (lastDigit >= 2 && lastDigit <= 4) {
-    return `${count} отзыва`;
-  }
-  return `${count} отзывов`;
-};
+import { formatAverageRating, formatReviewsCount } from '@/shared/lib/ratings';
 
 const SkillCard: FC<SkillCardProps> = ({
   author,
@@ -74,7 +58,9 @@ const SkillCard: FC<SkillCardProps> = ({
 
     return (
       <>
-        <span className={styles.ratingValue}>{averageRating.toFixed(1)}</span>
+        <span className={styles.ratingValue}>
+          {formatAverageRating(averageRating)}
+        </span>
         <span className={styles.ratingCount}>
           {formatReviewsCount(ratingsCount)}
         </span>

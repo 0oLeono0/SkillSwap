@@ -27,6 +27,7 @@ import {
   MATERIAL_TYPE_LABELS,
   MATERIAL_TYPE_ORDER
 } from '@/shared/lib/materials';
+import { formatAverageRating, formatReviewsCount } from '@/shared/lib/ratings';
 import { SkillsList } from '@/widgets/SkillsList';
 import GalleryIcon from '@/shared/assets/icons/actions/like.svg?react';
 import ShareIcon from '@/shared/assets/icons/actions/share.svg?react';
@@ -38,10 +39,25 @@ import stock4 from '@/shared/assets/images/stock/stock4.jpg';
 import OkIcon from '@/shared/assets/icons/status/done.svg?react';
 import NotificationIcon from '@/shared/assets/icons/content/notification.svg?react';
 import { useAuthEntryNavigation } from '@/shared/lib/router/useAuthEntryNavigation';
+import { useUserRatings } from '@/entities/User/model/useUserRatings';
 
 const RELATED_AUTHORS_LIMIT = 4;
+const LATEST_REVIEWS_LIMIT = 3;
 
 const GALLERY_IMAGES = [stock1, stock2, stock3, stock4];
+
+const formatReviewDate = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return 'Дата не указана';
+  }
+
+  return date.toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+};
 
 const SkillDetails = (): ReactElement => {
   const { authorId: authorIdParam } = useParams();
@@ -49,6 +65,13 @@ const SkillDetails = (): ReactElement => {
   const navigate = useNavigate();
   const { navigateToLogin, navigateToRegister } = useAuthEntryNavigation();
   const { isAuthenticated, user, accessToken } = useAuth();
+  const {
+    ratings: authorRatings,
+    averageRating,
+    ratingsCount,
+    isLoading: isRatingsLoading,
+    error: ratingsError
+  } = useUserRatings(authorId);
 
   const { toggleFavorite, isFavorite } = useFavorites();
 
@@ -211,6 +234,11 @@ const SkillDetails = (): ReactElement => {
         items: materials.filter((material) => material.type === type)
       })).filter((group) => group.items.length > 0),
     [materials]
+  );
+
+  const latestRatings = useMemo(
+    () => authorRatings.slice(0, LATEST_REVIEWS_LIMIT),
+    [authorRatings]
   );
 
   useEffect(() => {
@@ -386,6 +414,52 @@ const SkillDetails = (): ReactElement => {
               </p>
             </div>
           </div>
+          <div className={styles.authorRating} aria-label='Рейтинг автора'>
+            {isRatingsLoading ? (
+              <span className={styles.authorRatingStatus}>
+                Загрузка рейтинга...
+              </span>
+            ) : ratingsError ? (
+              <span className={styles.authorRatingStatus}>
+                Рейтинг недоступен
+              </span>
+            ) : ratingsCount > 0 && averageRating !== null ? (
+              <>
+                <span className={styles.authorRatingValue}>
+                  {formatAverageRating(averageRating)}
+                </span>
+                <span className={styles.authorRatingCount}>
+                  {formatReviewsCount(ratingsCount)}
+                </span>
+              </>
+            ) : (
+              <span className={styles.authorRatingStatus}>Нет оценок</span>
+            )}
+          </div>
+          {!isRatingsLoading && !ratingsError && latestRatings.length > 0 && (
+            <div className={styles.authorReviews}>
+              {latestRatings.map((rating) => (
+                <article key={rating.id} className={styles.authorReview}>
+                  <div className={styles.authorReviewHeader}>
+                    <span className={styles.authorReviewName}>
+                      {rating.rater.name}
+                    </span>
+                    <span className={styles.authorReviewScore}>
+                      Оценка: {rating.score}
+                    </span>
+                  </div>
+                  <span className={styles.authorReviewDate}>
+                    {formatReviewDate(rating.createdAt)}
+                  </span>
+                  {rating.comment ? (
+                    <p className={styles.authorReviewComment}>
+                      {rating.comment}
+                    </p>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+          )}
           <p className={styles.authorBio}>{authorBio}</p>
 
           <div className={styles.authorSkills}>

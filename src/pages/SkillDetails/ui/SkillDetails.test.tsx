@@ -4,6 +4,7 @@ import { ROUTES } from '@/shared/constants';
 import { SkillCategories } from '@/shared/lib/constants';
 import { loadCatalogAuthors } from '@/pages/Catalog/model/catalogData';
 import { materialsApi } from '@/shared/api/materials';
+import { useUserRatings } from '@/entities/User/model/useUserRatings';
 import SkillDetails from './SkillDetails';
 import userEvent from '@testing-library/user-event';
 
@@ -18,6 +19,10 @@ jest.mock('@/shared/api/materials', () => ({
   materialsApi: {
     listByUserSkill: jest.fn()
   }
+}));
+
+jest.mock('@/entities/User/model/useUserRatings', () => ({
+  useUserRatings: jest.fn()
 }));
 
 jest.mock('@/app/providers/auth', () => ({
@@ -47,6 +52,9 @@ const mockLoadCatalogAuthors = loadCatalogAuthors as jest.MockedFunction<
 >;
 const mockListMaterials = materialsApi.listByUserSkill as jest.MockedFunction<
   typeof materialsApi.listByUserSkill
+>;
+const mockUseUserRatings = useUserRatings as jest.MockedFunction<
+  typeof useUserRatings
 >;
 
 const makeCatalogResponse = (description: string) => ({
@@ -135,6 +143,18 @@ const makeMaterial = (overrides = {}) => ({
   ...overrides
 });
 
+const makeRatingsState = (
+  overrides: Partial<ReturnType<typeof useUserRatings>> = {}
+): ReturnType<typeof useUserRatings> => ({
+  ratings: [],
+  averageRating: null,
+  ratingsCount: 0,
+  isLoading: false,
+  error: null,
+  refetch: jest.fn(),
+  ...overrides
+});
+
 const relatedEmptyResponse = {
   authors: [],
   page: 1,
@@ -158,6 +178,7 @@ describe('SkillDetails description', () => {
     jest.clearAllMocks();
     mockIsFavorite.mockReturnValue(false);
     mockListMaterials.mockResolvedValue({ materials: [] });
+    mockUseUserRatings.mockReturnValue(makeRatingsState());
   });
 
   it('renders actual skill description when it exists', async () => {
@@ -340,5 +361,121 @@ describe('SkillDetails description', () => {
     expect(await screen.findByText('Vue material')).toBeInTheDocument();
     expect(screen.queryByText('React material')).not.toBeInTheDocument();
     expect(mockListMaterials).toHaveBeenCalledWith('skill-2');
+  });
+
+  it('loads author ratings by author id', async () => {
+    mockLoadCatalogAuthors
+      .mockResolvedValueOnce(makeCatalogResponse('React description'))
+      .mockResolvedValueOnce(relatedEmptyResponse);
+
+    renderPage();
+
+    await screen.findByText('React description');
+    expect(mockUseUserRatings).toHaveBeenCalledWith('author-1');
+  });
+
+  it('renders author average rating and reviews count', async () => {
+    mockUseUserRatings.mockReturnValue(
+      makeRatingsState({
+        averageRating: 4.8,
+        ratingsCount: 12
+      })
+    );
+    mockLoadCatalogAuthors
+      .mockResolvedValueOnce(makeCatalogResponse('React description'))
+      .mockResolvedValueOnce(relatedEmptyResponse);
+
+    renderPage();
+
+    expect(await screen.findByText('4.8')).toBeInTheDocument();
+    expect(screen.getByText('12 отзывов')).toBeInTheDocument();
+  });
+
+  it('renders latest author reviews and limits the list', async () => {
+    mockUseUserRatings.mockReturnValue(
+      makeRatingsState({
+        averageRating: 4.7,
+        ratingsCount: 4,
+        ratings: [
+          {
+            id: 'rating-1',
+            exchangeId: 'exchange-1',
+            score: 5,
+            comment: 'Очень полезный обмен',
+            rater: { id: 'rater-1', name: 'Анна', avatarUrl: null },
+            createdAt: '2026-04-30T10:00:00.000Z',
+            updatedAt: '2026-04-30T10:00:00.000Z'
+          },
+          {
+            id: 'rating-2',
+            exchangeId: 'exchange-2',
+            score: 4,
+            comment: 'Хорошая практика',
+            rater: { id: 'rater-2', name: 'Борис', avatarUrl: null },
+            createdAt: '2026-04-29T10:00:00.000Z',
+            updatedAt: '2026-04-29T10:00:00.000Z'
+          },
+          {
+            id: 'rating-3',
+            exchangeId: 'exchange-3',
+            score: 5,
+            comment: null,
+            rater: { id: 'rater-3', name: 'Мария', avatarUrl: null },
+            createdAt: '2026-04-28T10:00:00.000Z',
+            updatedAt: '2026-04-28T10:00:00.000Z'
+          },
+          {
+            id: 'rating-4',
+            exchangeId: 'exchange-4',
+            score: 3,
+            comment: 'Четвёртый отзыв не должен быть виден',
+            rater: { id: 'rater-4', name: 'Игорь', avatarUrl: null },
+            createdAt: '2026-04-27T10:00:00.000Z',
+            updatedAt: '2026-04-27T10:00:00.000Z'
+          }
+        ]
+      })
+    );
+    mockLoadCatalogAuthors
+      .mockResolvedValueOnce(makeCatalogResponse('React description'))
+      .mockResolvedValueOnce(relatedEmptyResponse);
+
+    renderPage();
+
+    expect(await screen.findByText('Анна')).toBeInTheDocument();
+    expect(screen.getAllByText('Оценка: 5')).toHaveLength(2);
+    expect(screen.getByText('Очень полезный обмен')).toBeInTheDocument();
+    expect(screen.getByText('Борис')).toBeInTheDocument();
+    expect(screen.getByText('Хорошая практика')).toBeInTheDocument();
+    expect(screen.getByText('Мария')).toBeInTheDocument();
+    expect(screen.queryByText('Игорь')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Четвёртый отзыв не должен быть виден')
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders no ratings state', async () => {
+    mockLoadCatalogAuthors
+      .mockResolvedValueOnce(makeCatalogResponse('React description'))
+      .mockResolvedValueOnce(relatedEmptyResponse);
+
+    renderPage();
+
+    expect(await screen.findByText('Нет оценок')).toBeInTheDocument();
+  });
+
+  it('renders author rating fallback on error', async () => {
+    mockUseUserRatings.mockReturnValue(
+      makeRatingsState({
+        error: 'Не удалось загрузить рейтинг пользователя'
+      })
+    );
+    mockLoadCatalogAuthors
+      .mockResolvedValueOnce(makeCatalogResponse('React description'))
+      .mockResolvedValueOnce(relatedEmptyResponse);
+
+    renderPage();
+
+    expect(await screen.findByText('Рейтинг недоступен')).toBeInTheDocument();
   });
 });

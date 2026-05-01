@@ -143,6 +143,79 @@
   color: rgba(0, 0, 0, 0.6);
 }
 
+.authorRating {
+  min-height: 30px;
+  margin-bottom: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.authorRatingValue {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--button-color-accent);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.authorRatingCount,
+.authorRatingStatus {
+  color: var(--font-color-secondary);
+  font-size: 14px;
+}
+
+.authorReviews {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.authorReview {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(80, 136, 38, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.authorReviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.authorReviewName {
+  color: var(--font-color-primary);
+  font-weight: 600;
+}
+
+.authorReviewScore {
+  color: var(--button-color-accent);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.authorReviewDate {
+  color: rgba(0, 0, 0, 0.55);
+  font-size: 12px;
+}
+
+.authorReviewComment {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.75);
+  line-height: 1.45;
+}
+
 .authorBio {
   margin: 0;
 }
