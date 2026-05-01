@@ -46,6 +46,27 @@
     font-weight: var(--font-weight-regular);
 }
 
+.rating {
+    min-height: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-family-main), sans-serif;
+    font-size: var(--font-size-sm);
+    line-height: var(--font-line-xs);
+    color: var(--font-color-secondary);
+}
+
+.rating-value {
+    color: var(--button-color-accent);
+    font-weight: var(--font-weight-semibold);
+}
+
+.rating-count,
+.rating-status {
+    color: var(--font-color-secondary);
+}
+
 .about {
     font-family: var(--font-family-main), sans-serif;
     font-size: var(--font-size-sm);
@@ -99,4 +120,3 @@
     flex-direction: row;
     gap: 4px;
 }
-

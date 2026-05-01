@@ -1,6 +1,7 @@
 import type { SkillCategory } from '@/shared/lib/constants.ts';
 
 interface AuthorProps {
+  id?: string;
   avatar: string;
   name: string;
   city: string;

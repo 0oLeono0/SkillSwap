@@ -6,6 +6,24 @@ import ClockIcon from '@/shared/assets/icons/content/clock.svg?react';
 import { ageToString } from '@/shared/lib/helpers';
 import { Button } from '@/shared/ui/button/Button';
 import { Tag } from '@/shared/ui/Tag/Tag';
+import { useUserRatings } from '@/entities/User/model/useUserRatings';
+
+const formatReviewsCount = (count: number) => {
+  const absCount = Math.abs(count);
+  const lastTwoDigits = absCount % 100;
+  const lastDigit = absCount % 10;
+
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+    return `${count} отзывов`;
+  }
+  if (lastDigit === 1) {
+    return `${count} отзыв`;
+  }
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return `${count} отзыва`;
+  }
+  return `${count} отзывов`;
+};
 
 const SkillCard: FC<SkillCardProps> = ({
   author,
@@ -16,12 +34,18 @@ const SkillCard: FC<SkillCardProps> = ({
   onDetailsButtonClick,
   onLikeButtonClick,
   isExchangeOffered,
-  isFavorite = false,
+  isFavorite = false
 }) => {
   const exchangeOfferedIcon = {
     icon: <ClockIcon />,
-    show: isExchangeOffered,
+    show: isExchangeOffered
   };
+  const {
+    averageRating,
+    ratingsCount,
+    isLoading: isRatingLoading,
+    error: ratingError
+  } = useUserRatings(author.id);
 
   const buttonText = isExchangeOffered ? 'Обмен предложен' : 'Подробнее';
 
@@ -35,6 +59,29 @@ const SkillCard: FC<SkillCardProps> = ({
     }
   };
 
+  const renderRating = () => {
+    if (isRatingLoading) {
+      return <span className={styles.ratingStatus}>Загрузка рейтинга...</span>;
+    }
+
+    if (ratingError) {
+      return <span className={styles.ratingStatus}>Рейтинг недоступен</span>;
+    }
+
+    if (!ratingsCount || averageRating === null) {
+      return <span className={styles.ratingStatus}>Нет оценок</span>;
+    }
+
+    return (
+      <>
+        <span className={styles.ratingValue}>{averageRating.toFixed(1)}</span>
+        <span className={styles.ratingCount}>
+          {formatReviewsCount(ratingsCount)}
+        </span>
+      </>
+    );
+  };
+
   return (
     <div className={styles.card}>
       <div className={styles.author}>
@@ -44,12 +91,13 @@ const SkillCard: FC<SkillCardProps> = ({
           <span className={styles.authorDetails}>
             {author.city}, {ageToString(author.age)}
           </span>
+          <span className={styles.rating}>{renderRating()}</span>
           {isLikeButtonVisible && (
             <button
-              type="button"
+              type='button'
               className={likeButtonClassName}
               onClick={handleLikeClick}
-              aria-label="Добавить в избранное"
+              aria-label='Добавить в избранное'
               aria-pressed={isFavorite}
             >
               <LikeIcon />
@@ -74,9 +122,7 @@ const SkillCard: FC<SkillCardProps> = ({
               </Tag>
             ))}
 
-            {skillsToLearn.length > 2 && (
-              <Tag>+{skillsToLearn.length - 2}</Tag>
-            )}
+            {skillsToLearn.length > 2 && <Tag>+{skillsToLearn.length - 2}</Tag>}
           </div>
         </div>
       </div>

@@ -64,6 +64,7 @@ export const SkillsList: FC<SkillsListProps> = ({
           <div key={author.id} className={styles.cardWrapper}>
             <SkillCard
               author={{
+                id: author.id,
                 avatar: resolveAvatar(author),
                 name: author.name || 'Имя не указано',
                 city: author.city || 'Город не указан',
