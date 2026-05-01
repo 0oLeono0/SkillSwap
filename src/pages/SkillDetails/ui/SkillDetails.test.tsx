@@ -57,11 +57,15 @@ const mockUseUserRatings = useUserRatings as jest.MockedFunction<
   typeof useUserRatings
 >;
 
-const makeCatalogResponse = (description: string) => ({
+const makeCatalogResponse = (
+  description: string,
+  status: 'active' | 'inactive' = 'active'
+) => ({
   authors: [
     {
       id: 'author-1',
       name: 'Иван',
+      status,
       city: 'Москва',
       age: 25,
       about: 'Био автора',
@@ -92,6 +96,7 @@ const makeCatalogResponseWithTwoSkills = () => ({
     {
       id: 'author-1',
       name: 'Author',
+      status: 'active' as const,
       city: 'City',
       age: 25,
       about: 'Author bio',
@@ -477,5 +482,17 @@ describe('SkillDetails description', () => {
     renderPage();
 
     expect(await screen.findByText('Рейтинг недоступен')).toBeInTheDocument();
+  });
+
+  it('renders author status', async () => {
+    mockLoadCatalogAuthors
+      .mockResolvedValueOnce(
+        makeCatalogResponse('React description', 'inactive')
+      )
+      .mockResolvedValueOnce(relatedEmptyResponse);
+
+    renderPage();
+
+    expect(await screen.findByText('Неактивен')).toBeInTheDocument();
   });
 });

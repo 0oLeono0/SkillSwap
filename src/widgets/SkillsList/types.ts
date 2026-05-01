@@ -1,3 +1,5 @@
+import type { UserStatus } from '@/shared/types/userStatus';
+
 export interface SkillsListModerationProps {
   enabled: boolean;
   deletingAuthorIds?: string[];
@@ -15,6 +17,7 @@ export interface SkillsListSkill {
 export interface SkillsListAuthor {
   id: string;
   name: string;
+  status?: UserStatus;
   city: string;
   age: number;
   about?: string;

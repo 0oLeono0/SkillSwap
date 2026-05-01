@@ -100,3 +100,31 @@ describe('SkillCard rating', () => {
     expect(screen.getByText('Рейтинг недоступен')).toBeInTheDocument();
   });
 });
+
+describe('SkillCard author status', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockRatingsState();
+  });
+
+  it('shows active status by default', () => {
+    render(<SkillCard {...buildProps()} />);
+
+    expect(screen.getByText('Активен')).toBeInTheDocument();
+  });
+
+  it('shows inactive status', () => {
+    render(
+      <SkillCard
+        {...buildProps({
+          author: {
+            ...buildProps().author,
+            status: 'inactive'
+          }
+        })}
+      />
+    );
+
+    expect(screen.getByText('Неактивен')).toBeInTheDocument();
+  });
+});

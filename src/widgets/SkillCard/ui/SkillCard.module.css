@@ -46,6 +46,26 @@
     font-weight: var(--font-weight-regular);
 }
 
+.status-badge {
+    width: fit-content;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-family: var(--font-family-main), sans-serif;
+    font-size: 12px;
+    line-height: 1.2;
+    font-weight: var(--font-weight-semibold);
+}
+
+.status-badge-active {
+    background: rgba(80, 136, 38, 0.12);
+    color: var(--button-color-accent);
+}
+
+.status-badge-inactive {
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--font-color-secondary);
+}
+
 .rating {
     min-height: 20px;
     display: inline-flex;

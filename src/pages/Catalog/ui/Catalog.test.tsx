@@ -100,6 +100,7 @@ function buildLearnSkill(
 function buildCatalogAuthor({
   id = 'author-1',
   name = 'Author 1',
+  status = 'active',
   city = 'City 1',
   age = 30,
   about,
@@ -128,6 +129,7 @@ function buildCatalogAuthor({
   return {
     id,
     name,
+    status,
     city,
     age,
     canTeach,
@@ -204,14 +206,16 @@ jest.mock('@/widgets/SkillsList', () => ({
     props.authors.length > 0 ? (
       <div>
         {props.authors.map((author) => (
-          <button
-            key={author.id}
-            type='button'
-            aria-label={getFavoriteButtonName(author.id)}
-            onClick={() => props.onToggleFavorite(author.id)}
-          >
-            like
-          </button>
+          <div key={author.id}>
+            <span>{`status-${author.id}-${author.status ?? 'missing'}`}</span>
+            <button
+              type='button'
+              aria-label={getFavoriteButtonName(author.id)}
+              onClick={() => props.onToggleFavorite(author.id)}
+            >
+              like
+            </button>
+          </div>
         ))}
       </div>
     ) : (
@@ -362,5 +366,25 @@ describe('Catalog favorite action', () => {
         expect.any(Object)
       );
     });
+  });
+
+  it('passes author status to catalog list', async () => {
+    mockLoadCatalogAuthors.mockResolvedValue(
+      buildCatalogResponse({
+        authors: [
+          buildCatalogAuthor({
+            id: 'author-inactive',
+            name: 'Inactive author',
+            status: 'inactive'
+          })
+        ]
+      })
+    );
+
+    renderCatalog();
+
+    expect(
+      await screen.findByText('status-author-inactive-inactive')
+    ).toBeInTheDocument();
   });
 });

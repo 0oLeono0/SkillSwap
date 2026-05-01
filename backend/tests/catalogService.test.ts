@@ -20,6 +20,7 @@ type SkillRecord = {
 type UserRecord = {
   id: string;
   name: string;
+  status: string;
   avatarUrl: string | null;
   bio: string | null;
   birthDate: Date | null;
@@ -51,6 +52,7 @@ describe('catalogService.searchCatalogSkills', () => {
       {
         id: 'author-1',
         name: 'Author',
+        status: 'inactive',
         avatarUrl: null,
         bio: null,
         birthDate: new Date('2000-01-01'),
@@ -120,6 +122,46 @@ describe('catalogService.searchCatalogSkills', () => {
         })
       })
     );
+  });
+
+  it('maps user status to catalog author', async () => {
+    mockPrisma.user.count.mockResolvedValue(1);
+    mockPrisma.user.findMany.mockResolvedValue([
+      {
+        id: 'author-1',
+        name: 'Author',
+        status: 'inactive',
+        avatarUrl: null,
+        bio: null,
+        birthDate: new Date('2000-01-01'),
+        city: { name: 'City' },
+        userSkills: [
+          {
+            id: 'skill-1',
+            title: 'Skill',
+            description: 'Desc',
+            type: 'teach',
+            imageUrls: [],
+            subcategoryId: 11,
+            categoryId: 5,
+            category: { id: 5, name: 'Group' },
+            subcategory: {
+              id: 11,
+              name: 'Sub',
+              groupId: 5,
+              group: { id: 5, name: 'Group' }
+            }
+          }
+        ]
+      }
+    ]);
+
+    const result = await catalogService.searchCatalogSkills();
+
+    expect(result.authors[0]).toMatchObject({
+      id: 'author-1',
+      status: 'inactive'
+    });
   });
 
   it('filters catalog authors by user status', async () => {

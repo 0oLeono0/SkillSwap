@@ -6,7 +6,11 @@ import {
   type UserSkillType,
   isUserSkillType
 } from '../types/userSkillType.js';
-import { isUserStatus, type UserStatus } from '../types/userStatus.js';
+import {
+  isUserStatus,
+  type UserStatus,
+  USER_STATUS
+} from '../types/userStatus.js';
 
 export interface CityOption {
   id: number;
@@ -57,6 +61,7 @@ export interface CatalogAuthorSkill {
 export interface CatalogAuthor {
   id: string;
   name: string;
+  status: UserStatus;
   avatarUrl?: string;
   city: string;
   age: number;
@@ -204,6 +209,7 @@ type CatalogAuthorRecord = Prisma.UserGetPayload<{
   select: {
     id: true;
     name: true;
+    status: true;
     avatarUrl: true;
     bio: true;
     birthDate: true;
@@ -296,6 +302,7 @@ const mapCatalogAuthor = (user: CatalogAuthorRecord): CatalogAuthor => {
   const payload: CatalogAuthor = {
     id: user.id,
     name: user.name,
+    status: isUserStatus(user.status) ? user.status : USER_STATUS.active,
     city: user.city?.name ?? '',
     age: getAge(user.birthDate),
     canTeach,
@@ -450,6 +457,7 @@ export const catalogService = {
       select: {
         id: true,
         name: true,
+        status: true,
         avatarUrl: true,
         bio: true,
         birthDate: true,

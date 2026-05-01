@@ -28,6 +28,7 @@ export interface ApiCatalogAuthorSkill {
 export interface ApiCatalogAuthor {
   id: string;
   name: string;
+  status?: UserStatus;
   avatarUrl?: string;
   city: string;
   age: number;

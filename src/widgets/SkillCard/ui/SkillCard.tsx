@@ -8,6 +8,10 @@ import { Button } from '@/shared/ui/button/Button';
 import { Tag } from '@/shared/ui/Tag/Tag';
 import { useUserRatings } from '@/entities/User/model/useUserRatings';
 import { formatAverageRating, formatReviewsCount } from '@/shared/lib/ratings';
+import {
+  normalizeUserStatus,
+  USER_STATUS_LABELS
+} from '@/shared/types/userStatus';
 
 const SkillCard: FC<SkillCardProps> = ({
   author,
@@ -32,6 +36,11 @@ const SkillCard: FC<SkillCardProps> = ({
   } = useUserRatings(author.id);
 
   const buttonText = isExchangeOffered ? 'Обмен предложен' : 'Подробнее';
+  const authorStatus = normalizeUserStatus(author.status);
+  const statusClassName =
+    authorStatus === 'active'
+      ? `${styles.statusBadge} ${styles.statusBadgeActive}`
+      : `${styles.statusBadge} ${styles.statusBadgeInactive}`;
 
   const likeButtonClassName = isFavorite
     ? `${styles.likeButton} ${styles.likeButtonActive}`
@@ -76,6 +85,9 @@ const SkillCard: FC<SkillCardProps> = ({
           <span className={styles.authorName}>{author.name}</span>
           <span className={styles.authorDetails}>
             {author.city}, {ageToString(author.age)}
+          </span>
+          <span className={statusClassName}>
+            {USER_STATUS_LABELS[authorStatus]}
           </span>
           <span className={styles.rating}>{renderRating()}</span>
           {isLikeButtonVisible && (

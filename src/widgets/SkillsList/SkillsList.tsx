@@ -65,6 +65,7 @@ export const SkillsList: FC<SkillsListProps> = ({
             <SkillCard
               author={{
                 id: author.id,
+                status: author.status,
                 avatar: resolveAvatar(author),
                 name: author.name || 'Имя не указано',
                 city: author.city || 'Город не указан',

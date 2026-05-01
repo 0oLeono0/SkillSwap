@@ -40,6 +40,10 @@ import OkIcon from '@/shared/assets/icons/status/done.svg?react';
 import NotificationIcon from '@/shared/assets/icons/content/notification.svg?react';
 import { useAuthEntryNavigation } from '@/shared/lib/router/useAuthEntryNavigation';
 import { useUserRatings } from '@/entities/User/model/useUserRatings';
+import {
+  normalizeUserStatus,
+  USER_STATUS_LABELS
+} from '@/shared/types/userStatus';
 
 const RELATED_AUTHORS_LIMIT = 4;
 const LATEST_REVIEWS_LIMIT = 3;
@@ -144,7 +148,8 @@ const SkillDetails = (): ReactElement => {
       avatarUrl: currentAuthor.avatarUrl,
       bio: currentAuthor.about,
       city: currentAuthor.city,
-      age: currentAuthor.age
+      age: currentAuthor.age,
+      status: normalizeUserStatus(currentAuthor.status)
     };
   }, [currentAuthor]);
 
@@ -379,6 +384,7 @@ const SkillDetails = (): ReactElement => {
     : 'Привет! Я увлекаюсь этим навыком уже больше 10 лет — от первых занятий дома до выступлений на сцене. Научу вас основам, поделюсь любимыми техниками и помогу уверенно чувствовать себя даже без подготовки.';
 
   const authorBio = authorInfo.bio?.trim() || skillDescription;
+  const authorStatus = normalizeUserStatus(authorInfo.status);
 
   const proposeButtonLabel = isProposalSent
     ? 'Обмен предложен'
@@ -412,6 +418,15 @@ const SkillDetails = (): ReactElement => {
               <p className={styles.authorMeta}>
                 {authorInfo.city || 'Город не указан'}, {authorInfo.age} лет
               </p>
+              <span
+                className={
+                  authorStatus === 'active'
+                    ? `${styles.authorStatus} ${styles.authorStatusActive}`
+                    : `${styles.authorStatus} ${styles.authorStatusInactive}`
+                }
+              >
+                {USER_STATUS_LABELS[authorStatus]}
+              </span>
             </div>
           </div>
           <div className={styles.authorRating} aria-label='Рейтинг автора'>
