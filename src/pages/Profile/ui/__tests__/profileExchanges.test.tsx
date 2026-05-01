@@ -7,6 +7,7 @@ import type {
 } from '@/entities/Exchange/types';
 import { loadFiltersBaseData } from '@/features/Filter/model/filterBaseDataStore';
 import { exchangesApi } from '@/shared/api/exchanges';
+import { useUserRatings } from '@/entities/User/model/useUserRatings';
 import {
   ProfileExchanges,
   formatDateTime,
@@ -16,6 +17,9 @@ import {
 
 jest.mock('@/app/providers/auth');
 jest.mock('@/features/Filter/model/filterBaseDataStore');
+jest.mock('@/entities/User/model/useUserRatings', () => ({
+  useUserRatings: jest.fn()
+}));
 jest.mock('@/shared/api/exchanges', () => ({
   exchangesApi: {
     fetchAll: jest.fn(),
@@ -39,6 +43,21 @@ const mockFetchById = exchangesApi.fetchById as jest.MockedFunction<
 const mockRateExchange = exchangesApi.rate as jest.MockedFunction<
   typeof exchangesApi.rate
 >;
+const mockUseUserRatings = useUserRatings as jest.MockedFunction<
+  typeof useUserRatings
+>;
+
+const makeRatingsState = (
+  overrides: Partial<ReturnType<typeof useUserRatings>> = {}
+): ReturnType<typeof useUserRatings> => ({
+  ratings: [],
+  averageRating: null,
+  ratingsCount: 0,
+  isLoading: false,
+  error: null,
+  refetch: jest.fn(),
+  ...overrides
+});
 
 const createExchange = (overrides: Partial<Exchange> = {}): Exchange => ({
   id: overrides.id ?? 'exchange-1',
@@ -122,6 +141,7 @@ const setupProfileExchanges = async (
 describe('ProfileExchanges rating form', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseUserRatings.mockReturnValue(makeRatingsState());
   });
 
   it('does not show rating form for active exchange', async () => {
@@ -187,6 +207,107 @@ describe('ProfileExchanges rating form', () => {
     } finally {
       consoleErrorSpy.mockRestore();
     }
+  });
+
+  it('shows received reviews summary and count', async () => {
+    mockUseUserRatings.mockReturnValue(
+      makeRatingsState({
+        averageRating: 4.9,
+        ratingsCount: 2,
+        ratings: [
+          {
+            id: 'rating-1',
+            exchangeId: 'exchange-1',
+            score: 5,
+            comment: 'Отличный обмен',
+            rater: { id: 'user-2', name: 'Анна', avatarUrl: null },
+            createdAt: '2026-04-30T12:30:00.000Z',
+            updatedAt: '2026-04-30T12:30:00.000Z'
+          },
+          {
+            id: 'rating-2',
+            exchangeId: 'exchange-2',
+            score: 4,
+            comment: null,
+            rater: { id: 'user-3', name: 'Борис', avatarUrl: null },
+            createdAt: '2026-04-29T12:30:00.000Z',
+            updatedAt: '2026-04-29T12:30:00.000Z'
+          }
+        ]
+      })
+    );
+
+    await setupProfileExchanges(createExchangeDetails('active'));
+
+    expect(mockUseUserRatings).toHaveBeenCalledWith('user-1');
+    expect(screen.getByText('4.9')).toBeInTheDocument();
+    expect(screen.getByText('2 отзыва')).toBeInTheDocument();
+  });
+
+  it('shows received reviews list', async () => {
+    const dateSpy = jest
+      .spyOn(Date.prototype, 'toLocaleDateString')
+      .mockReturnValue('30 апр. 2026 г.');
+    mockUseUserRatings.mockReturnValue(
+      makeRatingsState({
+        averageRating: 5,
+        ratingsCount: 1,
+        ratings: [
+          {
+            id: 'rating-1',
+            exchangeId: 'exchange-1',
+            score: 5,
+            comment: 'Очень полезная консультация',
+            rater: { id: 'user-2', name: 'Анна', avatarUrl: null },
+            createdAt: '2026-04-30T12:30:00.000Z',
+            updatedAt: '2026-04-30T12:30:00.000Z'
+          }
+        ]
+      })
+    );
+
+    try {
+      await setupProfileExchanges(createExchangeDetails('active'));
+
+      expect(screen.getByText('Анна')).toBeInTheDocument();
+      expect(screen.getByText('Оценка: 5')).toBeInTheDocument();
+      expect(screen.getByText('30 апр. 2026 г.')).toBeInTheDocument();
+      expect(
+        screen.getByText('Очень полезная консультация')
+      ).toBeInTheDocument();
+    } finally {
+      dateSpy.mockRestore();
+    }
+  });
+
+  it('shows empty received reviews state', async () => {
+    await setupProfileExchanges(createExchangeDetails('active'));
+
+    expect(screen.getByText('У вас пока нет отзывов')).toBeInTheDocument();
+  });
+
+  it('shows received reviews loading state', async () => {
+    mockUseUserRatings.mockReturnValue(
+      makeRatingsState({
+        isLoading: true
+      })
+    );
+
+    await setupProfileExchanges(createExchangeDetails('active'));
+
+    expect(screen.getByText('Загрузка отзывов...')).toBeInTheDocument();
+  });
+
+  it('shows received reviews error state', async () => {
+    mockUseUserRatings.mockReturnValue(
+      makeRatingsState({
+        error: 'Не удалось загрузить рейтинг пользователя'
+      })
+    );
+
+    await setupProfileExchanges(createExchangeDetails('active'));
+
+    expect(screen.getByText('Не удалось загрузить отзывы')).toBeInTheDocument();
   });
 });
 

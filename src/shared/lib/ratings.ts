@@ -17,3 +17,20 @@ export const formatReviewsCount = (count: number) => {
   }
   return `${count} отзывов`;
 };
+
+export const formatReviewDate = (value?: string | null) => {
+  if (!value) {
+    return 'Дата не указана';
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return 'Дата не указана';
+  }
+
+  return date.toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+};

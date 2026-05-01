@@ -27,7 +27,11 @@ import {
   MATERIAL_TYPE_LABELS,
   MATERIAL_TYPE_ORDER
 } from '@/shared/lib/materials';
-import { formatAverageRating, formatReviewsCount } from '@/shared/lib/ratings';
+import {
+  formatAverageRating,
+  formatReviewDate,
+  formatReviewsCount
+} from '@/shared/lib/ratings';
 import { SkillsList } from '@/widgets/SkillsList';
 import GalleryIcon from '@/shared/assets/icons/actions/like.svg?react';
 import ShareIcon from '@/shared/assets/icons/actions/share.svg?react';
@@ -49,19 +53,6 @@ const RELATED_AUTHORS_LIMIT = 4;
 const LATEST_REVIEWS_LIMIT = 3;
 
 const GALLERY_IMAGES = [stock1, stock2, stock3, stock4];
-
-const formatReviewDate = (value: string) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return 'Дата не указана';
-  }
-
-  return date.toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  });
-};
 
 const SkillDetails = (): ReactElement => {
   const { authorId: authorIdParam } = useParams();

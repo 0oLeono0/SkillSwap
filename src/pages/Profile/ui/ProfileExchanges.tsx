@@ -22,6 +22,7 @@ import type {
 } from '@/entities/Exchange/types';
 import { getSubskillNameMap } from '@/entities/Skill/mappers';
 import { loadFiltersBaseData } from '@/features/Filter/model/filterBaseDataStore';
+import { ProfileReceivedReviews } from './ProfileReceivedReviews';
 
 interface SkillMeta {
   title: string;
@@ -447,6 +448,8 @@ export function ProfileExchanges(): ReactElement {
       </div>
 
       {listError && <p className={styles.error}>{listError}</p>}
+
+      <ProfileReceivedReviews userId={user?.id} />
 
       <div className={styles.layout}>
         <div className={styles.listWrapper}>
