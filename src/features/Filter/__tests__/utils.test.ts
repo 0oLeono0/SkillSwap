@@ -37,7 +37,7 @@ describe('Filter utils', () => {
     const baseFilters: Filters = {
       mode: 'all',
       sortBy: 'default',
-      status: 'all',
+      activityPeriod: 'default',
       gender: undefined,
       cities: [],
       skillIds: []
@@ -51,7 +51,7 @@ describe('Filter utils', () => {
       const filters: Filters = {
         mode: 'wantToLearn',
         sortBy: 'rating',
-        status: 'active',
+        activityPeriod: 'month',
         gender: 'female',
         cities: ['Moscow', 'Voronezh'],
         skillIds: [101, 202, 203]

@@ -17,17 +17,17 @@ describe('catalogApi', () => {
     });
   });
 
-  it('adds user status to catalog search query string', async () => {
+  it('adds activity period to catalog search query string', async () => {
     await catalogApi.search({
       mode: 'all',
-      status: 'active',
       sortBy: 'rating',
+      activityPeriod: 'month',
       page: 1,
       pageSize: 12
     });
 
     expect(mockRequest).toHaveBeenCalledWith(
-      '/catalog/search?mode=all&status=active&sortBy=rating&page=1&pageSize=12',
+      '/catalog/search?mode=all&sortBy=rating&activityPeriod=month&page=1&pageSize=12',
       undefined
     );
   });

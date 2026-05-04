@@ -33,6 +33,9 @@ const mockPrisma = {
     count: jest.fn<(args: unknown) => Promise<number>>(),
     findMany: jest.fn<(args: unknown) => Promise<unknown[]>>()
   },
+  exchange: {
+    groupBy: jest.fn<(args: unknown) => Promise<unknown[]>>()
+  },
   exchangeRating: {
     groupBy: jest.fn<(args: unknown) => Promise<unknown[]>>()
   }
@@ -198,26 +201,6 @@ describe('catalogService.searchCatalogSkills', () => {
     });
   });
 
-  it('filters catalog authors by user status', async () => {
-    mockPrisma.user.count.mockResolvedValue(0);
-
-    await catalogService.searchCatalogSkills({
-      status: 'inactive'
-    });
-
-    expect(mockPrisma.user.count).toHaveBeenCalledWith({
-      where: expect.objectContaining({
-        status: 'inactive',
-        userSkills: {
-          some: {
-            subcategoryId: { not: null }
-          }
-        }
-      })
-    });
-    expect(mockPrisma.user.findMany).not.toHaveBeenCalled();
-  });
-
   it('sorts catalog authors by average rating and keeps unrated users lower', async () => {
     mockPrisma.user.count.mockResolvedValue(3);
     mockPrisma.user.findMany
@@ -278,5 +261,160 @@ describe('catalogService.searchCatalogSkills', () => {
       'author-high',
       'author-low'
     ]);
+  });
+
+  it('sorts catalog authors by completed exchange count for activity period', async () => {
+    mockPrisma.user.count.mockResolvedValue(3);
+    mockPrisma.user.findMany
+      .mockResolvedValueOnce([
+        { id: 'author-new', createdAt: new Date('2026-04-30') },
+        { id: 'author-low', createdAt: new Date('2026-04-29') },
+        { id: 'author-high', createdAt: new Date('2026-04-28') }
+      ])
+      .mockResolvedValueOnce([
+        buildUserRecord({ id: 'author-low', name: 'Low' }),
+        buildUserRecord({ id: 'author-high', name: 'High' })
+      ]);
+    mockPrisma.exchange.groupBy
+      .mockResolvedValueOnce([
+        {
+          initiatorId: 'author-low',
+          _count: { _all: 1 }
+        },
+        {
+          initiatorId: 'author-high',
+          _count: { _all: 2 }
+        }
+      ])
+      .mockResolvedValueOnce([
+        {
+          recipientId: 'author-high',
+          _count: { _all: 1 }
+        }
+      ]);
+
+    const result = await catalogService.searchCatalogSkills({
+      activityPeriod: 'allTime',
+      page: 1,
+      pageSize: 2
+    });
+
+    expect(mockPrisma.exchange.groupBy).toHaveBeenNthCalledWith(1, {
+      by: ['initiatorId'],
+      where: {
+        status: 'completed',
+        OR: [
+          { initiatorId: { in: ['author-new', 'author-low', 'author-high'] } },
+          { recipientId: { in: ['author-new', 'author-low', 'author-high'] } }
+        ]
+      },
+      _count: {
+        _all: true
+      }
+    });
+    expect(mockPrisma.exchange.groupBy).toHaveBeenNthCalledWith(2, {
+      by: ['recipientId'],
+      where: {
+        status: 'completed',
+        OR: [
+          { initiatorId: { in: ['author-new', 'author-low', 'author-high'] } },
+          { recipientId: { in: ['author-new', 'author-low', 'author-high'] } }
+        ]
+      },
+      _count: {
+        _all: true
+      }
+    });
+    expect(mockPrisma.user.findMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        where: {
+          AND: [
+            expect.objectContaining({
+              userSkills: {
+                some: {
+                  subcategoryId: { not: null }
+                }
+              }
+            }),
+            { id: { in: ['author-high', 'author-low'] } }
+          ]
+        }
+      })
+    );
+    expect(result.authors.map((author) => author.id)).toEqual([
+      'author-high',
+      'author-low'
+    ]);
+  });
+
+  it.each([
+    ['day', 1],
+    ['week', 7],
+    ['month', 'month'],
+    ['year', 'year']
+  ] as const)(
+    'adds completedAt date filter for %s activity period',
+    async (activityPeriod, expectedShift) => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-05-01T00:00:00.000Z'));
+      mockPrisma.user.count.mockResolvedValue(1);
+      mockPrisma.user.findMany
+        .mockResolvedValueOnce([
+          { id: 'author-1', createdAt: new Date('2026-04-30') }
+        ])
+        .mockResolvedValueOnce([buildUserRecord({ id: 'author-1' })]);
+      mockPrisma.exchange.groupBy.mockResolvedValue([]);
+
+      try {
+        await catalogService.searchCatalogSkills({
+          activityPeriod,
+          page: 1,
+          pageSize: 1
+        });
+
+        const expectedDate = new Date('2026-05-01T00:00:00.000Z');
+        if (expectedShift === 'month') {
+          expectedDate.setMonth(expectedDate.getMonth() - 1);
+        } else if (expectedShift === 'year') {
+          expectedDate.setFullYear(expectedDate.getFullYear() - 1);
+        } else {
+          expectedDate.setDate(expectedDate.getDate() - expectedShift);
+        }
+
+        expect(mockPrisma.exchange.groupBy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              completedAt: { gte: expectedDate }
+            })
+          })
+        );
+      } finally {
+        jest.useRealTimers();
+      }
+    }
+  );
+
+  it('does not add completedAt date filter for allTime activity period', async () => {
+    mockPrisma.user.count.mockResolvedValue(1);
+    mockPrisma.user.findMany
+      .mockResolvedValueOnce([
+        { id: 'author-1', createdAt: new Date('2026-04-30') }
+      ])
+      .mockResolvedValueOnce([buildUserRecord({ id: 'author-1' })]);
+    mockPrisma.exchange.groupBy.mockResolvedValue([]);
+
+    await catalogService.searchCatalogSkills({
+      activityPeriod: 'allTime',
+      page: 1,
+      pageSize: 1
+    });
+
+    expect(mockPrisma.exchange.groupBy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.not.objectContaining({
+          completedAt: expect.anything()
+        })
+      })
+    );
   });
 });

@@ -41,11 +41,14 @@ import { ApiError } from '@/shared/api/request';
 import { isElevatedRole } from '@/shared/types/userRole';
 import { loadFiltersBaseData } from '@/features/Filter/model/filterBaseDataStore';
 import { useAuthEntryNavigation } from '@/shared/lib/router/useAuthEntryNavigation';
-import type { UserStatusFilter } from '@/shared/types/userStatus';
 import {
   CATALOG_SORT_LABELS,
   type CatalogSortOption
 } from '@/shared/types/catalogSort';
+import {
+  CATALOG_ACTIVITY_LABELS,
+  type CatalogActivityOption
+} from '@/shared/types/catalogActivity';
 
 type CatalogVariant = 'home' | 'catalog';
 
@@ -73,11 +76,6 @@ const SECTION_META: Record<string, string> = {
 const MODE_LABELS: Record<Exclude<SearchMode, 'all'>, string> = {
   wantToLearn: 'Хочу учить',
   canTeach: 'Могу научить'
-};
-
-const STATUS_FILTER_LABELS: Record<Exclude<UserStatusFilter, 'all'>, string> = {
-  active: 'Активные',
-  inactive: 'Неактивные'
 };
 
 const searchModeValues: SearchMode[] = ['all', 'wantToLearn', 'canTeach'];
@@ -176,8 +174,11 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
           {
             mode: filters.mode,
             gender: filters.gender,
-            status: filters.status === 'all' ? undefined : filters.status,
             sortBy: filters.sortBy === 'default' ? undefined : filters.sortBy,
+            activityPeriod:
+              filters.activityPeriod === 'default'
+                ? undefined
+                : filters.activityPeriod,
             cityIds,
             skillIds: filters.skillIds,
             excludeAuthorId: authUser?.id,
@@ -393,8 +394,8 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
       labels.push(filters.gender);
     }
 
-    if (filters.status !== 'all') {
-      labels.push(STATUS_FILTER_LABELS[filters.status]);
+    if (filters.activityPeriod !== 'default') {
+      labels.push(CATALOG_ACTIVITY_LABELS[filters.activityPeriod]);
     }
 
     if (filters.cities.length) {
@@ -443,9 +444,12 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
     dispatchFilters({ type: 'setGender', gender: gender || undefined });
   }, []);
 
-  const handleStatusChange = useCallback((status: UserStatusFilter) => {
-    dispatchFilters({ type: 'setStatus', status });
-  }, []);
+  const handleActivityPeriodChange = useCallback(
+    (activityPeriod: CatalogActivityOption) => {
+      dispatchFilters({ type: 'setActivityPeriod', activityPeriod });
+    },
+    []
+  );
 
   const handleCitySelect = useCallback(
     (cityIds: number[]) => {
@@ -637,7 +641,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
             filtersCount={filtersCount}
             onModeChange={handleModeChange}
             onSortByChange={handleSortByChange}
-            onStatusChange={handleStatusChange}
+            onActivityPeriodChange={handleActivityPeriodChange}
             onGenderChange={handleGenderChange}
             onCitySelect={handleCitySelect}
             onSkillSelect={handleSkillSelect}

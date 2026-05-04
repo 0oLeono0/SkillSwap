@@ -6,7 +6,7 @@ interface MockFilterPanelProps {
   filtersCount: number;
   onModeChange: (mode: 'canTeach') => void;
   onSortByChange: (sortBy: 'rating') => void;
-  onStatusChange: (status: 'active') => void;
+  onActivityPeriodChange: (activityPeriod: 'month') => void;
   onGenderChange: (gender: string) => void;
   onCitySelect: (ids: number[]) => void;
   onSkillSelect: (categoryId: number, skillIds: number[]) => void;
@@ -19,7 +19,9 @@ jest.mock('./ui/FilterPanel.tsx', () => ({
       <div data-testid='filters-count'>{props.filtersCount}</div>
       <button onClick={() => props.onModeChange('canTeach')}>mode</button>
       <button onClick={() => props.onSortByChange('rating')}>sort</button>
-      <button onClick={() => props.onStatusChange('active')}>status</button>
+      <button onClick={() => props.onActivityPeriodChange('month')}>
+        activity
+      </button>
       <button onClick={() => props.onGenderChange('female')}>gender</button>
       <button onClick={() => props.onCitySelect([2])}>city</button>
       <button onClick={() => props.onSkillSelect(1, [101, 102])}>skills</button>
@@ -64,7 +66,7 @@ describe('Filter', () => {
     await user.click(screen.getByRole('button', { name: 'sort' }));
     expect(count).toHaveTextContent('2');
 
-    await user.click(screen.getByRole('button', { name: 'status' }));
+    await user.click(screen.getByRole('button', { name: 'activity' }));
     expect(count).toHaveTextContent('3');
 
     await user.click(screen.getByRole('button', { name: 'gender' }));

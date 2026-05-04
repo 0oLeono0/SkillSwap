@@ -23,12 +23,12 @@ describe('filterReducer', () => {
     expect(next.sortBy).toBe('rating');
   });
 
-  it('sets author status', () => {
+  it('sets activity period', () => {
     const next = filterReducer(filtersInitialState, {
-      type: 'setStatus',
-      status: 'inactive'
+      type: 'setActivityPeriod',
+      activityPeriod: 'month'
     });
-    expect(next.status).toBe('inactive');
+    expect(next.activityPeriod).toBe('month');
   });
 
   it('sets gender and cities', () => {
@@ -57,7 +57,7 @@ describe('filterReducer', () => {
     const replacement: Filters = {
       mode: 'wantToLearn',
       sortBy: 'rating',
-      status: 'active',
+      activityPeriod: 'week',
       gender: 'male',
       cities: ['Vilnius'],
       skillIds: [5]
@@ -74,7 +74,7 @@ describe('filterReducer', () => {
     const dirty = buildState({
       mode: 'wantToLearn',
       sortBy: 'rating',
-      status: 'inactive',
+      activityPeriod: 'day',
       gender: 'male',
       cities: ['Minsk'],
       skillIds: [1]

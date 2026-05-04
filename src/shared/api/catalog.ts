@@ -1,6 +1,7 @@
 import { request, type RequestOptions } from '@/shared/api/request';
 import type { UserStatus } from '@/shared/types/userStatus';
 import type { CatalogSortBy } from '@/shared/types/catalogSort';
+import type { CatalogActivityPeriod } from '@/shared/types/catalogActivity';
 
 export interface CatalogFilterBaseData {
   cities: Array<{ id: number; name: string }>;
@@ -54,8 +55,8 @@ export interface CatalogSearchParams {
   authorIds?: string[];
   excludeAuthorId?: string;
   search?: string;
-  status?: UserStatus;
   sortBy?: CatalogSortBy;
+  activityPeriod?: CatalogActivityPeriod;
   page?: number;
   pageSize?: number;
 }
@@ -86,11 +87,11 @@ const buildCatalogSearchQuery = (params: CatalogSearchParams): string => {
   if (params.search) {
     query.set('search', params.search);
   }
-  if (params.status) {
-    query.set('status', params.status);
-  }
   if (params.sortBy) {
     query.set('sortBy', params.sortBy);
+  }
+  if (params.activityPeriod) {
+    query.set('activityPeriod', params.activityPeriod);
   }
   if (typeof params.excludeAuthorId === 'string') {
     query.set('excludeAuthorId', params.excludeAuthorId);

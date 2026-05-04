@@ -373,7 +373,7 @@ describe('Catalog routes', () => {
     });
   });
 
-  it('passes valid user status to catalog search', async () => {
+  it('passes valid activity period to catalog search', async () => {
     mockCatalogService.searchCatalogSkills.mockResolvedValue({
       authors: [],
       page: 1,
@@ -382,18 +382,18 @@ describe('Catalog routes', () => {
     });
 
     const response = await request(app).get(
-      '/api/catalog/search?status=active'
+      '/api/catalog/search?activityPeriod=month'
     );
 
     expect(response.status).toBe(200);
     expect(mockCatalogService.searchCatalogSkills).toHaveBeenCalledWith(
       expect.objectContaining({
-        status: 'active'
+        activityPeriod: 'month'
       })
     );
   });
 
-  it('ignores unknown catalog user status', async () => {
+  it('ignores unknown activity period', async () => {
     mockCatalogService.searchCatalogSkills.mockResolvedValue({
       authors: [],
       page: 1,
@@ -402,13 +402,13 @@ describe('Catalog routes', () => {
     });
 
     const response = await request(app).get(
-      '/api/catalog/search?status=archived'
+      '/api/catalog/search?activityPeriod=quarter'
     );
 
     expect(response.status).toBe(200);
     expect(mockCatalogService.searchCatalogSkills).toHaveBeenCalledWith(
       expect.not.objectContaining({
-        status: expect.anything()
+        activityPeriod: expect.anything()
       })
     );
   });

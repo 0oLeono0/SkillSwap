@@ -8,7 +8,7 @@ const buildProps = (
 ): FilterPanelProps => ({
   filters: {
     mode: 'all',
-    status: 'all',
+    activityPeriod: 'default',
     sortBy: 'default',
     gender: undefined,
     cities: [],
@@ -19,7 +19,7 @@ const buildProps = (
   filtersCount: 0,
   onModeChange: jest.fn(),
   onSortByChange: jest.fn(),
-  onStatusChange: jest.fn(),
+  onActivityPeriodChange: jest.fn(),
   onGenderChange: jest.fn(),
   onCitySelect: jest.fn(),
   onSkillSelect: jest.fn(),
@@ -28,14 +28,14 @@ const buildProps = (
 });
 
 describe('FilterPanel', () => {
-  it('calls onStatusChange when author status changes', async () => {
+  it('calls onActivityPeriodChange when activity period changes', async () => {
     const user = userEvent.setup();
-    const onStatusChange = jest.fn();
-    render(<FilterPanel {...buildProps({ onStatusChange })} />);
+    const onActivityPeriodChange = jest.fn();
+    render(<FilterPanel {...buildProps({ onActivityPeriodChange })} />);
 
-    await user.click(screen.getByRole('radio', { name: 'Активные' }));
+    await user.click(screen.getByRole('radio', { name: 'За месяц' }));
 
-    expect(onStatusChange).toHaveBeenCalledWith('active');
+    expect(onActivityPeriodChange).toHaveBeenCalledWith('month');
   });
 
   it('calls onSortByChange when catalog sorting changes', async () => {

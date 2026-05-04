@@ -12,6 +12,8 @@ import {
   USER_STATUS
 } from '../types/userStatus.js';
 
+type CatalogActivityPeriod = 'allTime' | 'year' | 'month' | 'week' | 'day';
+
 export interface CityOption {
   id: number;
   name: string;
@@ -86,8 +88,8 @@ export interface CatalogSearchOptions {
   authorIds?: string[];
   excludeAuthorId?: string;
   search?: string;
-  status?: UserStatus;
   sortBy?: 'rating';
+  activityPeriod?: CatalogActivityPeriod;
   page?: number;
   pageSize?: number;
 }
@@ -101,6 +103,14 @@ type RatingAverageRow = {
   ratedUserId: string;
   _avg: {
     score: number | null;
+  };
+};
+
+type ExchangeCountRow = {
+  initiatorId?: string;
+  recipientId?: string;
+  _count: {
+    _all: number;
   };
 };
 
@@ -402,6 +412,84 @@ const sortAuthorCandidatesByRating = (
   });
 };
 
+const buildActivityPeriodCompletedAtFilter = (
+  period: CatalogActivityPeriod
+): Prisma.DateTimeNullableFilter | undefined => {
+  if (period === 'allTime') {
+    return undefined;
+  }
+
+  const since = new Date(Date.now());
+  if (period === 'day') {
+    since.setDate(since.getDate() - 1);
+  } else if (period === 'week') {
+    since.setDate(since.getDate() - 7);
+  } else if (period === 'month') {
+    since.setMonth(since.getMonth() - 1);
+  } else {
+    since.setFullYear(since.getFullYear() - 1);
+  }
+
+  return { gte: since };
+};
+
+const buildActivityExchangeWhere = (
+  candidateIds: string[],
+  period: CatalogActivityPeriod
+): Prisma.ExchangeWhereInput => {
+  const completedAtFilter = buildActivityPeriodCompletedAtFilter(period);
+  const where: Prisma.ExchangeWhereInput = {
+    status: 'completed',
+    OR: [
+      { initiatorId: { in: candidateIds } },
+      { recipientId: { in: candidateIds } }
+    ]
+  };
+
+  if (completedAtFilter) {
+    where.completedAt = completedAtFilter;
+  }
+
+  return where;
+};
+
+const mergeActivityCounts = (
+  initiatorRows: ExchangeCountRow[],
+  recipientRows: ExchangeCountRow[]
+) => {
+  const activityCountByUserId = new Map<string, number>();
+
+  const addCount = (userId: string | undefined, count: number) => {
+    if (!userId) {
+      return;
+    }
+    activityCountByUserId.set(
+      userId,
+      (activityCountByUserId.get(userId) ?? 0) + count
+    );
+  };
+
+  initiatorRows.forEach((row) => addCount(row.initiatorId, row._count._all));
+  recipientRows.forEach((row) => addCount(row.recipientId, row._count._all));
+
+  return activityCountByUserId;
+};
+
+const sortAuthorCandidatesByActivity = (
+  candidates: CatalogAuthorSortCandidate[],
+  activityCountByUserId: Map<string, number>
+) =>
+  [...candidates].sort((left, right) => {
+    const leftCount = activityCountByUserId.get(left.id) ?? 0;
+    const rightCount = activityCountByUserId.get(right.id) ?? 0;
+
+    if (leftCount !== rightCount) {
+      return rightCount - leftCount;
+    }
+
+    return right.createdAt.getTime() - left.createdAt.getTime();
+  });
+
 export const catalogService = {
   async getFiltersBaseData() {
     const [cities, skillGroups] = await Promise.all([
@@ -492,10 +580,6 @@ export const catalogService = {
       userWhere.gender = options.gender;
     }
 
-    if (isUserStatus(options.status)) {
-      userWhere.status = options.status;
-    }
-
     if (cityIds.length) {
       userWhere.cityId = { in: cityIds };
     }
@@ -537,7 +621,67 @@ export const catalogService = {
     const authorSelect = buildCatalogAuthorSelect(skillFilters);
     let authors: CatalogAuthorRecord[];
 
-    if (options.sortBy === 'rating') {
+    if (options.activityPeriod) {
+      const candidates = (await prisma.user.findMany({
+        where: userWhere,
+        select: {
+          id: true,
+          createdAt: true
+        },
+        orderBy: { createdAt: 'desc' }
+      })) as CatalogAuthorSortCandidate[];
+      const candidateIds = candidates.map((candidate) => candidate.id);
+      let activityCountByUserId = new Map<string, number>();
+      if (candidateIds.length) {
+        const exchangeWhere = buildActivityExchangeWhere(
+          candidateIds,
+          options.activityPeriod
+        );
+        const [initiatorRows, recipientRows] = await Promise.all([
+          prisma.exchange.groupBy({
+            by: ['initiatorId'],
+            where: exchangeWhere,
+            _count: {
+              _all: true
+            }
+          }),
+          prisma.exchange.groupBy({
+            by: ['recipientId'],
+            where: exchangeWhere,
+            _count: {
+              _all: true
+            }
+          })
+        ]);
+        activityCountByUserId = mergeActivityCounts(
+          initiatorRows,
+          recipientRows
+        );
+      }
+
+      const pageAuthorIds = sortAuthorCandidatesByActivity(
+        candidates,
+        activityCountByUserId
+      )
+        .slice((page - 1) * pageSize, page * pageSize)
+        .map((candidate) => candidate.id);
+
+      if (pageAuthorIds.length === 0) {
+        return { authors: [], page, pageSize, totalAuthors };
+      }
+
+      const pageAuthors = (await prisma.user.findMany({
+        where: buildPageUserWhere(userWhere, pageAuthorIds),
+        select: authorSelect
+      })) as CatalogAuthorRecord[];
+      const authorById = new Map(
+        pageAuthors.map((author) => [author.id, author])
+      );
+
+      authors = pageAuthorIds
+        .map((authorId) => authorById.get(authorId))
+        .filter((author): author is CatalogAuthorRecord => Boolean(author));
+    } else if (options.sortBy === 'rating') {
       const candidates = (await prisma.user.findMany({
         where: userWhere,
         select: {

@@ -5,8 +5,6 @@ export const USER_STATUS = {
 
 export type UserStatus = (typeof USER_STATUS)[keyof typeof USER_STATUS];
 
-export type UserStatusFilter = 'all' | UserStatus;
-
 export const USER_STATUS_LABELS: Record<UserStatus, string> = {
   active: 'Активен',
   inactive: 'Неактивен'

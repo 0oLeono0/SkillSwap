@@ -8,8 +8,8 @@ import {
 } from './utils.ts';
 import { useFiltersBaseData } from './model/useFiltersBaseData';
 import { filterReducer, filtersInitialState } from './model/filterReducer';
-import type { UserStatusFilter } from '@/shared/types/userStatus';
 import type { CatalogSortOption } from '@/shared/types/catalogSort';
+import type { CatalogActivityOption } from '@/shared/types/catalogActivity';
 
 export const Filter: FC = () => {
   const [filters, dispatchFilters] = useReducer(
@@ -27,8 +27,10 @@ export const Filter: FC = () => {
     dispatchFilters({ type: 'setSortBy', sortBy });
   };
 
-  const handleStatusChange = (status: UserStatusFilter) => {
-    dispatchFilters({ type: 'setStatus', status });
+  const handleActivityPeriodChange = (
+    activityPeriod: CatalogActivityOption
+  ) => {
+    dispatchFilters({ type: 'setActivityPeriod', activityPeriod });
   };
 
   const handleGenderChange = (gender: string) => {
@@ -62,7 +64,7 @@ export const Filter: FC = () => {
       filtersCount={countActiveFilters(filters)}
       onModeChange={handleModeChange}
       onSortByChange={handleSortByChange}
-      onStatusChange={handleStatusChange}
+      onActivityPeriodChange={handleActivityPeriodChange}
       onGenderChange={handleGenderChange}
       onCitySelect={handleCitySelect}
       onSkillSelect={handleSkillSelect}

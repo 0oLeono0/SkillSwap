@@ -225,13 +225,16 @@ jest.mock('@/widgets/SkillsList', () => ({
 
 jest.mock('@/features/Filter/ui/FilterPanel.tsx', () => ({
   FilterPanel: (props: {
-    onStatusChange: (status: 'active') => void;
+    onActivityPeriodChange: (period: 'month') => void;
     onSortByChange: (sortBy: 'rating') => void;
   }) => (
     <div>
       filter
-      <button type='button' onClick={() => props.onStatusChange('active')}>
-        status-active
+      <button
+        type='button'
+        onClick={() => props.onActivityPeriodChange('month')}
+      >
+        activity-month
       </button>
       <button type='button' onClick={() => props.onSortByChange('rating')}>
         sort-rating
@@ -353,7 +356,7 @@ describe('Catalog favorite action', () => {
     expect(mockNavigateToLogin).not.toHaveBeenCalled();
   });
 
-  it('passes selected author status to catalog search', async () => {
+  it('passes selected activity period to catalog search', async () => {
     const user = userEvent.setup();
     renderCatalog();
 
@@ -361,12 +364,12 @@ describe('Catalog favorite action', () => {
       expect(mockLoadCatalogAuthors).toHaveBeenCalled();
     });
 
-    await user.click(screen.getByRole('button', { name: 'status-active' }));
+    await user.click(screen.getByRole('button', { name: 'activity-month' }));
 
     await waitFor(() => {
       expect(mockLoadCatalogAuthors).toHaveBeenLastCalledWith(
         expect.objectContaining({
-          status: 'active',
+          activityPeriod: 'month',
           page: 1
         }),
         expect.any(Object)

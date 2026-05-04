@@ -9,11 +9,14 @@ import type { Gender } from '@/shared/types/gender';
 import { mapCityNamesToCityIds, selectedSkillsByGroup } from '../utils.ts';
 import { GroupedMultiSelect } from '@/shared/ui/GroupedMultiSelect/GroupedMultiSelect';
 import { ToggleMore } from '@/features/Filter/ui/ToggleMore/ToggleMore.tsx';
-import type { UserStatusFilter } from '@/shared/types/userStatus';
 import {
   CATALOG_SORT_LABELS,
   type CatalogSortOption
 } from '@/shared/types/catalogSort';
+import {
+  CATALOG_ACTIVITY_LABELS,
+  type CatalogActivityOption
+} from '@/shared/types/catalogActivity';
 
 export const FilterPanel: FC<FilterPanelProps> = (props: FilterPanelProps) => {
   const {
@@ -24,7 +27,7 @@ export const FilterPanel: FC<FilterPanelProps> = (props: FilterPanelProps) => {
     onGenderChange,
     onModeChange,
     onSortByChange,
-    onStatusChange,
+    onActivityPeriodChange,
     onCitySelect,
     onSkillSelect,
     onFilterReset
@@ -78,16 +81,30 @@ export const FilterPanel: FC<FilterPanelProps> = (props: FilterPanelProps) => {
         </div>
         <div className={styles.filter}>
           <Title tag={'h3'} variant={'md'}>
-            Статус автора
+            Активность
           </Title>
           <RadioGroup
-            name={'author-status'}
-            value={filters.status}
-            onChange={(_, value) => onStatusChange(value as UserStatusFilter)}
+            name={'author-activity'}
+            value={filters.activityPeriod}
+            onChange={(_, value) =>
+              onActivityPeriodChange(value as CatalogActivityOption)
+            }
           >
-            <Radio title={'Все'} value={'all'}></Radio>
-            <Radio title={'Активные'} value={'active'}></Radio>
-            <Radio title={'Неактивные'} value={'inactive'}></Radio>
+            <Radio
+              title={CATALOG_ACTIVITY_LABELS.default}
+              value={'default'}
+            ></Radio>
+            <Radio
+              title={CATALOG_ACTIVITY_LABELS.allTime}
+              value={'allTime'}
+            ></Radio>
+            <Radio title={CATALOG_ACTIVITY_LABELS.year} value={'year'}></Radio>
+            <Radio
+              title={CATALOG_ACTIVITY_LABELS.month}
+              value={'month'}
+            ></Radio>
+            <Radio title={CATALOG_ACTIVITY_LABELS.week} value={'week'}></Radio>
+            <Radio title={CATALOG_ACTIVITY_LABELS.day} value={'day'}></Radio>
           </RadioGroup>
         </div>
         <div className={styles.filter}>

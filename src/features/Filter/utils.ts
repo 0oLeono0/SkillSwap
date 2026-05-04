@@ -9,7 +9,7 @@ export const countActiveFilters = (filters: Filters): number => {
   if (filters.sortBy !== 'default') {
     count++;
   }
-  if (filters.status !== 'all') {
+  if (filters.activityPeriod !== 'default') {
     count++;
   }
   if (filters.gender) {

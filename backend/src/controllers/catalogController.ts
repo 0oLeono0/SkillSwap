@@ -3,7 +3,6 @@ import { catalogService } from '../services/catalogService.js';
 import { createNotFound } from '../utils/httpErrors.js';
 import { NOT_FOUND_MESSAGES } from '../utils/errorMessages.js';
 import { parseNumberParamOrNotFound } from '../utils/routeParams.js';
-import { isUserStatus } from '../types/userStatus.js';
 
 const parseStringList = (value: unknown): string[] => {
   if (Array.isArray(value)) {
@@ -32,6 +31,13 @@ const parsePositiveNumber = (value: unknown): number | undefined => {
 
 const allowedModes = new Set(['all', 'wantToLearn', 'canTeach']);
 const allowedSortBy = new Set(['rating']);
+const allowedActivityPeriods = new Set([
+  'allTime',
+  'year',
+  'month',
+  'week',
+  'day'
+]);
 
 export const getFiltersBaseData = asyncHandler(async (_req, res) => {
   const data = await catalogService.getFiltersBaseData();
@@ -73,13 +79,19 @@ export const searchCatalogSkills = asyncHandler(async (req, res) => {
     typeof req.query.gender === 'string' ? req.query.gender : undefined;
   const search =
     typeof req.query.search === 'string' ? req.query.search : undefined;
-  const status =
-    typeof req.query.status === 'string' && isUserStatus(req.query.status)
-      ? req.query.status
-      : undefined;
   const sortBy =
     typeof req.query.sortBy === 'string' && allowedSortBy.has(req.query.sortBy)
       ? (req.query.sortBy as 'rating')
+      : undefined;
+  const activityPeriod =
+    typeof req.query.activityPeriod === 'string' &&
+    allowedActivityPeriods.has(req.query.activityPeriod)
+      ? (req.query.activityPeriod as
+          | 'allTime'
+          | 'year'
+          | 'month'
+          | 'week'
+          | 'day')
       : undefined;
   const excludeAuthorId =
     typeof req.query.excludeAuthorId === 'string'
@@ -112,11 +124,11 @@ export const searchCatalogSkills = asyncHandler(async (req, res) => {
   if (search) {
     options.search = search;
   }
-  if (status) {
-    options.status = status;
-  }
   if (sortBy) {
     options.sortBy = sortBy;
+  }
+  if (activityPeriod) {
+    options.activityPeriod = activityPeriod;
   }
   if (excludeAuthorId) {
     options.excludeAuthorId = excludeAuthorId;
