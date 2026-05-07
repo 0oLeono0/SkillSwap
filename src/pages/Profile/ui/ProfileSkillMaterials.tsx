@@ -3,6 +3,7 @@ import {
   useMemo,
   useState,
   type ChangeEvent,
+  type DragEvent,
   type FormEvent,
   type ReactElement
 } from 'react';
@@ -56,6 +57,35 @@ const fileToAttachment = (file: File) =>
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(file);
   });
+
+const formatAttachmentSize = (size: number) => {
+  if (size < 1024) {
+    return `${size} Б`;
+  }
+  if (size < 1024 * 1024) {
+    return `${Math.round(size / 1024)} КБ`;
+  }
+  return `${(size / 1024 / 1024).toFixed(1)} МБ`;
+};
+
+const getAttachmentLabel = (attachment: MaterialAttachmentDto) => {
+  const extension = attachment.name.split('.').pop()?.trim().toUpperCase();
+  if (extension && extension.length <= 5) {
+    return extension;
+  }
+  if (attachment.type.startsWith('image/')) {
+    return 'IMG';
+  }
+  if (attachment.type.includes('pdf')) {
+    return 'PDF';
+  }
+  return 'FILE';
+};
+
+const getAttachmentMeta = (attachment: MaterialAttachmentDto) => {
+  const type = attachment.type || 'application/octet-stream';
+  return `${type} · ${formatAttachmentSize(attachment.size)}`;
+};
 
 export function ProfileSkillMaterials({
   skillId
@@ -114,10 +144,7 @@ export function ProfileSkillMaterials({
     }
   };
 
-  const handleAttachmentUpload = async (
-    event: ChangeEvent<HTMLInputElement>
-  ) => {
-    const files = Array.from(event.target.files ?? []);
+  const addAttachmentFiles = async (files: File[]) => {
     if (!files.length) {
       return;
     }
@@ -131,9 +158,23 @@ export function ProfileSkillMaterials({
     } catch (error) {
       console.error('[ProfileSkillMaterials] Failed to read file', error);
       updateForm({ error: 'Не удалось добавить файл' });
+    }
+  };
+
+  const handleAttachmentUpload = async (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = Array.from(event.target.files ?? []);
+    try {
+      await addAttachmentFiles(files);
     } finally {
       event.target.value = '';
     }
+  };
+
+  const handleAttachmentDrop = (event: DragEvent<HTMLLabelElement>) => {
+    event.preventDefault();
+    void addAttachmentFiles(Array.from(event.dataTransfer.files));
   };
 
   const handleRemoveAttachment = (attachmentId: string) => {
@@ -160,6 +201,39 @@ export function ProfileSkillMaterials({
     resetForm();
     setEditorMode(materialsState.items.length ? 'hidden' : 'create');
   };
+
+  const renderAttachmentCards = (
+    attachments: MaterialAttachmentDto[],
+    options: { onRemove?: (attachmentId: string) => void } = {}
+  ) => (
+    <ul className={styles.attachmentCards}>
+      {attachments.map((attachment) => (
+        <li key={attachment.id} className={styles.attachmentCard}>
+          <a
+            className={styles.attachmentLink}
+            href={attachment.url}
+            download={attachment.name}
+          >
+            <span className={styles.attachmentIcon}>
+              {getAttachmentLabel(attachment)}
+            </span>
+            <span className={styles.attachmentInfo}>
+              <strong>{attachment.name}</strong>
+              <small>{getAttachmentMeta(attachment)}</small>
+            </span>
+          </a>
+          {options.onRemove ? (
+            <Button
+              variant='secondary'
+              onClick={() => options.onRemove?.(attachment.id)}
+            >
+              Удалить
+            </Button>
+          ) : null}
+        </li>
+      ))}
+    </ul>
+  );
 
   const renderMaterialForm = () => (
     <form className={styles.materialForm} onSubmit={handleSubmit}>
@@ -246,32 +320,25 @@ export function ProfileSkillMaterials({
       <div className={styles.field}>
         <span>Файлы</span>
         {form.attachments.length ? (
-          <ul className={styles.attachmentList}>
-            {form.attachments.map((attachment) => (
-              <li key={attachment.id}>
-                <a href={attachment.url} download={attachment.name}>
-                  {attachment.name}
-                </a>
-                <Button
-                  variant='secondary'
-                  onClick={() => handleRemoveAttachment(attachment.id)}
-                >
-                  Удалить
-                </Button>
-              </li>
-            ))}
-          </ul>
+          renderAttachmentCards(form.attachments, {
+            onRemove: handleRemoveAttachment
+          })
         ) : (
           <p className={styles.materialState}>Файлы пока не добавлены</p>
         )}
-        <label className={styles.uploadButton}>
+        <label
+          className={styles.uploadDropzone}
+          onDragOver={(event) => event.preventDefault()}
+          onDrop={handleAttachmentDrop}
+        >
           <input
             type='file'
             multiple
             className={styles.uploadInput}
             onChange={handleAttachmentUpload}
           />
-          Добавить файлы
+          <span>Выберите файлы или перетащите сюда</span>
+          <small>До 10 файлов. PDF, изображения, документы или архивы.</small>
         </label>
       </div>
       {form.error ? (
@@ -385,15 +452,10 @@ export function ProfileSkillMaterials({
                   </p>
                 ) : null}
                 {selectedMaterial.attachments?.length ? (
-                  <ul className={styles.attachmentList}>
-                    {selectedMaterial.attachments.map((attachment) => (
-                      <li key={attachment.id}>
-                        <a href={attachment.url} download={attachment.name}>
-                          {attachment.name}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className={styles.materialAttachmentsPreview}>
+                    <span>Файлы к материалу</span>
+                    {renderAttachmentCards(selectedMaterial.attachments)}
+                  </div>
                 ) : null}
                 {selectedMaterial.type === 'testing' ? (
                   <ProfileTestQuestionsEditor

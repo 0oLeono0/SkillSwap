@@ -268,6 +268,80 @@
   }
 }
 
+.materialAttachmentsPreview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  >span {
+    color: var(--font-color-primary);
+    font-size: 14px;
+    font-weight: 700;
+  }
+}
+
+.attachmentCards {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.attachmentCard {
+  border: 1px solid rgba(80, 136, 38, 0.14);
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.attachmentLink {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--font-color-primary);
+  text-decoration: none;
+}
+
+.attachmentIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: rgba(80, 136, 38, 0.12);
+  color: var(--font-color-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.attachmentInfo {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  strong {
+    color: var(--font-color-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    color: var(--font-color-secondary);
+    font-size: 12px;
+  }
+}
+
 .materialForm {
   border: 1px dashed #dfe5d8;
   border-radius: 16px;
@@ -669,6 +743,35 @@ span.questionMeta {
   color: var(--font-color-primary);
   font-weight: 600;
   cursor: pointer;
+}
+
+.uploadDropzone {
+  border: 1px dashed #c7d5b2;
+  border-radius: 16px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--font-color-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+
+  span {
+    font-weight: 700;
+  }
+
+  small {
+    color: var(--font-color-secondary);
+    line-height: 1.35;
+  }
+}
+
+.uploadDropzone:hover {
+  border-color: var(--button-color-accent);
+  background: rgba(171, 210, 122, 0.14);
 }
 
 .uploadInput {
