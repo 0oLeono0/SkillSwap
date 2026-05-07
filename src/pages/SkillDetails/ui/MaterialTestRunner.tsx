@@ -65,21 +65,70 @@ const hasCorrectTextAnswer = (question: TestQuestionDto, value: string) => {
   return getCorrectTextAnswers(question).includes(normalizedValue);
 };
 
+const getQuestionHint = (questionType: string) => {
+  if (questionType === 'single') {
+    return 'Выберите один вариант';
+  }
+  if (questionType === 'multiple') {
+    return 'Можно выбрать несколько вариантов';
+  }
+  if (questionType === 'text') {
+    return 'Напишите ответ текстом';
+  }
+  if (questionType === 'gap') {
+    return 'Вставьте пропущенное слово';
+  }
+  return 'Загрузите фото в качестве ответа';
+};
+
 export function MaterialTestRunner({
   material
 }: MaterialTestRunnerProps): ReactElement {
   const questions = useMemo(() => material.questions ?? [], [material]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<SelectedAnswers>({});
   const [textAnswers, setTextAnswers] = useState<TextAnswers>({});
   const [imageAnswers, setImageAnswers] = useState<ImageAnswers>({});
   const [result, setResult] = useState<TestResult | null>(null);
 
   useEffect(() => {
+    setCurrentQuestionIndex(0);
     setSelectedAnswers({});
     setTextAnswers({});
     setImageAnswers({});
     setResult(null);
   }, [material.id]);
+
+  const evaluateTest = () => {
+    const questionResults = questions.reduce<Record<string, boolean>>(
+      (acc, question) => {
+        const questionType = normalizeTestQuestionType(question.type);
+        if (isChoiceQuestionType(questionType)) {
+          acc[question.id] = sameAnswerSet(
+            selectedAnswers[question.id] ?? [],
+            getCorrectOptionIds(question)
+          );
+          return acc;
+        }
+        if (isTextQuestionType(questionType)) {
+          acc[question.id] = hasCorrectTextAnswer(
+            question,
+            textAnswers[question.id] ?? ''
+          );
+          return acc;
+        }
+        acc[question.id] = Boolean(imageAnswers[question.id]);
+        return acc;
+      },
+      {}
+    );
+    const correctCount = Object.values(questionResults).filter(Boolean).length;
+    setResult({
+      correctCount,
+      totalCount: questions.length,
+      questionResults
+    });
+  };
 
   const handleOptionChange = (
     question: TestQuestionDto,
@@ -122,169 +171,217 @@ export function MaterialTestRunner({
     }));
   };
 
+  const handleRestart = () => {
+    setCurrentQuestionIndex(0);
+    setSelectedAnswers({});
+    setTextAnswers({});
+    setImageAnswers({});
+    setResult(null);
+  };
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const questionResults = questions.reduce<Record<string, boolean>>(
-      (acc, question) => {
-        const questionType = normalizeTestQuestionType(question.type);
-        if (isChoiceQuestionType(questionType)) {
-          acc[question.id] = sameAnswerSet(
-            selectedAnswers[question.id] ?? [],
-            getCorrectOptionIds(question)
-          );
-          return acc;
-        }
-        if (isTextQuestionType(questionType)) {
-          acc[question.id] = hasCorrectTextAnswer(
-            question,
-            textAnswers[question.id] ?? ''
-          );
-          return acc;
-        }
-        acc[question.id] = Boolean(imageAnswers[question.id]);
-        return acc;
-      },
-      {}
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex((current) => current + 1);
+      return;
+    }
+    evaluateTest();
+  };
+
+  const renderQuestionResult = (question: TestQuestionDto) => {
+    if (!result) {
+      return null;
+    }
+
+    const questionType = normalizeTestQuestionType(question.type);
+    const questionResult = result.questionResults[question.id];
+    const correctAnswers = question.answerOptions.filter(
+      (option) => option.isCorrect
     );
-    const correctCount = Object.values(questionResults).filter(Boolean).length;
-    setResult({
-      correctCount,
-      totalCount: questions.length,
-      questionResults
-    });
+    const correctTextAnswers = getCorrectTextAnswers(question);
+
+    return (
+      <div
+        className={
+          questionResult ? styles.testQuestionCorrect : styles.testQuestionWrong
+        }
+      >
+        <strong>{questionResult ? 'Верно' : 'Неверно'}</strong>
+        {isChoiceQuestionType(questionType) ? (
+          <span>
+            Правильный ответ:{' '}
+            {correctAnswers.length
+              ? correctAnswers.map((option) => option.text).join(', ')
+              : 'ответ не задан'}
+          </span>
+        ) : null}
+        {isTextQuestionType(questionType) ? (
+          <span>
+            Засчитывается:{' '}
+            {correctTextAnswers.length
+              ? correctTextAnswers.join(', ')
+              : 'ответ не задан'}
+          </span>
+        ) : null}
+        {questionType === 'image' ? (
+          <span>{questionResult ? 'Фото загружено' : 'Фото не загружено'}</span>
+        ) : null}
+      </div>
+    );
   };
 
   if (!questions.length) {
     return <p>Вопросы пока не добавлены</p>;
   }
 
+  const currentQuestion = questions[currentQuestionIndex];
+  const questionType = normalizeTestQuestionType(currentQuestion.type);
+  const selectedIds = selectedAnswers[currentQuestion.id] ?? [];
+  const imageAnswer = imageAnswers[currentQuestion.id];
+  const isLastQuestion = currentQuestionIndex === questions.length - 1;
+  const progressPercent = ((currentQuestionIndex + 1) / questions.length) * 100;
+  const resultPercent = result
+    ? Math.round((result.correctCount / result.totalCount) * 100)
+    : 0;
+
+  if (result) {
+    return (
+      <section className={styles.testRunner}>
+        <div className={styles.testResultCard}>
+          <div className={styles.testResultHeader}>
+            <div>
+              <p className={styles.testResult}>
+                Результат: {result.correctCount} из {result.totalCount}
+              </p>
+              <span>Итоговая точность: {resultPercent}%</span>
+            </div>
+            <strong>
+              {result.correctCount}/{result.totalCount}
+            </strong>
+          </div>
+
+          <ol className={styles.testResultList}>
+            {questions.map((question, index) => (
+              <li key={question.id}>
+                <div className={styles.testResultQuestion}>
+                  <small>Вопрос {index + 1}</small>
+                  <strong>{question.text}</strong>
+                </div>
+                {renderQuestionResult(question)}
+              </li>
+            ))}
+          </ol>
+
+          <Button variant='secondary' type='button' onClick={handleRestart}>
+            Пройти ещё раз
+          </Button>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <form className={styles.testRunner} onSubmit={handleSubmit}>
-      {questions.map((question, index) => {
-        const questionType = normalizeTestQuestionType(question.type);
-        const selectedIds = selectedAnswers[question.id] ?? [];
-        const questionResult = result?.questionResults[question.id];
-        const correctAnswers = question.answerOptions.filter(
-          (option) => option.isCorrect
-        );
-        const correctTextAnswers = getCorrectTextAnswers(question);
-        const imageAnswer = imageAnswers[question.id];
+      <div className={styles.testRunnerHeader}>
+        <div>
+          <span>
+            Вопрос {currentQuestionIndex + 1} из {questions.length}
+          </span>
+        </div>
+        <div
+          className={styles.testProgress}
+          role='progressbar'
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(progressPercent)}
+        >
+          <span style={{ width: `${progressPercent}%` }} />
+        </div>
+      </div>
 
-        return (
-          <fieldset key={question.id} className={styles.testQuestion}>
-            <legend>
-              {index + 1}. <span>{question.text}</span>
-            </legend>
-            <span className={styles.testQuestionHint}>
-              {questionType === 'single' && 'Выберите один вариант'}
-              {questionType === 'multiple' &&
-                'Можно выбрать несколько вариантов'}
-              {questionType === 'text' && 'Напишите ответ текстом'}
-              {questionType === 'gap' && 'Вставьте пропущенное слово'}
-              {questionType === 'image' && 'Загрузите фото в качестве ответа'}
-            </span>
-            {isChoiceQuestionType(questionType) ? (
-              <div className={styles.testOptions}>
-                {question.answerOptions.map((option) => (
-                  <label key={option.id} className={styles.testOption}>
-                    <input
-                      type='checkbox'
-                      checked={selectedIds.includes(option.id)}
-                      onChange={(event) =>
-                        handleOptionChange(
-                          question,
-                          option.id,
-                          event.target.checked
-                        )
-                      }
-                    />
-                    <span>{option.text}</span>
-                  </label>
-                ))}
-              </div>
-            ) : null}
-            {questionType === 'text' ? (
-              <label className={styles.testTextAnswer}>
-                Ответ
-                <textarea
-                  value={textAnswers[question.id] ?? ''}
-                  onChange={(event) =>
-                    handleTextAnswerChange(question.id, event.target.value)
-                  }
-                />
-              </label>
-            ) : null}
-            {questionType === 'gap' ? (
-              <label className={styles.testTextAnswer}>
-                Слово
+      <fieldset className={styles.testQuestion}>
+        <legend>
+          {currentQuestionIndex + 1}. <span>{currentQuestion.text}</span>
+        </legend>
+        <span className={styles.testQuestionHint}>
+          {getQuestionHint(questionType)}
+        </span>
+        {isChoiceQuestionType(questionType) ? (
+          <div className={styles.testOptions}>
+            {currentQuestion.answerOptions.map((option) => (
+              <label key={option.id} className={styles.testOption}>
                 <input
-                  type='text'
-                  value={textAnswers[question.id] ?? ''}
+                  type='checkbox'
+                  checked={selectedIds.includes(option.id)}
                   onChange={(event) =>
-                    handleTextAnswerChange(question.id, event.target.value)
-                  }
-                />
-              </label>
-            ) : null}
-            {questionType === 'image' ? (
-              <label className={styles.testUploadAnswer}>
-                Фото
-                <input
-                  type='file'
-                  accept='image/*'
-                  onChange={(event) =>
-                    handleImageAnswerChange(
-                      question.id,
-                      event.target.files?.[0] ?? null
+                    handleOptionChange(
+                      currentQuestion,
+                      option.id,
+                      event.target.checked
                     )
                   }
                 />
-                {imageAnswer ? <span>{imageAnswer.name}</span> : null}
+                <span>{option.text}</span>
               </label>
-            ) : null}
-            {typeof questionResult === 'boolean' ? (
-              <div
-                className={
-                  questionResult
-                    ? styles.testQuestionCorrect
-                    : styles.testQuestionWrong
-                }
-              >
-                <strong>{questionResult ? 'Верно' : 'Неверно'}</strong>
-                {isChoiceQuestionType(questionType) ? (
-                  <span>
-                    Правильный ответ:{' '}
-                    {correctAnswers.map((option) => option.text).join(', ')}
-                  </span>
-                ) : null}
-                {isTextQuestionType(questionType) ? (
-                  <span>
-                    Засчитывается:{' '}
-                    {correctTextAnswers.length
-                      ? correctTextAnswers.join(', ')
-                      : 'ответ не задан'}
-                  </span>
-                ) : null}
-                {questionType === 'image' ? (
-                  <span>
-                    {questionResult ? 'Фото загружено' : 'Фото не загружено'}
-                  </span>
-                ) : null}
-              </div>
-            ) : null}
-          </fieldset>
-        );
-      })}
+            ))}
+          </div>
+        ) : null}
+        {questionType === 'text' ? (
+          <label className={styles.testTextAnswer}>
+            Ответ
+            <textarea
+              value={textAnswers[currentQuestion.id] ?? ''}
+              onChange={(event) =>
+                handleTextAnswerChange(currentQuestion.id, event.target.value)
+              }
+            />
+          </label>
+        ) : null}
+        {questionType === 'gap' ? (
+          <label className={styles.testTextAnswer}>
+            Слово
+            <input
+              type='text'
+              value={textAnswers[currentQuestion.id] ?? ''}
+              onChange={(event) =>
+                handleTextAnswerChange(currentQuestion.id, event.target.value)
+              }
+            />
+          </label>
+        ) : null}
+        {questionType === 'image' ? (
+          <label className={styles.testUploadAnswer}>
+            Фото
+            <input
+              type='file'
+              accept='image/*'
+              onChange={(event) =>
+                handleImageAnswerChange(
+                  currentQuestion.id,
+                  event.target.files?.[0] ?? null
+                )
+              }
+            />
+            {imageAnswer ? <span>{imageAnswer.name}</span> : null}
+          </label>
+        ) : null}
+      </fieldset>
 
-      {result ? (
-        <p className={styles.testResult}>
-          Результат: {result.correctCount} из {result.totalCount}
-        </p>
-      ) : null}
-
-      <Button variant='primary' type='submit'>
-        Проверить ответы
-      </Button>
+      <div className={styles.testNavigation}>
+        <Button
+          variant='secondary'
+          type='button'
+          disabled={currentQuestionIndex === 0}
+          onClick={() =>
+            setCurrentQuestionIndex((current) => Math.max(current - 1, 0))
+          }
+        >
+          Назад
+        </Button>
+        <Button variant='primary' type='submit'>
+          {isLastQuestion ? 'Показать результат' : 'Далее'}
+        </Button>
+      </div>
     </form>
   );
 }

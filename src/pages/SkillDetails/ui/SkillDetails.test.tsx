@@ -394,9 +394,12 @@ describe('SkillDetails description', () => {
     renderPage();
 
     await user.click(await screen.findByLabelText('Right single'));
-    await user.click(screen.getByLabelText('Right multiple A'));
+    await user.click(screen.getByRole('button', { name: 'Далее' }));
+    await user.click(await screen.findByLabelText('Right multiple A'));
     await user.click(screen.getByLabelText('Right multiple B'));
-    await user.click(screen.getByRole('button', { name: 'Проверить ответы' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Показать результат' })
+    );
 
     expect(screen.getByText('Результат: 2 из 2')).toBeInTheDocument();
     expect(screen.getAllByText('Верно')).toHaveLength(2);
@@ -482,12 +485,16 @@ describe('SkillDetails description', () => {
       await screen.findByLabelText('Ответ'),
       '  could you please confirm the deadline?  '
     );
-    await user.type(screen.getByLabelText('Слово'), 'friday');
+    await user.click(screen.getByRole('button', { name: 'Далее' }));
+    await user.type(await screen.findByLabelText('Слово'), 'friday');
+    await user.click(screen.getByRole('button', { name: 'Далее' }));
     await user.upload(
-      screen.getByLabelText('Фото'),
+      await screen.findByLabelText('Фото'),
       new File(['image'], 'draft.png', { type: 'image/png' })
     );
-    await user.click(screen.getByRole('button', { name: 'Проверить ответы' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Показать результат' })
+    );
 
     expect(screen.getByText('Результат: 3 из 3')).toBeInTheDocument();
     expect(screen.getAllByText('Верно')).toHaveLength(3);

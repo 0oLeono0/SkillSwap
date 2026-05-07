@@ -1,0 +1,59 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - navigation "Основная навигация" [ref=e5]:
+      - link "SkillSwap logo SkillSwap" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img "SkillSwap logo" [ref=e7]
+        - generic [ref=e8]: SkillSwap
+      - list [ref=e9]:
+        - listitem [ref=e10]:
+          - link "О проекте" [ref=e11] [cursor=pointer]:
+            - /url: /about
+        - listitem [ref=e12]:
+          - button "Все навыки" [ref=e14] [cursor=pointer]:
+            - text: Все навыки
+            - img [ref=e15]
+      - group [ref=e18]:
+        - generic [ref=e19]:
+          - img [ref=e20]
+          - textbox "Искать навыки" [ref=e22]
+      - generic [ref=e23]:
+        - button "Переключить тему" [ref=e24] [cursor=pointer]:
+          - img [ref=e26]
+        - generic [ref=e28]:
+          - link "Войти" [ref=e29] [cursor=pointer]:
+            - /url: /login
+            - button "Войти" [ref=e30]:
+              - generic [ref=e31]: Войти
+          - link "Зарегистрироваться" [ref=e32] [cursor=pointer]:
+            - /url: /register
+            - button "Зарегистрироваться" [ref=e33]:
+              - generic [ref=e34]: Зарегистрироваться
+  - main [ref=e35]:
+    - generic [ref=e36]: Загрузка данных…
+  - contentinfo [ref=e37]:
+    - link "Логотип SkillSwap SkillSwap" [ref=e38] [cursor=pointer]:
+      - /url: /
+      - img "Логотип SkillSwap" [ref=e39]
+      - generic [ref=e40]: SkillSwap
+    - navigation "Основная навигация футера" [ref=e41]:
+      - list [ref=e42]:
+        - listitem [ref=e43]:
+          - link "О проекте" [ref=e44] [cursor=pointer]:
+            - /url: /about
+        - listitem [ref=e45]:
+          - link "Все навыки" [ref=e46] [cursor=pointer]:
+            - /url: /catalog
+        - listitem [ref=e47]:
+          - link "Контакты" [ref=e48] [cursor=pointer]:
+            - /url: /contacts
+        - listitem [ref=e49]:
+          - link "Блог" [ref=e50] [cursor=pointer]:
+            - /url: /blog
+        - listitem [ref=e51]:
+          - link "Политика конфиденциальности" [ref=e52] [cursor=pointer]:
+            - /url: /policy
+        - listitem [ref=e53]:
+          - link "Пользовательское соглашение" [ref=e54] [cursor=pointer]:
+            - /url: /terms
+    - generic [ref=e55]: SkillSwap — 2025
