@@ -714,6 +714,7 @@ describe('ProfileSkills materials management', () => {
     setupSkillMaterials({ accessToken: null });
 
     await screen.findByText('Старый вопрос');
+    fireEvent.click(screen.getByRole('button', { name: 'Добавить материал' }));
     fireEvent.change(screen.getByLabelText('Название материала'), {
       target: { value: 'Материал без токена' }
     });
@@ -725,6 +726,7 @@ describe('ProfileSkills materials management', () => {
         'Для управления материалами нужно войти в аккаунт'
       )
     ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Отменить' }));
 
     fireEvent.change(screen.getByLabelText('Текст вопроса'), {
       target: { value: 'Вопрос без токена' }

@@ -172,14 +172,14 @@ export const useSkillMaterials = (skillId: string) => {
 
     if (!payload) {
       updateForm({ error: 'Введите название материала' });
-      return;
+      return false;
     }
 
     if (!accessToken) {
       updateForm({
         error: 'Для управления материалами нужно войти в аккаунт'
       });
-      return;
+      return false;
     }
 
     updateForm({
@@ -203,12 +203,14 @@ export const useSkillMaterials = (skillId: string) => {
       }
       resetForm();
       await loadMaterials();
+      return true;
     } catch (error) {
       console.error('[ProfileSkillMaterials] Failed to save material', error);
       updateForm({
         isSubmitting: false,
         error: 'Не удалось сохранить материал'
       });
+      return false;
     }
   }, [accessToken, form, loadMaterials, resetForm, skillId, updateForm]);
 

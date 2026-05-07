@@ -26,6 +26,8 @@ interface ProfileSkillMaterialsProps {
   skillId: string;
 }
 
+type MaterialEditorMode = 'hidden' | 'create' | 'edit';
+
 const createAttachmentId = () => {
   const cryptoApi = globalThis.crypto;
   if (cryptoApi?.randomUUID) {
@@ -71,8 +73,11 @@ export function ProfileSkillMaterials({
   const [selectedMaterialId, setSelectedMaterialId] = useState<string | null>(
     null
   );
+  const [editorMode, setEditorMode] = useState<MaterialEditorMode>('hidden');
 
   const isEditingMaterial = Boolean(form.editingMaterialId);
+  const isMaterialFormVisible =
+    editorMode !== 'hidden' || materialsState.items.length === 0;
   const defaultSelectedMaterial = useMemo(
     () =>
       materialsState.items.find((material) => material.type === 'testing') ??
@@ -101,9 +106,12 @@ export function ProfileSkillMaterials({
     });
   }, [defaultSelectedMaterial, materialsState.items]);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    void saveMaterial();
+    const isSaved = await saveMaterial();
+    if (isSaved) {
+      setEditorMode('hidden');
+    }
   };
 
   const handleAttachmentUpload = async (
@@ -140,13 +148,157 @@ export function ProfileSkillMaterials({
   const handleEditMaterial = (material: MaterialDto) => {
     setSelectedMaterialId(material.id);
     startEdit(material);
+    setEditorMode('edit');
   };
+
+  const handleCreateMaterial = () => {
+    resetForm();
+    setEditorMode('create');
+  };
+
+  const handleCancelMaterialForm = () => {
+    resetForm();
+    setEditorMode(materialsState.items.length ? 'hidden' : 'create');
+  };
+
+  const renderMaterialForm = () => (
+    <form className={styles.materialForm} onSubmit={handleSubmit}>
+      <div className={styles.materialFormHeader}>
+        <div>
+          <h5>
+            {isEditingMaterial ? 'Редактировать материал' : 'Добавить материал'}
+          </h5>
+          <p>
+            Заполните заголовок, короткое описание, основной текст и приложите
+            файлы, если они нужны ученику.
+          </p>
+        </div>
+        {materialsState.items.length || isEditingMaterial ? (
+          <Button variant='secondary' onClick={handleCancelMaterialForm}>
+            Отменить
+          </Button>
+        ) : null}
+      </div>
+      <div className={styles.formGrid}>
+        <label className={styles.field}>
+          Тип материала
+          <select
+            className={styles.select}
+            value={form.type}
+            onChange={(event) =>
+              updateForm({
+                type: event.target.value as MaterialType,
+                error: null
+              })
+            }
+          >
+            {MATERIAL_TYPE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <Input
+          id={`${skillId}-material-title`}
+          title='Заголовок'
+          aria-label='Название материала'
+          placeholder='Например, Основы планирования'
+          value={form.title}
+          onChange={(event) =>
+            updateForm({
+              title: event.target.value,
+              error: null
+            })
+          }
+        />
+      </div>
+      <label className={styles.field}>
+        Подзаголовок
+        <textarea
+          aria-label='Описание материала'
+          className={styles.textarea}
+          value={form.description}
+          onChange={(event) =>
+            updateForm({
+              description: event.target.value,
+              error: null
+            })
+          }
+          rows={3}
+        />
+      </label>
+      <label className={styles.field}>
+        Текст
+        <textarea
+          aria-label='Содержимое материала'
+          className={styles.textarea}
+          value={form.content}
+          onChange={(event) =>
+            updateForm({
+              content: event.target.value,
+              error: null
+            })
+          }
+          rows={4}
+        />
+      </label>
+      <div className={styles.field}>
+        <span>Файлы</span>
+        {form.attachments.length ? (
+          <ul className={styles.attachmentList}>
+            {form.attachments.map((attachment) => (
+              <li key={attachment.id}>
+                <a href={attachment.url} download={attachment.name}>
+                  {attachment.name}
+                </a>
+                <Button
+                  variant='secondary'
+                  onClick={() => handleRemoveAttachment(attachment.id)}
+                >
+                  Удалить
+                </Button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className={styles.materialState}>Файлы пока не добавлены</p>
+        )}
+        <label className={styles.uploadButton}>
+          <input
+            type='file'
+            multiple
+            className={styles.uploadInput}
+            onChange={handleAttachmentUpload}
+          />
+          Добавить файлы
+        </label>
+      </div>
+      {form.error ? (
+        <p className={styles.materialStateError}>{form.error}</p>
+      ) : null}
+      <Button variant='primary' type='submit' disabled={form.isSubmitting}>
+        {form.isSubmitting
+          ? 'Сохраняю...'
+          : isEditingMaterial
+            ? 'Сохранить материал'
+            : 'Добавить материал'}
+      </Button>
+    </form>
+  );
 
   return (
     <section className={styles.materialsBlock}>
       <div className={styles.materialsHeader}>
         <h5>Методические материалы</h5>
-        <span>{materialsState.items.length}</span>
+        <div className={styles.materialsHeaderActions}>
+          <span>{materialsState.items.length}</span>
+          {!isMaterialFormVisible ? (
+            <Button variant='secondary' onClick={handleCreateMaterial}>
+              Добавить материал
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {materialsState.isLoading ? (
@@ -154,7 +306,10 @@ export function ProfileSkillMaterials({
       ) : materialsState.error ? (
         <p className={styles.materialStateError}>{materialsState.error}</p>
       ) : materialsState.items.length === 0 ? (
-        <p className={styles.materialState}>Материалы пока не добавлены</p>
+        <div className={styles.materialEmptyWorkspace}>
+          <p className={styles.materialState}>Материалы пока не добавлены</p>
+          {renderMaterialForm()}
+        </div>
       ) : (
         <div className={styles.materialsWorkspace}>
           <aside className={styles.materialsSidebar}>
@@ -195,7 +350,9 @@ export function ProfileSkillMaterials({
           </aside>
 
           <div className={styles.materialDetailsPanel}>
-            {selectedMaterial ? (
+            {isMaterialFormVisible ? (
+              renderMaterialForm()
+            ) : selectedMaterial ? (
               <article className={styles.materialCard}>
                 <div className={styles.materialCardHeader}>
                   <span className={styles.materialType}>
@@ -253,124 +410,6 @@ export function ProfileSkillMaterials({
           </div>
         </div>
       )}
-
-      <form className={styles.materialForm} onSubmit={handleSubmit}>
-        <div className={styles.materialFormHeader}>
-          <h5>
-            {isEditingMaterial ? 'Редактировать материал' : 'Добавить материал'}
-          </h5>
-          {isEditingMaterial ? (
-            <Button variant='secondary' onClick={resetForm}>
-              Отменить
-            </Button>
-          ) : null}
-        </div>
-        <div className={styles.formGrid}>
-          <label className={styles.field}>
-            Тип материала
-            <select
-              className={styles.select}
-              value={form.type}
-              onChange={(event) =>
-                updateForm({
-                  type: event.target.value as MaterialType,
-                  error: null
-                })
-              }
-            >
-              {MATERIAL_TYPE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <Input
-            id={`${skillId}-material-title`}
-            title='Заголовок'
-            aria-label='Название материала'
-            placeholder='Например, Основы планирования'
-            value={form.title}
-            onChange={(event) =>
-              updateForm({
-                title: event.target.value,
-                error: null
-              })
-            }
-          />
-        </div>
-        <label className={styles.field}>
-          Подзаголовок
-          <textarea
-            aria-label='Описание материала'
-            className={styles.textarea}
-            value={form.description}
-            onChange={(event) =>
-              updateForm({
-                description: event.target.value,
-                error: null
-              })
-            }
-            rows={3}
-          />
-        </label>
-        <label className={styles.field}>
-          Текст
-          <textarea
-            aria-label='Содержимое материала'
-            className={styles.textarea}
-            value={form.content}
-            onChange={(event) =>
-              updateForm({
-                content: event.target.value,
-                error: null
-              })
-            }
-            rows={4}
-          />
-        </label>
-        <div className={styles.field}>
-          <span>Файлы</span>
-          {form.attachments.length ? (
-            <ul className={styles.attachmentList}>
-              {form.attachments.map((attachment) => (
-                <li key={attachment.id}>
-                  <a href={attachment.url} download={attachment.name}>
-                    {attachment.name}
-                  </a>
-                  <Button
-                    variant='secondary'
-                    onClick={() => handleRemoveAttachment(attachment.id)}
-                  >
-                    Удалить
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className={styles.materialState}>Файлы пока не добавлены</p>
-          )}
-          <label className={styles.uploadButton}>
-            <input
-              type='file'
-              multiple
-              className={styles.uploadInput}
-              onChange={handleAttachmentUpload}
-            />
-            Добавить файлы
-          </label>
-        </div>
-        {form.error ? (
-          <p className={styles.materialStateError}>{form.error}</p>
-        ) : null}
-        <Button variant='primary' type='submit' disabled={form.isSubmitting}>
-          {form.isSubmitting
-            ? 'Сохраняю...'
-            : isEditingMaterial
-              ? 'Сохранить материал'
-              : 'Добавить материал'}
-        </Button>
-      </form>
     </section>
   );
 }
