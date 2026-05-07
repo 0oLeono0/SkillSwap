@@ -1,4 +1,12 @@
-import type { FormEvent, ReactElement } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type ReactElement
+} from 'react';
+import clsx from 'clsx';
 import { useSkillMaterials } from '../model/useSkillMaterials';
 import { ProfileTestQuestionsEditor } from './ProfileTestQuestionsEditor';
 import styles from './profileSkillMaterials.module.scss';
@@ -8,11 +16,44 @@ import {
   MATERIAL_TYPE_LABELS,
   MATERIAL_TYPE_OPTIONS
 } from '@/shared/lib/materials';
-import type { MaterialType } from '@/shared/api/materials';
+import type {
+  MaterialAttachmentDto,
+  MaterialDto,
+  MaterialType
+} from '@/shared/api/materials';
 
 interface ProfileSkillMaterialsProps {
   skillId: string;
 }
+
+const createAttachmentId = () => {
+  const cryptoApi = globalThis.crypto;
+  if (cryptoApi?.randomUUID) {
+    return cryptoApi.randomUUID();
+  }
+  return `attachment-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+};
+
+const fileToAttachment = (file: File) =>
+  new Promise<MaterialAttachmentDto>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = typeof reader.result === 'string' ? reader.result : '';
+      if (!url) {
+        reject(new Error('Failed to read attachment'));
+        return;
+      }
+      resolve({
+        id: createAttachmentId(),
+        name: file.name,
+        type: file.type || 'application/octet-stream',
+        size: file.size,
+        url
+      });
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
 
 export function ProfileSkillMaterials({
   skillId
@@ -27,12 +68,78 @@ export function ProfileSkillMaterials({
     deleteMaterial,
     refreshMaterials
   } = useSkillMaterials(skillId);
+  const [selectedMaterialId, setSelectedMaterialId] = useState<string | null>(
+    null
+  );
 
   const isEditingMaterial = Boolean(form.editingMaterialId);
+  const defaultSelectedMaterial = useMemo(
+    () =>
+      materialsState.items.find((material) => material.type === 'testing') ??
+      materialsState.items[0] ??
+      null,
+    [materialsState.items]
+  );
+  const selectedMaterial = useMemo(
+    () =>
+      materialsState.items.find(
+        (material) => material.id === selectedMaterialId
+      ) ?? defaultSelectedMaterial,
+    [defaultSelectedMaterial, materialsState.items, selectedMaterialId]
+  );
+
+  useEffect(() => {
+    setSelectedMaterialId((currentId) => {
+      if (
+        currentId &&
+        materialsState.items.some((material) => material.id === currentId)
+      ) {
+        return currentId;
+      }
+
+      return defaultSelectedMaterial?.id ?? null;
+    });
+  }, [defaultSelectedMaterial, materialsState.items]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     void saveMaterial();
+  };
+
+  const handleAttachmentUpload = async (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = Array.from(event.target.files ?? []);
+    if (!files.length) {
+      return;
+    }
+
+    try {
+      const attachments = await Promise.all(files.map(fileToAttachment));
+      updateForm({
+        attachments: [...form.attachments, ...attachments].slice(0, 10),
+        error: null
+      });
+    } catch (error) {
+      console.error('[ProfileSkillMaterials] Failed to read file', error);
+      updateForm({ error: 'Не удалось добавить файл' });
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  const handleRemoveAttachment = (attachmentId: string) => {
+    updateForm({
+      attachments: form.attachments.filter(
+        (attachment) => attachment.id !== attachmentId
+      ),
+      error: null
+    });
+  };
+
+  const handleEditMaterial = (material: MaterialDto) => {
+    setSelectedMaterialId(material.id);
+    startEdit(material);
   };
 
   return (
@@ -49,43 +156,101 @@ export function ProfileSkillMaterials({
       ) : materialsState.items.length === 0 ? (
         <p className={styles.materialState}>Материалы пока не добавлены</p>
       ) : (
-        <div className={styles.materialList}>
-          {materialsState.items.map((material) => (
-            <article key={material.id} className={styles.materialCard}>
-              <div className={styles.materialCardHeader}>
-                <span className={styles.materialType}>
-                  {MATERIAL_TYPE_LABELS[material.type]}
-                </span>
-                <div className={styles.materialActions}>
-                  <Button
-                    variant='secondary'
-                    onClick={() => startEdit(material)}
-                    aria-label={`Редактировать материал ${material.title}`}
-                  >
-                    Редактировать
-                  </Button>
-                  <Button
-                    variant='secondary'
-                    onClick={() => void deleteMaterial(material.id)}
-                    aria-label={`Удалить материал ${material.title}`}
-                  >
-                    Удалить
-                  </Button>
+        <div className={styles.materialsWorkspace}>
+          <aside className={styles.materialsSidebar}>
+            <div className={styles.materialsSidebarHeader}>
+              <span>Структура курса</span>
+              <strong>{materialsState.items.length}</strong>
+            </div>
+            <ul className={styles.materialNavList}>
+              {materialsState.items.map((material, index) => {
+                const isActive = material.id === selectedMaterial?.id;
+                return (
+                  <li key={material.id}>
+                    <button
+                      type='button'
+                      className={clsx(
+                        styles.materialNavItem,
+                        isActive && styles.materialNavItemActive
+                      )}
+                      onClick={() => setSelectedMaterialId(material.id)}
+                    >
+                      <span className={styles.materialType}>
+                        {MATERIAL_TYPE_LABELS[material.type]}
+                      </span>
+                      <strong>
+                        {isActive
+                          ? `Открыт: ${material.title}`
+                          : material.title}
+                      </strong>
+                      <small>
+                        {material.description ||
+                          `Материал ${index + 1} без подзаголовка`}
+                      </small>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </aside>
+
+          <div className={styles.materialDetailsPanel}>
+            {selectedMaterial ? (
+              <article className={styles.materialCard}>
+                <div className={styles.materialCardHeader}>
+                  <span className={styles.materialType}>
+                    {MATERIAL_TYPE_LABELS[selectedMaterial.type]}
+                  </span>
+                  <div className={styles.materialActions}>
+                    <Button
+                      variant='secondary'
+                      onClick={() => handleEditMaterial(selectedMaterial)}
+                      aria-label={`Редактировать материал ${selectedMaterial.title}`}
+                    >
+                      Редактировать
+                    </Button>
+                    <Button
+                      variant='secondary'
+                      onClick={() => void deleteMaterial(selectedMaterial.id)}
+                      aria-label={`Удалить материал ${selectedMaterial.title}`}
+                    >
+                      Удалить
+                    </Button>
+                  </div>
                 </div>
-              </div>
-              <h6>{material.title}</h6>
-              {material.description ? <p>{material.description}</p> : null}
-              {material.content ? (
-                <p className={styles.materialContent}>{material.content}</p>
-              ) : null}
-              {material.type === 'testing' ? (
-                <ProfileTestQuestionsEditor
-                  material={material}
-                  onRefresh={refreshMaterials}
-                />
-              ) : null}
-            </article>
-          ))}
+                <h6>{selectedMaterial.title}</h6>
+                {selectedMaterial.description ? (
+                  <p>{selectedMaterial.description}</p>
+                ) : null}
+                {selectedMaterial.content ? (
+                  <p className={styles.materialContent}>
+                    {selectedMaterial.content}
+                  </p>
+                ) : null}
+                {selectedMaterial.attachments?.length ? (
+                  <ul className={styles.attachmentList}>
+                    {selectedMaterial.attachments.map((attachment) => (
+                      <li key={attachment.id}>
+                        <a href={attachment.url} download={attachment.name}>
+                          {attachment.name}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {selectedMaterial.type === 'testing' ? (
+                  <ProfileTestQuestionsEditor
+                    material={selectedMaterial}
+                    onRefresh={refreshMaterials}
+                  />
+                ) : null}
+              </article>
+            ) : (
+              <p className={styles.materialState}>
+                Выберите материал, чтобы открыть редактор.
+              </p>
+            )}
+          </div>
         </div>
       )}
 
@@ -122,7 +287,8 @@ export function ProfileSkillMaterials({
           </label>
           <Input
             id={`${skillId}-material-title`}
-            title='Название материала'
+            title='Заголовок'
+            aria-label='Название материала'
             placeholder='Например, Основы планирования'
             value={form.title}
             onChange={(event) =>
@@ -134,8 +300,9 @@ export function ProfileSkillMaterials({
           />
         </div>
         <label className={styles.field}>
-          Описание материала
+          Подзаголовок
           <textarea
+            aria-label='Описание материала'
             className={styles.textarea}
             value={form.description}
             onChange={(event) =>
@@ -148,8 +315,9 @@ export function ProfileSkillMaterials({
           />
         </label>
         <label className={styles.field}>
-          Содержимое материала
+          Текст
           <textarea
+            aria-label='Содержимое материала'
             className={styles.textarea}
             value={form.content}
             onChange={(event) =>
@@ -161,6 +329,37 @@ export function ProfileSkillMaterials({
             rows={4}
           />
         </label>
+        <div className={styles.field}>
+          <span>Файлы</span>
+          {form.attachments.length ? (
+            <ul className={styles.attachmentList}>
+              {form.attachments.map((attachment) => (
+                <li key={attachment.id}>
+                  <a href={attachment.url} download={attachment.name}>
+                    {attachment.name}
+                  </a>
+                  <Button
+                    variant='secondary'
+                    onClick={() => handleRemoveAttachment(attachment.id)}
+                  >
+                    Удалить
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className={styles.materialState}>Файлы пока не добавлены</p>
+          )}
+          <label className={styles.uploadButton}>
+            <input
+              type='file'
+              multiple
+              className={styles.uploadInput}
+              onChange={handleAttachmentUpload}
+            />
+            Добавить файлы
+          </label>
+        </div>
         {form.error ? (
           <p className={styles.materialStateError}>{form.error}</p>
         ) : null}

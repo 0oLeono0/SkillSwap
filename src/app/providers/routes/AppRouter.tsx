@@ -19,6 +19,7 @@ import {
   ProfilePersonalData,
   ProfileRequests,
   ProfileSkills,
+  ProfileSkillMaterialsPage,
   ProfileAdminPanel
 } from '@/pages/Profile';
 
@@ -109,6 +110,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.PROFILE.CHILDREN.SKILLS,
             element: <ProfileSkills />
+          },
+          {
+            path: ROUTES.PROFILE.CHILDREN.SKILL_MATERIALS,
+            element: <ProfileSkillMaterialsPage />
           }
         ]
       }

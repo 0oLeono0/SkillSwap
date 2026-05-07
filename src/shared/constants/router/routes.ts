@@ -9,6 +9,7 @@ export const ROUTES = {
       EXCHANGES: 'exchanges',
       FAVORITES: 'favorites',
       SKILLS: 'skills',
+      SKILL_MATERIALS: 'skills/:skillId/materials',
       ADMIN: 'admin',
     },
   },

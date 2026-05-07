@@ -63,10 +63,24 @@ describe('adminController', () => {
   });
 
   describe('deleteUserAccount', () => {
+    it('blocks non-owner deletion', async () => {
+      const req = {
+        params: { userId: 'u1' },
+        user: { sub: 'admin', role: 'admin' }
+      } as unknown as Request;
+      const res = createRes();
+      const next = jest.fn() as unknown as NextFunction;
+
+      await deleteUserAccount(req, res as Response, next);
+
+      expect(next).toHaveBeenCalledWith(expect.any(HttpError));
+      expect(mockAdminService.deleteUser).not.toHaveBeenCalled();
+    });
+
     it('blocks self-deletion', async () => {
       const req = {
         params: { userId: 'me' },
-        user: { sub: 'me' }
+        user: { sub: 'me', role: 'owner' }
       } as unknown as Request;
       const res = createRes();
       const next = jest.fn() as unknown as NextFunction;
@@ -80,7 +94,7 @@ describe('adminController', () => {
     it('delegates to adminService on valid request', async () => {
       const req = {
         params: { userId: 'u1' },
-        user: { sub: 'admin' }
+        user: { sub: 'owner', role: 'owner' }
       } as unknown as Request;
       const res = createRes();
       const next = jest.fn() as unknown as NextFunction;

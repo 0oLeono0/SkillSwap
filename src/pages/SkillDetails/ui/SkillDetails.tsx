@@ -27,6 +27,7 @@ import {
   MATERIAL_TYPE_LABELS,
   MATERIAL_TYPE_ORDER
 } from '@/shared/lib/materials';
+import { MaterialTestRunner } from './MaterialTestRunner';
 import {
   formatAverageRating,
   formatReviewDate,
@@ -566,20 +567,23 @@ const SkillDetails = (): ReactElement => {
                           {material.content}
                         </p>
                       ) : null}
+                      {material.attachments?.length ? (
+                        <ul className={styles.attachmentList}>
+                          {material.attachments.map((attachment) => (
+                            <li key={attachment.id}>
+                              <a href={attachment.url} download={attachment.name}>
+                                {attachment.name}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
                       {material.type === 'testing' ? (
                         <div className={styles.testQuestions}>
                           <span>
                             Вопросов: {material.questions?.length ?? 0}
                           </span>
-                          {material.questions?.length ? (
-                            <ol>
-                              {material.questions.map((question) => (
-                                <li key={question.id}>{question.text}</li>
-                              ))}
-                            </ol>
-                          ) : (
-                            <p>Вопросы пока не добавлены</p>
-                          )}
+                          <MaterialTestRunner material={material} />
                         </div>
                       ) : null}
                     </article>

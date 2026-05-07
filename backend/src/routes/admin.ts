@@ -20,6 +20,6 @@ adminRouter.patch(
 );
 adminRouter.delete(
   '/users/:userId',
-  authorizeRole(USER_ROLE.admin, USER_ROLE.owner),
+  authorizeRole(USER_ROLE.owner),
   deleteUserAccount
 );

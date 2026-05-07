@@ -1,7 +1,8 @@
 import { z } from 'zod';
-import { MATERIAL_TYPES } from './materials.js';
+import { MATERIAL_TYPES, TEST_QUESTION_TYPES } from './materials.js';
 
 export const materialTypes = MATERIAL_TYPES;
+export const testQuestionTypes = TEST_QUESTION_TYPES;
 
 const idSchema = z.string().trim().min(1);
 const textSchema = z.string().trim().min(1);
@@ -9,6 +10,17 @@ const nullableOptional = (schema) => schema.optional().nullable();
 const positionSchema = z.number().int().min(0);
 
 export const materialTypeSchema = z.enum(MATERIAL_TYPES);
+export const testQuestionTypeSchema = z.enum(TEST_QUESTION_TYPES);
+
+export const materialAttachmentSchema = z
+  .object({
+    id: idSchema,
+    name: z.string().trim().min(1).max(255),
+    type: z.string().trim().min(1).max(120),
+    size: z.number().int().min(0).max(10_000_000),
+    url: z.string().trim().min(1)
+  })
+  .strict();
 
 export const createMaterialPayloadSchema = z
   .object({
@@ -17,6 +29,7 @@ export const createMaterialPayloadSchema = z
     title: textSchema,
     description: nullableOptional(z.string().trim().min(1).max(2000)),
     content: nullableOptional(z.string().trim().min(1)),
+    attachments: z.array(materialAttachmentSchema).max(10).optional(),
     position: positionSchema.optional()
   })
   .strict();
@@ -27,6 +40,7 @@ export const updateMaterialPayloadSchema = z
     title: textSchema.optional(),
     description: nullableOptional(z.string().trim().min(1).max(2000)),
     content: nullableOptional(z.string().trim().min(1)),
+    attachments: z.array(materialAttachmentSchema).max(10).optional(),
     position: positionSchema.optional()
   })
   .strict();
@@ -34,6 +48,7 @@ export const updateMaterialPayloadSchema = z
 export const createTestQuestionPayloadSchema = z
   .object({
     materialId: idSchema,
+    type: testQuestionTypeSchema.optional(),
     text: textSchema,
     position: positionSchema.optional()
   })
@@ -41,6 +56,7 @@ export const createTestQuestionPayloadSchema = z
 
 export const updateTestQuestionPayloadSchema = z
   .object({
+    type: testQuestionTypeSchema.optional(),
     text: textSchema.optional(),
     position: positionSchema.optional()
   })

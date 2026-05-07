@@ -13,9 +13,11 @@ import { authorizedRequest, request } from './request';
 
 export type {
   AnswerOptionDto,
+  MaterialAttachmentDto,
   MaterialDto,
   MaterialType,
   TestQuestionDto,
+  TestQuestionType,
   UpdateAnswerOptionPayload,
   UpdateMaterialPayload,
   UpdateTestQuestionPayload

@@ -169,12 +169,14 @@ function buildFiltersBaseDataResponse(
   };
 }
 
-function buildAuthenticatedUser(): AuthUser {
+function buildAuthenticatedUser(
+  role: AuthUser['role'] = 'user'
+): AuthUser {
   return {
     id: 'user-1',
     name: 'User',
     email: 'user@example.com',
-    role: 'user',
+    role,
     teachableSkills: [],
     learningSkills: []
   };
@@ -188,11 +190,13 @@ function buildGuestViewerState(): ViewerAuthState {
   };
 }
 
-function buildAuthenticatedViewerState(): ViewerAuthState {
+function buildAuthenticatedViewerState(
+  role: AuthUser['role'] = 'user'
+): ViewerAuthState {
   return {
     isAuthenticated: true,
     accessToken: 'access-token',
-    user: buildAuthenticatedUser()
+    user: buildAuthenticatedUser(role)
   };
 }
 
@@ -215,6 +219,15 @@ jest.mock('@/widgets/SkillsList', () => ({
             >
               like
             </button>
+            {props.moderation?.enabled && (
+              <button
+                type='button'
+                aria-label={`delete-${author.id}`}
+                onClick={() => props.moderation?.onDelete(author.id)}
+              >
+                delete
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -415,6 +428,42 @@ describe('Catalog favorite action', () => {
 
     expect(
       await screen.findByText('status-author-inactive-inactive')
+    ).toBeInTheDocument();
+  });
+
+  it('does not expose catalog moderation for regular user or admin', async () => {
+    currentViewerState = buildAuthenticatedViewerState('user');
+    const { rerender } = renderCatalog();
+
+    await screen.findByRole('button', {
+      name: getFavoriteButtonName('author-1')
+    });
+    expect(
+      screen.queryByRole('button', { name: 'delete-author-1' })
+    ).not.toBeInTheDocument();
+
+    currentViewerState = buildAuthenticatedViewerState('admin');
+    rerender(
+      <MemoryRouter>
+        <Catalog variant='catalog' />
+      </MemoryRouter>
+    );
+
+    await screen.findByRole('button', {
+      name: getFavoriteButtonName('author-1')
+    });
+    expect(
+      screen.queryByRole('button', { name: 'delete-author-1' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('exposes catalog moderation only for owner', async () => {
+    currentViewerState = buildAuthenticatedViewerState('owner');
+
+    renderCatalog();
+
+    expect(
+      await screen.findByRole('button', { name: 'delete-author-1' })
     ).toBeInTheDocument();
   });
 });

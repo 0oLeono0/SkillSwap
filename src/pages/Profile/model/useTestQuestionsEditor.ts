@@ -4,10 +4,17 @@ import {
   materialsApi,
   type AnswerOptionDto,
   type MaterialDto,
+  type TestQuestionType,
   type TestQuestionDto
 } from '@/shared/api/materials';
+import {
+  isTextQuestionType,
+  normalizeTestQuestionType
+} from '@/shared/lib/materials';
 
 export type QuestionFormState = {
+  type: TestQuestionType;
+  initialType: TestQuestionType;
   text: string;
   editingQuestionId: string | null;
   isSubmitting: boolean;
@@ -23,6 +30,8 @@ export type AnswerOptionFormState = {
 };
 
 const createEmptyQuestionForm = (): QuestionFormState => ({
+  type: 'single',
+  initialType: 'single',
   text: '',
   editingQuestionId: null,
   isSubmitting: false,
@@ -103,14 +112,24 @@ export const useTestQuestionsEditor = (
     });
 
     try {
+      const questionType = normalizeTestQuestionType(questionForm.type);
+      const questionPayload = {
+        text,
+        ...(questionType !== questionForm.initialType
+          ? { type: questionType }
+          : {})
+      };
       if (questionForm.editingQuestionId) {
         await materialsApi.updateQuestion(
           accessToken,
           questionForm.editingQuestionId,
-          { text }
+          questionPayload
         );
       } else {
-        await materialsApi.createQuestion(accessToken, material.id, { text });
+        await materialsApi.createQuestion(accessToken, material.id, {
+          text,
+          ...(questionType === 'single' ? {} : { type: questionType })
+        });
       }
       resetQuestionForm();
       await onRefresh();
@@ -127,7 +146,10 @@ export const useTestQuestionsEditor = (
   };
 
   const startQuestionEdit = (question: TestQuestionDto) => {
+    const questionType = normalizeTestQuestionType(question.type);
     setQuestionForm({
+      type: questionType,
+      initialType: questionType,
       text: question.text,
       editingQuestionId: question.id,
       isSubmitting: false,
@@ -159,7 +181,16 @@ export const useTestQuestionsEditor = (
 
   const saveAnswerOption = async (question: TestQuestionDto) => {
     const form = getAnswerForm(question.id);
+    const questionType = normalizeTestQuestionType(question.type);
     const text = form.text.trim();
+
+    if (questionType === 'image') {
+      updateAnswerForm(question.id, {
+        error: 'Для вопроса с загрузкой фото правильный вариант не нужен'
+      });
+      return;
+    }
+
     if (!text) {
       updateAnswerForm(question.id, {
         error: 'Введите текст варианта ответа'
@@ -180,19 +211,22 @@ export const useTestQuestionsEditor = (
     });
 
     try {
+      const isCorrect = isTextQuestionType(questionType)
+        ? true
+        : form.isCorrect;
       if (form.editingOptionId) {
         await materialsApi.updateAnswerOption(
           accessToken,
           form.editingOptionId,
           {
             text,
-            isCorrect: form.isCorrect
+            isCorrect
           }
         );
       } else {
         await materialsApi.createAnswerOption(accessToken, question.id, {
           text,
-          isCorrect: form.isCorrect
+          isCorrect
         });
       }
       resetAnswerForm(question.id);

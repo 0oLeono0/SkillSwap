@@ -30,6 +30,9 @@ const mockMaterialRepository: {
   updateAnswerOption: jest.MockedFunction<
     (optionId: string, data: unknown) => Promise<unknown>
   >;
+  clearCorrectAnswerOptions: jest.MockedFunction<
+    (questionId: string, exceptOptionId?: string) => Promise<unknown>
+  >;
   deleteAnswerOption: jest.MockedFunction<
     (optionId: string) => Promise<unknown>
   >;
@@ -47,6 +50,7 @@ const mockMaterialRepository: {
   findAnswerOptionById: jest.fn(),
   createAnswerOption: jest.fn(),
   updateAnswerOption: jest.fn(),
+  clearCorrectAnswerOptions: jest.fn(),
   deleteAnswerOption: jest.fn()
 };
 
@@ -167,6 +171,7 @@ describe('materialService', () => {
       title: 'Theory',
       description: 'Intro',
       content: 'Read',
+      attachments: '[]',
       position: 0
     });
   });
@@ -244,6 +249,7 @@ describe('materialService', () => {
 
     expect(mockMaterialRepository.createQuestion).toHaveBeenCalledWith({
       materialId: 'material-1',
+      type: 'single',
       text: 'New question',
       position: 2
     });
@@ -271,6 +277,9 @@ describe('materialService', () => {
       isCorrect: true,
       position: 0
     });
+    expect(
+      mockMaterialRepository.clearCorrectAnswerOptions
+    ).toHaveBeenCalledWith('question-1', 'option-1');
     expect(result).toMatchObject({ text: 'Correct', isCorrect: true });
   });
 

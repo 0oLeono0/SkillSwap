@@ -4,5 +4,6 @@ export { ProfileSectionPlaceholder } from './ui/ProfileSectionPlaceholder';
 export { ProfileRequests } from './ui/ProfileRequests';
 export { ProfileFavorites } from './ui/ProfileFavorites';
 export { ProfileSkills } from './ui/ProfileSkills';
+export { ProfileSkillMaterialsPage } from './ui/ProfileSkillMaterialsPage';
 export { ProfileExchanges } from './ui/ProfileExchanges';
 export { ProfileAdminPanel } from './ui/ProfileAdminPanel';

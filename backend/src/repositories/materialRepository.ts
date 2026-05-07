@@ -183,6 +183,22 @@ export const materialRepository = {
     });
   },
 
+  clearCorrectAnswerOptions(
+    questionId: string,
+    exceptOptionId?: string,
+    client?: DbClient
+  ) {
+    return getClient(client).materialAnswerOption.updateMany({
+      where: {
+        questionId,
+        ...(exceptOptionId ? { id: { not: exceptOptionId } } : {})
+      },
+      data: {
+        isCorrect: false
+      }
+    });
+  },
+
   deleteAnswerOption(optionId: string, client?: DbClient) {
     return getClient(client).materialAnswerOption.delete({
       where: { id: optionId }

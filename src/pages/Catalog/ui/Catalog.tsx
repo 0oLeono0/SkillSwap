@@ -38,7 +38,6 @@ import { useAuth } from '@/app/providers/auth';
 import { useFavorites } from '@/app/providers/favorites';
 import { adminApi } from '@/shared/api/admin';
 import { ApiError } from '@/shared/api/request';
-import { isElevatedRole } from '@/shared/types/userRole';
 import { loadFiltersBaseData } from '@/features/Filter/model/filterBaseDataStore';
 import { useAuthEntryNavigation } from '@/shared/lib/router/useAuthEntryNavigation';
 import {
@@ -121,7 +120,7 @@ const Catalog = ({ variant = 'home', heading }: CatalogProps) => {
     () => new Set(favoriteAuthorIds),
     [favoriteAuthorIds]
   );
-  const moderationEnabled = isElevatedRole(authUser?.role);
+  const moderationEnabled = authUser?.role === 'owner';
 
   const mapAuthorsWithFavorites = useCallback(
     (authorList: CatalogAuthor[]) =>

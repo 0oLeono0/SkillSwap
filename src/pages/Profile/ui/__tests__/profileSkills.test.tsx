@@ -182,6 +182,18 @@ const setupProfileSkills = ({
   return render(<ProfileSkills />);
 };
 
+const setupSkillMaterials = ({
+  accessToken = 'token'
+}: {
+  accessToken?: string | null;
+} = {}) => {
+  mockUseAuth.mockReturnValue({
+    accessToken
+  });
+
+  return render(<ProfileSkillMaterials skillId='skill-teach-1' />);
+};
+
 describe('ProfileSkills materials management', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -241,27 +253,15 @@ describe('ProfileSkills materials management', () => {
     mockRemoveAnswerOption.mockResolvedValue(undefined);
   });
 
-  it('loads materials only for teachable skills', async () => {
-    mockListByUserSkill.mockResolvedValue({
-      materials: [
-        createMaterial({
-          type: 'practice',
-          title: 'Практическое задание',
-          description: 'Описание практики',
-          content: 'Сделайте недельный план'
-        })
-      ]
-    });
-
+  it('shows dedicated materials page action for teachable skills', () => {
     setupProfileSkills();
 
-    await waitFor(() => {
-      expect(mockListByUserSkill).toHaveBeenCalledWith('skill-teach-1');
-    });
-    expect(mockListByUserSkill).not.toHaveBeenCalledWith('skill-learn-1');
-    expect(await screen.findByText('Практическое задание')).toBeInTheDocument();
-    expect(screen.getAllByText('Практика').length).toBeGreaterThan(0);
-    expect(screen.getByText('Сделайте недельный план')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', {
+        name: 'Управлять методическими материалами'
+      })
+    ).toBeInTheDocument();
+    expect(mockListByUserSkill).not.toHaveBeenCalled();
   });
 
   it('does not stay loading under React StrictMode effect replay', async () => {
@@ -289,7 +289,7 @@ describe('ProfileSkills materials management', () => {
   });
 
   it('shows empty state when a skill has no materials', async () => {
-    setupProfileSkills();
+    setupSkillMaterials();
 
     expect(
       await screen.findByText('Материалы пока не добавлены')
@@ -303,7 +303,7 @@ describe('ProfileSkills materials management', () => {
         materials: [createMaterial({ id: 'material-created' })]
       });
 
-    setupProfileSkills();
+    setupSkillMaterials();
 
     await screen.findByText('Материалы пока не добавлены');
     fireEvent.change(screen.getByLabelText('Тип материала'), {
@@ -350,7 +350,7 @@ describe('ProfileSkills materials management', () => {
         ]
       });
 
-    setupProfileSkills();
+    setupSkillMaterials();
 
     await screen.findByText('Старый материал');
     fireEvent.click(
@@ -387,7 +387,7 @@ describe('ProfileSkills materials management', () => {
       })
       .mockResolvedValueOnce({ materials: [] });
 
-    setupProfileSkills();
+    setupSkillMaterials();
 
     await screen.findByText('Удаляемый материал');
     fireEvent.click(
@@ -421,7 +421,7 @@ describe('ProfileSkills materials management', () => {
       ]
     });
 
-    setupProfileSkills();
+    setupSkillMaterials();
 
     expect(await screen.findByText('Тестовый материал')).toBeInTheDocument();
     expect(screen.getByText('Теоретический материал')).toBeInTheDocument();
@@ -452,7 +452,7 @@ describe('ProfileSkills materials management', () => {
         ]
       });
 
-    setupProfileSkills();
+    setupSkillMaterials();
 
     await screen.findByText('Вопросы пока не добавлены');
     fireEvent.change(screen.getByLabelText('Текст вопроса'), {
@@ -491,7 +491,7 @@ describe('ProfileSkills materials management', () => {
         ]
       });
 
-    setupProfileSkills();
+    setupSkillMaterials();
 
     await screen.findByText('Старый вопрос');
     fireEvent.click(
@@ -535,7 +535,7 @@ describe('ProfileSkills materials management', () => {
         ]
       });
 
-    setupProfileSkills();
+    setupSkillMaterials();
 
     await screen.findByText('Старый вопрос');
     fireEvent.click(
@@ -582,7 +582,7 @@ describe('ProfileSkills materials management', () => {
         ]
       });
 
-    setupProfileSkills();
+    setupSkillMaterials();
 
     await screen.findByText('Варианты ответа пока не добавлены');
     fireEvent.change(screen.getByLabelText('Текст варианта'), {
@@ -637,7 +637,7 @@ describe('ProfileSkills materials management', () => {
         ]
       });
 
-    setupProfileSkills();
+    setupSkillMaterials();
 
     await screen.findByText('Старый вариант');
     fireEvent.click(
@@ -683,7 +683,7 @@ describe('ProfileSkills materials management', () => {
         ]
       });
 
-    setupProfileSkills();
+    setupSkillMaterials();
 
     await screen.findByText('Старый вариант');
     fireEvent.click(
@@ -711,7 +711,7 @@ describe('ProfileSkills materials management', () => {
       ]
     });
 
-    setupProfileSkills({ accessToken: null });
+    setupSkillMaterials({ accessToken: null });
 
     await screen.findByText('Старый вопрос');
     fireEvent.change(screen.getByLabelText('Название материала'), {

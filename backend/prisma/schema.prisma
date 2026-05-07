@@ -198,6 +198,7 @@ model UserSkillMaterial {
   title       String
   description String?
   content     String?
+  attachments String   @default("[]")
   position    Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -213,6 +214,7 @@ model UserSkillMaterial {
 model MaterialQuestion {
   id         String   @id @default(cuid())
   materialId String
+  type       String   @default("single")
   text       String
   position   Int      @default(0)
   createdAt  DateTime @default(now())
@@ -222,6 +224,7 @@ model MaterialQuestion {
   answerOptions MaterialAnswerOption[]
 
   @@index([materialId])
+  @@index([type])
 }
 
 model MaterialAnswerOption {

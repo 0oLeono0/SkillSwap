@@ -3,6 +3,7 @@ import { useAuth } from '@/app/providers/auth';
 import {
   materialsApi,
   type CreateMaterialInput,
+  type MaterialAttachmentDto,
   type MaterialDto,
   type MaterialType,
   type UpdateMaterialPayload
@@ -19,6 +20,7 @@ export type MaterialFormState = {
   title: string;
   description: string;
   content: string;
+  attachments: MaterialAttachmentDto[];
   editingMaterialId: string | null;
   isSubmitting: boolean;
   error: string | null;
@@ -29,6 +31,7 @@ const createEmptyMaterialForm = (): MaterialFormState => ({
   title: '',
   description: '',
   content: '',
+  attachments: [],
   editingMaterialId: null,
   isSubmitting: false,
   error: null
@@ -55,6 +58,9 @@ const buildCreateMaterialPayload = (
   if (content) {
     payload.content = content;
   }
+  if (form.attachments.length) {
+    payload.attachments = form.attachments;
+  }
 
   return payload;
 };
@@ -74,7 +80,8 @@ const buildUpdateMaterialPayload = (
     type: form.type,
     title,
     description: description || null,
-    content: content || null
+    content: content || null,
+    attachments: form.attachments
   };
 };
 
@@ -150,6 +157,7 @@ export const useSkillMaterials = (skillId: string) => {
       title: material.title,
       description: material.description ?? '',
       content: material.content ?? '',
+      attachments: material.attachments ?? [],
       editingMaterialId: material.id,
       isSubmitting: false,
       error: null

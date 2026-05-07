@@ -19,7 +19,7 @@ import {
   sanitizeSkillsForSubmit,
   serializeSkills
 } from './profileSkills.helpers';
-import { ProfileSkillMaterials } from './ProfileSkillMaterials';
+import { ROUTES } from '@/shared/constants';
 const CATEGORY_NAME_TO_CONSTANT = new Map<string, SkillCategory>(
   Object.values(SkillCategories).map((value) => [value, value])
 );
@@ -362,7 +362,16 @@ export function ProfileSkills(): ReactElement {
         <h4 className={styles.skillTitle}>{title}</h4>
         <p className={styles.skillDescription}>{description}</p>
         {renderSkillGallery(skill.imageUrls)}
-        <ProfileSkillMaterials skillId={skill.id} />
+        <Button
+          variant='secondary'
+          onClick={() => {
+            window.location.assign(
+              `${ROUTES.PROFILE.ROOT}/${ROUTES.PROFILE.CHILDREN.SKILLS}/${skill.id}/materials`
+            );
+          }}
+        >
+          Управлять методическими материалами
+        </Button>
       </article>
     );
   };

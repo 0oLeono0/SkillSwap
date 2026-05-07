@@ -130,6 +130,12 @@ const mockMaterialService: {
   deleteAnswerOption: jest.fn()
 };
 
+const mockAdminService: {
+  deleteUser: jest.MockedFunction<(userId: string) => Promise<void>>;
+} = {
+  deleteUser: jest.fn()
+};
+
 jest.unstable_mockModule('../src/services/userService.js', () => ({
   userService: mockUserService,
   sanitizeUser: mockSanitizeUser
@@ -154,6 +160,10 @@ jest.unstable_mockModule('../src/services/exchangeService.js', () => ({
 
 jest.unstable_mockModule('../src/services/materialService.js', () => ({
   materialService: mockMaterialService
+}));
+
+jest.unstable_mockModule('../src/services/adminService.js', () => ({
+  adminService: mockAdminService
 }));
 
 const { HttpError } = await import('../src/utils/httpErrors.js');
@@ -576,6 +586,55 @@ describe('Admin routes', () => {
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('Invalid query params');
     expect(mockUserService.listUsersForAdmin).not.toHaveBeenCalled();
+  });
+
+  it('rejects regular user deleting another user', async () => {
+    mockTokenService.verifyAccessToken.mockReturnValue({
+      sub: 'user-1',
+      email: 'user@example.com',
+      name: 'User',
+      role: 'user'
+    });
+
+    const response = await request(app)
+      .delete('/api/admin/users/user-2')
+      .set('Authorization', 'Bearer user-token');
+
+    expect(response.status).toBe(403);
+    expect(mockAdminService.deleteUser).not.toHaveBeenCalled();
+  });
+
+  it('rejects admin deleting another user', async () => {
+    mockTokenService.verifyAccessToken.mockReturnValue({
+      sub: 'admin-1',
+      email: 'admin@example.com',
+      name: 'Admin',
+      role: 'admin'
+    });
+
+    const response = await request(app)
+      .delete('/api/admin/users/user-2')
+      .set('Authorization', 'Bearer admin-token');
+
+    expect(response.status).toBe(403);
+    expect(mockAdminService.deleteUser).not.toHaveBeenCalled();
+  });
+
+  it('allows owner deleting another user', async () => {
+    mockTokenService.verifyAccessToken.mockReturnValue({
+      sub: 'owner-1',
+      email: 'owner@example.com',
+      name: 'Owner',
+      role: 'owner'
+    });
+    mockAdminService.deleteUser.mockResolvedValue(undefined);
+
+    const response = await request(app)
+      .delete('/api/admin/users/user-2')
+      .set('Authorization', 'Bearer owner-token');
+
+    expect(response.status).toBe(204);
+    expect(mockAdminService.deleteUser).toHaveBeenCalledWith('user-2');
   });
 });
 

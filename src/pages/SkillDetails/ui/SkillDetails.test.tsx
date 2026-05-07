@@ -305,8 +305,193 @@ describe('SkillDetails description', () => {
     expect(screen.getByText('Theory content')).toBeInTheDocument();
     expect(screen.getByText('What is React?')).toBeInTheDocument();
     expect(
-      screen.queryByText('Correct answer should stay hidden')
-    ).not.toBeInTheDocument();
+      screen.getByText('Correct answer should stay hidden')
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Правильный ответ/i)).not.toBeInTheDocument();
+  });
+
+  it('shows test result after submitting answers', async () => {
+    const user = userEvent.setup();
+    mockLoadCatalogAuthors
+      .mockResolvedValueOnce(makeCatalogResponse('React description'))
+      .mockResolvedValueOnce(relatedEmptyResponse);
+    mockListMaterials.mockResolvedValue({
+      materials: [
+        {
+          id: 'testing-1',
+          userSkillId: 'skill-1',
+          type: 'testing',
+          title: 'Frontend quiz',
+          description: null,
+          content: null,
+          position: 0,
+          questions: [
+            {
+              id: 'question-1',
+              materialId: 'testing-1',
+              type: 'single',
+              text: 'Choose one',
+              position: 0,
+              answerOptions: [
+                {
+                  id: 'option-1',
+                  questionId: 'question-1',
+                  text: 'Right single',
+                  isCorrect: true,
+                  position: 0,
+                  createdAt: '2026-01-01T00:00:00.000Z',
+                  updatedAt: '2026-01-01T00:00:00.000Z'
+                },
+                {
+                  id: 'option-2',
+                  questionId: 'question-1',
+                  text: 'Wrong single',
+                  isCorrect: false,
+                  position: 1,
+                  createdAt: '2026-01-01T00:00:00.000Z',
+                  updatedAt: '2026-01-01T00:00:00.000Z'
+                }
+              ],
+              createdAt: '2026-01-01T00:00:00.000Z',
+              updatedAt: '2026-01-01T00:00:00.000Z'
+            },
+            {
+              id: 'question-2',
+              materialId: 'testing-1',
+              type: 'multiple',
+              text: 'Choose several',
+              position: 1,
+              answerOptions: [
+                {
+                  id: 'option-3',
+                  questionId: 'question-2',
+                  text: 'Right multiple A',
+                  isCorrect: true,
+                  position: 0,
+                  createdAt: '2026-01-01T00:00:00.000Z',
+                  updatedAt: '2026-01-01T00:00:00.000Z'
+                },
+                {
+                  id: 'option-4',
+                  questionId: 'question-2',
+                  text: 'Right multiple B',
+                  isCorrect: true,
+                  position: 1,
+                  createdAt: '2026-01-01T00:00:00.000Z',
+                  updatedAt: '2026-01-01T00:00:00.000Z'
+                }
+              ],
+              createdAt: '2026-01-01T00:00:00.000Z',
+              updatedAt: '2026-01-01T00:00:00.000Z'
+            }
+          ],
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z'
+        }
+      ]
+    });
+
+    renderPage();
+
+    await user.click(await screen.findByLabelText('Right single'));
+    await user.click(screen.getByLabelText('Right multiple A'));
+    await user.click(screen.getByLabelText('Right multiple B'));
+    await user.click(screen.getByRole('button', { name: 'Проверить ответы' }));
+
+    expect(screen.getByText('Результат: 2 из 2')).toBeInTheDocument();
+    expect(screen.getAllByText('Верно')).toHaveLength(2);
+    expect(screen.getAllByText(/Правильный ответ:/i)).toHaveLength(2);
+  });
+
+  it('checks text, gap and image question types', async () => {
+    const user = userEvent.setup();
+    mockLoadCatalogAuthors
+      .mockResolvedValueOnce(makeCatalogResponse('React description'))
+      .mockResolvedValueOnce(relatedEmptyResponse);
+    mockListMaterials.mockResolvedValue({
+      materials: [
+        {
+          id: 'testing-1',
+          userSkillId: 'skill-1',
+          type: 'testing',
+          title: 'Language quiz',
+          description: null,
+          content: null,
+          position: 0,
+          questions: [
+            {
+              id: 'question-text',
+              materialId: 'testing-1',
+              type: 'text',
+              text: 'Write a polite request',
+              position: 0,
+              answerOptions: [
+                {
+                  id: 'option-text',
+                  questionId: 'question-text',
+                  text: 'Could you please confirm the deadline?',
+                  isCorrect: true,
+                  position: 0,
+                  createdAt: '2026-01-01T00:00:00.000Z',
+                  updatedAt: '2026-01-01T00:00:00.000Z'
+                }
+              ],
+              createdAt: '2026-01-01T00:00:00.000Z',
+              updatedAt: '2026-01-01T00:00:00.000Z'
+            },
+            {
+              id: 'question-gap',
+              materialId: 'testing-1',
+              type: 'gap',
+              text: 'Please confirm the deadline by ____.',
+              position: 1,
+              answerOptions: [
+                {
+                  id: 'option-gap',
+                  questionId: 'question-gap',
+                  text: 'Friday',
+                  isCorrect: true,
+                  position: 0,
+                  createdAt: '2026-01-01T00:00:00.000Z',
+                  updatedAt: '2026-01-01T00:00:00.000Z'
+                }
+              ],
+              createdAt: '2026-01-01T00:00:00.000Z',
+              updatedAt: '2026-01-01T00:00:00.000Z'
+            },
+            {
+              id: 'question-image',
+              materialId: 'testing-1',
+              type: 'image',
+              text: 'Upload a draft photo',
+              position: 2,
+              answerOptions: [],
+              createdAt: '2026-01-01T00:00:00.000Z',
+              updatedAt: '2026-01-01T00:00:00.000Z'
+            }
+          ],
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z'
+        }
+      ]
+    });
+
+    renderPage();
+
+    await user.type(
+      await screen.findByLabelText('Ответ'),
+      '  could you please confirm the deadline?  '
+    );
+    await user.type(screen.getByLabelText('Слово'), 'friday');
+    await user.upload(
+      screen.getByLabelText('Фото'),
+      new File(['image'], 'draft.png', { type: 'image/png' })
+    );
+    await user.click(screen.getByRole('button', { name: 'Проверить ответы' }));
+
+    expect(screen.getByText('Результат: 3 из 3')).toBeInTheDocument();
+    expect(screen.getAllByText('Верно')).toHaveLength(3);
+    expect(screen.getByText('Фото загружено')).toBeInTheDocument();
   });
 
   it('renders empty materials state', async () => {

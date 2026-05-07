@@ -2,6 +2,7 @@ import type {
   CreateAnswerOptionPayload,
   CreateMaterialPayload,
   CreateTestQuestionPayload,
+  MaterialAttachmentDto,
   UpdateAnswerOptionPayload,
   UpdateMaterialPayload,
   UpdateTestQuestionPayload
@@ -9,8 +10,11 @@ import type {
 import { materialRepository } from '../repositories/materialRepository.js';
 import {
   MATERIAL_TYPE,
+  TEST_QUESTION_TYPE,
   isMaterialType,
-  type MaterialType
+  isTestQuestionType,
+  type MaterialType,
+  type TestQuestionType
 } from '../types/materialType.js';
 import { USER_ROLE, type UserRole } from '../types/userRole.js';
 import {
@@ -43,6 +47,7 @@ type AnswerOptionRecord = {
 type QuestionRecord = {
   id: string;
   materialId: string;
+  type?: string;
   text: string;
   position: number;
   createdAt: Date;
@@ -57,6 +62,7 @@ type MaterialRecord = {
   title: string;
   description: string | null;
   content: string | null;
+  attachments?: string | null;
   position: number;
   createdAt: Date;
   updatedAt: Date;
@@ -134,6 +140,65 @@ const normalizeMaterialType = (value: string): MaterialType => {
   return value;
 };
 
+const normalizeTestQuestionType = (
+  value: string | undefined | null
+): TestQuestionType => {
+  if (value === undefined || value === null) {
+    return TEST_QUESTION_TYPE.single;
+  }
+  if (!isTestQuestionType(value)) {
+    throw createBadRequest('Invalid test question type');
+  }
+  return value;
+};
+
+const normalizeAttachment = (
+  attachment: MaterialAttachmentDto
+): MaterialAttachmentDto => ({
+  id: normalizeRequiredText(attachment.id, 'Attachment id'),
+  name: normalizeRequiredText(attachment.name, 'Attachment name'),
+  type: normalizeRequiredText(attachment.type, 'Attachment type'),
+  size: attachment.size,
+  url: normalizeRequiredText(attachment.url, 'Attachment url')
+});
+
+const normalizeAttachments = (
+  attachments: MaterialAttachmentDto[] | undefined
+) => {
+  if (attachments === undefined) {
+    return undefined;
+  }
+  return attachments.map(normalizeAttachment);
+};
+
+const parseAttachments = (
+  rawAttachments: string | null | undefined
+): MaterialAttachmentDto[] => {
+  if (!rawAttachments) {
+    return [];
+  }
+  try {
+    const parsed = JSON.parse(rawAttachments) as unknown;
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed
+      .filter(
+        (item): item is MaterialAttachmentDto =>
+          typeof item === 'object' &&
+          item !== null &&
+          typeof (item as MaterialAttachmentDto).id === 'string' &&
+          typeof (item as MaterialAttachmentDto).name === 'string' &&
+          typeof (item as MaterialAttachmentDto).type === 'string' &&
+          typeof (item as MaterialAttachmentDto).size === 'number' &&
+          typeof (item as MaterialAttachmentDto).url === 'string'
+      )
+      .map(normalizeAttachment);
+  } catch {
+    return [];
+  }
+};
+
 const mapAnswerOption = (option: AnswerOptionRecord) => ({
   id: option.id,
   questionId: option.questionId,
@@ -147,6 +212,7 @@ const mapAnswerOption = (option: AnswerOptionRecord) => ({
 const mapQuestion = (question: QuestionRecord) => ({
   id: question.id,
   materialId: question.materialId,
+  type: normalizeTestQuestionType(question.type),
   text: question.text,
   position: question.position,
   answerOptions: (question.answerOptions ?? []).map(mapAnswerOption),
@@ -161,6 +227,7 @@ const mapMaterial = (material: MaterialRecord) => ({
   title: material.title,
   description: material.description,
   content: material.content,
+  attachments: parseAttachments(material.attachments),
   position: material.position,
   questions: (material.questions ?? []).map(mapQuestion),
   createdAt: material.createdAt,
@@ -176,6 +243,7 @@ const buildMaterialUpdateData = (
     title?: string;
     description?: string | null;
     content?: string | null;
+    attachments?: string;
     position?: number;
   } = {};
 
@@ -209,6 +277,11 @@ const buildMaterialUpdateData = (
     if (content !== undefined) {
       data.content = content;
     }
+  }
+  if (payload.attachments !== undefined) {
+    data.attachments = JSON.stringify(
+      normalizeAttachments(payload.attachments) ?? []
+    );
   }
   if (payload.position !== undefined) {
     data.position = payload.position;
@@ -250,11 +323,15 @@ export const materialService = {
       title: string;
       description?: string | null;
       content?: string | null;
+      attachments: string;
       position: number;
     } = {
       userSkillId: payload.userSkillId,
       type: normalizeMaterialType(payload.type),
       title: normalizeRequiredText(payload.title, 'Title'),
+      attachments: JSON.stringify(
+        normalizeAttachments(payload.attachments) ?? []
+      ),
       position: payload.position ?? 0
     };
     const description = normalizeNullableText(
@@ -325,6 +402,7 @@ export const materialService = {
 
     const question = (await materialRepository.createQuestion({
       materialId: payload.materialId,
+      type: normalizeTestQuestionType(payload.type),
       text: normalizeRequiredText(payload.text, 'Text'),
       position: payload.position ?? 0
     })) as QuestionRecord;
@@ -346,7 +424,11 @@ export const materialService = {
 
     ensureOwnerOrModerator(question.material.userSkill.userId, actor);
 
-    const data: { text?: string; position?: number } = {};
+    const data: { type?: TestQuestionType; text?: string; position?: number } =
+      {};
+    if (payload.type !== undefined) {
+      data.type = normalizeTestQuestionType(payload.type);
+    }
     if (payload.text !== undefined) {
       data.text = normalizeRequiredText(payload.text, 'Text');
     }
@@ -354,10 +436,24 @@ export const materialService = {
       data.position = payload.position;
     }
 
-    const updated = (await materialRepository.updateQuestion(
+    let updated = (await materialRepository.updateQuestion(
       questionId,
       data
     )) as QuestionRecord;
+    if (data.type === TEST_QUESTION_TYPE.single) {
+      const correctOptions = (question.answerOptions ?? []).filter(
+        (option) => option.isCorrect
+      );
+      if (correctOptions.length > 1) {
+        await materialRepository.clearCorrectAnswerOptions(
+          questionId,
+          correctOptions[0]?.id
+        );
+        updated = (await materialRepository.findQuestionById(
+          questionId
+        )) as QuestionRecord;
+      }
+    }
 
     return mapQuestion(updated);
   },
@@ -394,6 +490,15 @@ export const materialService = {
       isCorrect: payload.isCorrect ?? false,
       position: payload.position ?? 0
     })) as AnswerOptionRecord;
+    if (
+      normalizeTestQuestionType(question.type) === TEST_QUESTION_TYPE.single &&
+      option.isCorrect
+    ) {
+      await materialRepository.clearCorrectAnswerOptions(
+        payload.questionId,
+        option.id
+      );
+    }
 
     return mapAnswerOption(option);
   },
@@ -427,6 +532,16 @@ export const materialService = {
       optionId,
       data
     )) as AnswerOptionRecord;
+    if (
+      normalizeTestQuestionType(option.question.type) ===
+        TEST_QUESTION_TYPE.single &&
+      data.isCorrect === true
+    ) {
+      await materialRepository.clearCorrectAnswerOptions(
+        option.questionId,
+        optionId
+      );
+    }
 
     return mapAnswerOption(updated);
   },

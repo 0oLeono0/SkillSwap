@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import { asyncHandler } from '../middleware/asyncHandler.js';
 import { adminService } from '../services/adminService.js';
-import { createBadRequest } from '../utils/httpErrors.js';
+import { createBadRequest, createForbidden } from '../utils/httpErrors.js';
 import { BAD_REQUEST_MESSAGES } from '../utils/errorMessages.js';
 import { requireStringParam } from '../utils/routeParams.js';
 import { parseOrBadRequest } from '../utils/validation.js';
 import { userService } from '../services/userService.js';
 import { USER_ROLE } from '../types/userRole.js';
+import { requireCurrentUser } from '../utils/currentUser.js';
 
 const updateRoleSchema = z.object({
   role: z.enum([USER_ROLE.user, USER_ROLE.admin])
@@ -20,12 +21,17 @@ const listUsersQuerySchema = z.object({
 });
 
 export const deleteUserAccount = asyncHandler(async (req, res) => {
+  const currentUser = requireCurrentUser(req);
+  if (currentUser.role !== USER_ROLE.owner) {
+    throw createForbidden();
+  }
+
   const userId = requireStringParam(
     req.params,
     'userId',
     BAD_REQUEST_MESSAGES.userIdRequired
   );
-  if (req.user?.sub === userId) {
+  if (currentUser.sub === userId) {
     throw createBadRequest(BAD_REQUEST_MESSAGES.cannotDeleteOwnAccount);
   }
   await adminService.deleteUser(userId);

@@ -1,6 +1,22 @@
 export declare const MATERIAL_TYPES: readonly ['theory', 'practice', 'testing'];
+export declare const TEST_QUESTION_TYPES: readonly [
+  'single',
+  'multiple',
+  'text',
+  'gap',
+  'image'
+];
 
 export type MaterialType = (typeof MATERIAL_TYPES)[number];
+export type TestQuestionType = (typeof TEST_QUESTION_TYPES)[number];
+
+export interface MaterialAttachmentDto {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  url: string;
+}
 
 export interface AnswerOptionDto {
   id: string;
@@ -15,6 +31,7 @@ export interface AnswerOptionDto {
 export interface TestQuestionDto {
   id: string;
   materialId: string;
+  type?: TestQuestionType | undefined;
   text: string;
   position: number;
   answerOptions: AnswerOptionDto[];
@@ -29,6 +46,7 @@ export interface MaterialDto {
   title: string;
   description?: string | null | undefined;
   content?: string | null | undefined;
+  attachments?: MaterialAttachmentDto[] | undefined;
   position: number;
   questions?: TestQuestionDto[] | undefined;
   createdAt: string;
@@ -41,6 +59,7 @@ export interface CreateMaterialPayload {
   title: string;
   description?: string | null | undefined;
   content?: string | null | undefined;
+  attachments?: MaterialAttachmentDto[] | undefined;
   position?: number | undefined;
 }
 
@@ -49,16 +68,19 @@ export interface UpdateMaterialPayload {
   title?: string | undefined;
   description?: string | null | undefined;
   content?: string | null | undefined;
+  attachments?: MaterialAttachmentDto[] | undefined;
   position?: number | undefined;
 }
 
 export interface CreateTestQuestionPayload {
   materialId: string;
+  type?: TestQuestionType | undefined;
   text: string;
   position?: number | undefined;
 }
 
 export interface UpdateTestQuestionPayload {
+  type?: TestQuestionType | undefined;
   text?: string | undefined;
   position?: number | undefined;
 }

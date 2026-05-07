@@ -279,6 +279,21 @@
   white-space: pre-wrap;
 }
 
+.attachmentList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  a {
+    color: var(--button-color-accent);
+    font-weight: 600;
+    word-break: break-word;
+  }
+}
+
 .testQuestions {
   display: flex;
   flex-direction: column;
@@ -297,6 +312,105 @@
   p {
     margin: 0;
   }
+}
+
+.testRunner {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.testQuestion {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  legend {
+    padding: 0 4px;
+    color: var(--font-color-primary);
+    font-weight: 700;
+  }
+}
+
+.testQuestionHint {
+  color: var(--font-color-secondary);
+  font-size: 13px;
+}
+
+.testOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.testOption {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--font-color-primary);
+  line-height: 1.4;
+}
+
+.testTextAnswer,
+.testUploadAnswer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--font-color-primary);
+  font-weight: 600;
+}
+
+.testTextAnswer textarea,
+.testTextAnswer input {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--font-color-primary);
+  background: #fff;
+}
+
+.testTextAnswer textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.testUploadAnswer input {
+  width: fit-content;
+}
+
+.testUploadAnswer span {
+  color: var(--font-color-secondary);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.testQuestionCorrect,
+.testQuestionWrong {
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.testQuestionCorrect {
+  background: rgba(80, 136, 38, 0.12);
+  color: var(--button-color-accent);
+}
+
+.testQuestionWrong {
+  background: rgba(179, 38, 30, 0.1);
+  color: #b3261e;
+}
+
+.testResult {
+  margin: 0;
+  font-weight: 700;
+  color: var(--font-color-primary);
 }
 
 .reviewsSection {
