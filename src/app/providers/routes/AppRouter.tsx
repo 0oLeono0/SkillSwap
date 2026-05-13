@@ -12,16 +12,8 @@ import { AuthStepOne, AuthStepTwo, AuthStepThree } from '@/pages/Auth';
 import SkillDetails from '@/pages/SkillDetails';
 import Create from '@/pages/Create/ui/Create';
 import { AuthLayout } from '@/app/layouts/AuthLayout';
-import {
-  ProfileExchanges,
-  ProfileFavorites,
-  ProfileLayout,
-  ProfilePersonalData,
-  ProfileRequests,
-  ProfileSkills,
-  ProfileSkillMaterialsPage,
-  ProfileAdminPanel
-} from '@/pages/Profile';
+import { ProfileLayout } from '@/pages/Profile';
+import { profileRoutes } from './profileRoutes';
 import { RouteStub } from './RouteStub';
 
 export const router = createBrowserRouter([
@@ -74,37 +66,7 @@ export const router = createBrowserRouter([
             <ProfileLayout />
           </ProtectedRoute>
         ),
-        children: [
-          { index: true, element: <ProfilePersonalData /> },
-          {
-            path: ROUTES.PROFILE.CHILDREN.ADMIN,
-            element: (
-              <ProtectedRoute allowedRoles={['owner']}>
-                <ProfileAdminPanel />
-              </ProtectedRoute>
-            )
-          },
-          {
-            path: ROUTES.PROFILE.CHILDREN.REQUESTS,
-            element: <ProfileRequests />
-          },
-          {
-            path: ROUTES.PROFILE.CHILDREN.EXCHANGES,
-            element: <ProfileExchanges />
-          },
-          {
-            path: ROUTES.PROFILE.CHILDREN.FAVORITES,
-            element: <ProfileFavorites />
-          },
-          {
-            path: ROUTES.PROFILE.CHILDREN.SKILLS,
-            element: <ProfileSkills />
-          },
-          {
-            path: ROUTES.PROFILE.CHILDREN.SKILL_MATERIALS,
-            element: <ProfileSkillMaterialsPage />
-          }
-        ]
+        children: profileRoutes
       }
     ]
   },
