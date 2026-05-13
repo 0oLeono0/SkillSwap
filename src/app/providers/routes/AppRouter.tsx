@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
-import { Suspense, type FC } from 'react';
-import { createBrowserRouter, useLocation } from 'react-router-dom';
+import { Suspense } from 'react';
+import { createBrowserRouter } from 'react-router-dom';
 import BaseLayout from '@/app/layouts/BaseLayout';
 import { NotFound } from '@/pages/NotFound';
 import { ServerError } from '@/pages/ServerError';
@@ -22,18 +22,7 @@ import {
   ProfileSkillMaterialsPage,
   ProfileAdminPanel
 } from '@/pages/Profile';
-
-const Stub: FC<{ title: string }> = ({ title }) => {
-  const { pathname } = useLocation();
-  return (
-    <div style={{ padding: 24 }}>
-      <h1 style={{ margin: 0 }}>{title}</h1>
-      <p style={{ opacity: 0.7, marginTop: 8 }}>
-        Current path: <code>{pathname}</code>
-      </p>
-    </div>
-  );
-};
+import { RouteStub } from './RouteStub';
 
 export const router = createBrowserRouter([
   {
@@ -72,12 +61,12 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         )
       },
-      { path: ROUTES.ABOUT, element: <Stub title='About' /> },
-      { path: ROUTES.CONTACTS, element: <Stub title='Contacts' /> },
-      { path: ROUTES.BLOG, element: <Stub title='Blog' /> },
+      { path: ROUTES.ABOUT, element: <RouteStub title='About' /> },
+      { path: ROUTES.CONTACTS, element: <RouteStub title='Contacts' /> },
+      { path: ROUTES.BLOG, element: <RouteStub title='Blog' /> },
       { path: ROUTES.SKILL_DETAILS, element: <SkillDetails /> },
-      { path: ROUTES.POLICY, element: <Stub title='Policy' /> },
-      { path: ROUTES.TERMS, element: <Stub title='Terms' /> },
+      { path: ROUTES.POLICY, element: <RouteStub title='Policy' /> },
+      { path: ROUTES.TERMS, element: <RouteStub title='Terms' /> },
       {
         path: ROUTES.PROFILE.ROOT,
         element: (
