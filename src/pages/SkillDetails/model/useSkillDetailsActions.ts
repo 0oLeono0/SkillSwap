@@ -1,13 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useAuth } from '@/app/providers/auth';
-import { useFavorites } from '@/app/providers/favorites';
-import { createRequest } from '@/features/requests/model/actions';
 import { useAuthEntryNavigation } from '@/shared/lib/router/useAuthEntryNavigation';
-import {
-  SKILL_DETAILS_FAVORITE_BUTTON_LABELS,
-  SKILL_DETAILS_PROPOSE_BUTTON_LABELS,
-  SKILL_DETAILS_PROPOSED_BUTTON_STYLE
-} from './constants';
+import { useSkillDetailsExchange } from './useSkillDetailsExchange';
+import { useSkillDetailsFavorite } from './useSkillDetailsFavorite';
 import type {
   UseSkillDetailsActionsParams,
   UseSkillDetailsActionsResult
@@ -21,70 +16,14 @@ export const useSkillDetailsActions = ({
 }: UseSkillDetailsActionsParams): UseSkillDetailsActionsResult => {
   const { navigateToLogin, navigateToRegister } = useAuthEntryNavigation();
   const { isAuthenticated, user, accessToken } = useAuth();
-  const { toggleFavorite, isFavorite } = useFavorites();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-  const [isProposalSent, setIsProposalSent] = useState(false);
 
-  useEffect(() => {
-    setIsProposalSent(false);
-    setIsSuccessModalOpen(false);
-  }, [selectedSkillId, authorId]);
-
-  const handleToggleFavorite = useCallback(
-    (targetAuthorId: string) => {
-      toggleFavorite(targetAuthorId);
-    },
-    [toggleFavorite]
-  );
-
-  const handleAuthorFavoriteClick = useCallback(() => {
-    if (isAuthenticated) {
-      if (authorId) {
-        handleToggleFavorite(authorId);
-      }
-    } else {
-      setIsAuthModalOpen(true);
-    }
-  }, [authorId, handleToggleFavorite, isAuthenticated]);
-
-  const isCurrentAuthorFavorite = useMemo(
-    () => (authorId ? isFavorite(authorId) : false),
-    [authorId, isFavorite]
-  );
-
-  const favoriteButtonLabel = isCurrentAuthorFavorite
-    ? SKILL_DETAILS_FAVORITE_BUTTON_LABELS.active
-    : SKILL_DETAILS_FAVORITE_BUTTON_LABELS.inactive;
-
-  const handleProposeExchange = useCallback(async () => {
-    if (!selectedSkill || !currentAuthor) {
-      return;
-    }
-
-    if (!isAuthenticated || !user || !accessToken) {
-      setIsAuthModalOpen(true);
-      return;
-    }
-
-    try {
-      await createRequest(accessToken, {
-        toUserId: currentAuthor.id,
-        userSkillId: selectedSkill.userSkillId
-      });
-      setIsProposalSent(true);
-      setIsSuccessModalOpen(true);
-    } catch (err) {
-      console.error('[SkillDetails] Failed to create request', err);
-    }
-  }, [accessToken, currentAuthor, isAuthenticated, selectedSkill, user]);
+  const handleOpenAuthModal = useCallback(() => {
+    setIsAuthModalOpen(true);
+  }, []);
 
   const handleCloseAuthModal = useCallback(() => {
     setIsAuthModalOpen(false);
-  }, []);
-
-  const handleCloseSuccessModal = useCallback(() => {
-    setIsSuccessModalOpen(false);
   }, []);
 
   const handleLoginRedirect = useCallback(() => {
@@ -97,26 +36,28 @@ export const useSkillDetailsActions = ({
     navigateToRegister();
   }, [navigateToRegister]);
 
-  const proposeButtonLabel = isProposalSent
-    ? SKILL_DETAILS_PROPOSE_BUTTON_LABELS.sent
-    : SKILL_DETAILS_PROPOSE_BUTTON_LABELS.default;
-  const proposeButtonStyle = isProposalSent
-    ? SKILL_DETAILS_PROPOSED_BUTTON_STYLE
-    : undefined;
+  const favoriteActions = useSkillDetailsFavorite({
+    authorId,
+    isAuthenticated,
+    onAuthRequired: handleOpenAuthModal
+  });
+
+  const exchangeActions = useSkillDetailsExchange({
+    authorId,
+    currentAuthor,
+    selectedSkill,
+    selectedSkillId,
+    isAuthenticated,
+    hasUser: Boolean(user),
+    accessToken,
+    onAuthRequired: handleOpenAuthModal
+  });
 
   return {
-    isFavorite,
-    isCurrentAuthorFavorite,
-    favoriteButtonLabel,
+    ...favoriteActions,
     isAuthModalOpen,
-    isSuccessModalOpen,
-    proposeButtonLabel,
-    proposeButtonStyle,
-    handleToggleFavorite,
-    handleAuthorFavoriteClick,
-    handleProposeExchange,
+    ...exchangeActions,
     handleCloseAuthModal,
-    handleCloseSuccessModal,
     handleLoginRedirect,
     handleRegisterRedirect
   };

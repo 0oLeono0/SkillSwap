@@ -66,6 +66,39 @@ export type UseSkillDetailsActionsParams = {
   selectedSkillId: string | null;
 };
 
+export type UseSkillDetailsFavoriteParams = {
+  authorId: string;
+  isAuthenticated: boolean;
+  onAuthRequired: () => void;
+};
+
+export type UseSkillDetailsFavoriteResult = {
+  isFavorite: (authorId: string) => boolean;
+  isCurrentAuthorFavorite: boolean;
+  favoriteButtonLabel: string;
+  handleToggleFavorite: (targetAuthorId: string) => void;
+  handleAuthorFavoriteClick: () => void;
+};
+
+export type UseSkillDetailsExchangeParams = {
+  authorId: string;
+  currentAuthor: CatalogAuthor | null;
+  selectedSkill: CatalogAuthorSkill | null;
+  selectedSkillId: string | null;
+  isAuthenticated: boolean;
+  hasUser: boolean;
+  accessToken: string | null;
+  onAuthRequired: () => void;
+};
+
+export type UseSkillDetailsExchangeResult = {
+  isSuccessModalOpen: boolean;
+  proposeButtonLabel: string;
+  proposeButtonStyle?: CSSProperties;
+  handleProposeExchange: () => Promise<void>;
+  handleCloseSuccessModal: () => void;
+};
+
 export type UseSkillDetailsActionsResult = {
   isFavorite: (authorId: string) => boolean;
   isCurrentAuthorFavorite: boolean;
