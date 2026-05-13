@@ -5,6 +5,11 @@ import {
   type CatalogAuthorSkill
 } from '@/pages/Catalog/model/catalogData';
 import { normalizeUserStatus } from '@/shared/types/userStatus';
+import {
+  SKILL_DETAILS_AUTHOR_LOAD_ERROR,
+  SKILL_DETAILS_AUTHOR_PAGE,
+  SKILL_DETAILS_AUTHOR_PAGE_SIZE
+} from './constants';
 import type {
   UseSkillDetailsDataParams,
   UseSkillDetailsDataResult
@@ -20,7 +25,7 @@ export const useSkillDetailsData = ({
 
   useEffect(() => {
     if (!authorId) {
-      setError('Не удалось загрузить информацию о навыке');
+      setError(SKILL_DETAILS_AUTHOR_LOAD_ERROR);
       setIsLoading(false);
       return;
     }
@@ -32,8 +37,8 @@ export const useSkillDetailsData = ({
       try {
         const data = await loadCatalogAuthors({
           authorIds: [authorId],
-          page: 1,
-          pageSize: 1
+          page: SKILL_DETAILS_AUTHOR_PAGE,
+          pageSize: SKILL_DETAILS_AUTHOR_PAGE_SIZE
         });
         if (!isMounted) return;
         setAuthors(data.authors);
@@ -41,7 +46,7 @@ export const useSkillDetailsData = ({
       } catch (err) {
         if (!isMounted) return;
         console.error('[SkillDetails] Failed to load data', err);
-        setError('Не удалось загрузить информацию о навыке');
+        setError(SKILL_DETAILS_AUTHOR_LOAD_ERROR);
       } finally {
         if (isMounted) {
           setIsLoading(false);

@@ -3,6 +3,11 @@ import { useAuth } from '@/app/providers/auth';
 import { useFavorites } from '@/app/providers/favorites';
 import { createRequest } from '@/features/requests/model/actions';
 import { useAuthEntryNavigation } from '@/shared/lib/router/useAuthEntryNavigation';
+import {
+  SKILL_DETAILS_FAVORITE_BUTTON_LABELS,
+  SKILL_DETAILS_PROPOSE_BUTTON_LABELS,
+  SKILL_DETAILS_PROPOSED_BUTTON_STYLE
+} from './constants';
 import type {
   UseSkillDetailsActionsParams,
   UseSkillDetailsActionsResult
@@ -49,8 +54,8 @@ export const useSkillDetailsActions = ({
   );
 
   const favoriteButtonLabel = isCurrentAuthorFavorite
-    ? 'Убрать из избранного'
-    : 'Добавить в избранное';
+    ? SKILL_DETAILS_FAVORITE_BUTTON_LABELS.active
+    : SKILL_DETAILS_FAVORITE_BUTTON_LABELS.inactive;
 
   const handleProposeExchange = useCallback(async () => {
     if (!selectedSkill || !currentAuthor) {
@@ -93,14 +98,10 @@ export const useSkillDetailsActions = ({
   }, [navigateToRegister]);
 
   const proposeButtonLabel = isProposalSent
-    ? 'Обмен предложен'
-    : 'Предложить обмен';
+    ? SKILL_DETAILS_PROPOSE_BUTTON_LABELS.sent
+    : SKILL_DETAILS_PROPOSE_BUTTON_LABELS.default;
   const proposeButtonStyle = isProposalSent
-    ? {
-        backgroundColor: '#fff',
-        color: '#000',
-        borderColor: 'var(--button-color-accent)'
-      }
+    ? SKILL_DETAILS_PROPOSED_BUTTON_STYLE
     : undefined;
 
   return {

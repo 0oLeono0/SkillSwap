@@ -3,12 +3,14 @@ import {
   loadCatalogAuthors,
   type CatalogAuthor
 } from '@/pages/Catalog/model/catalogData';
+import {
+  SKILL_DETAILS_RELATED_AUTHORS_LIMIT,
+  SKILL_DETAILS_RELATED_AUTHORS_PAGE
+} from './constants';
 import type {
   UseSkillDetailsRelatedAuthorsParams,
   UseSkillDetailsRelatedAuthorsResult
 } from './types';
-
-const RELATED_AUTHORS_LIMIT = 4;
 
 export const useSkillDetailsRelatedAuthors = ({
   authorId,
@@ -32,8 +34,8 @@ export const useSkillDetailsRelatedAuthors = ({
           categoryIds: [selectedCategoryId],
           mode: 'wantToLearn',
           excludeAuthorId: authorId,
-          page: 1,
-          pageSize: RELATED_AUTHORS_LIMIT
+          page: SKILL_DETAILS_RELATED_AUTHORS_PAGE,
+          pageSize: SKILL_DETAILS_RELATED_AUTHORS_LIMIT
         });
 
         if (!isMounted) return;

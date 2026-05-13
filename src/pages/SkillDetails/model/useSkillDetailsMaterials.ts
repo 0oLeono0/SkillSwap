@@ -4,6 +4,7 @@ import {
   MATERIAL_TYPE_LABELS,
   MATERIAL_TYPE_ORDER
 } from '@/shared/lib/materials';
+import { SKILL_DETAILS_MATERIALS_LOAD_ERROR } from './constants';
 import type {
   SkillDetailsMaterialGroup,
   UseSkillDetailsMaterialsParams,
@@ -39,7 +40,7 @@ export const useSkillDetailsMaterials = ({
         if (!isMounted) return;
         console.error('[SkillDetails] Failed to load materials', err);
         setMaterials([]);
-        setMaterialsError('Не удалось загрузить материалы');
+        setMaterialsError(SKILL_DETAILS_MATERIALS_LOAD_ERROR);
       } finally {
         if (isMounted) {
           setIsMaterialsLoading(false);
