@@ -7,10 +7,6 @@
 } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styles from './skillDetails.module.scss';
-import {
-  loadCatalogAuthors,
-  type CatalogAuthor
-} from '@/pages/Catalog/model/catalogData';
 import { useAuth } from '@/app/providers/auth';
 
 import { useFavorites } from '@/app/providers/favorites';
@@ -24,6 +20,7 @@ import { useAuthEntryNavigation } from '@/shared/lib/router/useAuthEntryNavigati
 import { useUserRatings } from '@/entities/User/model/useUserRatings';
 import { useSkillDetailsData } from '../model/useSkillDetailsData';
 import { useSkillDetailsMaterials } from '../model/useSkillDetailsMaterials';
+import { useSkillDetailsRelatedAuthors } from '../model/useSkillDetailsRelatedAuthors';
 import { AuthorCard } from './AuthorCard';
 import { MaterialsSection } from './MaterialsSection';
 import { RelatedSkillsSection } from './RelatedSkillsSection';
@@ -31,7 +28,6 @@ import { ReviewsSection } from './ReviewsSection';
 import { SkillDetailsModals } from './SkillDetailsModals';
 import { SkillOverviewCard } from './SkillOverviewCard';
 
-const RELATED_AUTHORS_LIMIT = 4;
 const LATEST_REVIEWS_LIMIT = 3;
 
 const GALLERY_IMAGES = [stock1, stock2, stock3, stock4];
@@ -69,7 +65,12 @@ const SkillDetails = (): ReactElement => {
       userSkillId: selectedSkill?.userSkillId
     });
 
-  const [relatedAuthors, setRelatedAuthors] = useState<CatalogAuthor[]>([]);
+  const { relatedAuthors } = useSkillDetailsRelatedAuthors({
+    authorId,
+    selectedSkill,
+    isFavorite
+  });
+
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [isProposalSent, setIsProposalSent] = useState(false);
@@ -100,51 +101,6 @@ const SkillDetails = (): ReactElement => {
     [authorRatings]
   );
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchRelated = async () => {
-      if (!selectedSkill || typeof selectedSkill.categoryId !== 'number') {
-        setRelatedAuthors([]);
-        return;
-      }
-
-      try {
-        const data = await loadCatalogAuthors({
-          categoryIds: [selectedSkill.categoryId],
-          mode: 'wantToLearn',
-          excludeAuthorId: authorId,
-          page: 1,
-          pageSize: RELATED_AUTHORS_LIMIT
-        });
-
-        if (!isMounted) return;
-        setRelatedAuthors(data.authors);
-      } catch (err) {
-        if (!isMounted) return;
-        console.error('[SkillDetails] Failed to load related skills', err);
-        setRelatedAuthors([]);
-      }
-    };
-
-    fetchRelated();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [authorId, selectedSkill]);
-
-  const relatedAuthorsWithFavorites = useMemo(
-    () =>
-      relatedAuthors.map((author) => {
-        const shouldBeFavorite = isFavorite(author.id);
-        if (author.isFavorite === shouldBeFavorite) {
-          return author;
-        }
-        return { ...author, isFavorite: shouldBeFavorite };
-      }),
-    [relatedAuthors, isFavorite]
-  );
   const handleToggleFavorite = useCallback(
     (targetAuthorId: string) => {
       toggleFavorite(targetAuthorId);
@@ -296,7 +252,7 @@ const SkillDetails = (): ReactElement => {
       />
 
       <RelatedSkillsSection
-        authors={relatedAuthorsWithFavorites}
+        authors={relatedAuthors}
         onToggleFavorite={handleToggleFavorite}
         onDetailsClick={handleDetailsClick}
       />
