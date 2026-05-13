@@ -9,8 +9,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import styles from './skillDetails.module.scss';
 import {
   loadCatalogAuthors,
-  type CatalogAuthor,
-  type CatalogAuthorSkill
+  type CatalogAuthor
 } from '@/pages/Catalog/model/catalogData';
 import { useAuth } from '@/app/providers/auth';
 
@@ -28,7 +27,7 @@ import stock3 from '@/shared/assets/images/stock/stock3.jpg';
 import stock4 from '@/shared/assets/images/stock/stock4.jpg';
 import { useAuthEntryNavigation } from '@/shared/lib/router/useAuthEntryNavigation';
 import { useUserRatings } from '@/entities/User/model/useUserRatings';
-import { normalizeUserStatus } from '@/shared/types/userStatus';
+import { useSkillDetailsData } from '../model/useSkillDetailsData';
 import { AuthorCard } from './AuthorCard';
 import { MaterialsSection } from './MaterialsSection';
 import { RelatedSkillsSection } from './RelatedSkillsSection';
@@ -57,103 +56,30 @@ const SkillDetails = (): ReactElement => {
 
   const { toggleFavorite, isFavorite } = useFavorites();
 
-  const [authors, setAuthors] = useState<CatalogAuthor[]>([]);
+  const {
+    currentAuthor,
+    authorInfo,
+    teachSkills,
+    learnSkills,
+    selectedSkill,
+    selectedSkillId,
+    setSelectedSkillId,
+    isLoading,
+    error
+  } = useSkillDetailsData({ authorId });
+
   const [relatedAuthors, setRelatedAuthors] = useState<CatalogAuthor[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [materials, setMaterials] = useState<MaterialDto[]>([]);
   const [isMaterialsLoading, setIsMaterialsLoading] = useState(false);
   const [materialsError, setMaterialsError] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [isProposalSent, setIsProposalSent] = useState(false);
-  useEffect(() => {
-    if (!authorId) {
-      setError('Не удалось загрузить информацию о навыке');
-      setIsLoading(false);
-      return;
-    }
-
-    let isMounted = true;
-
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const data = await loadCatalogAuthors({
-          authorIds: [authorId],
-          page: 1,
-          pageSize: 1
-        });
-        if (!isMounted) return;
-        setAuthors(data.authors);
-        setError(null);
-      } catch (err) {
-        if (!isMounted) return;
-        console.error('[SkillDetails] Failed to load data', err);
-        setError('Не удалось загрузить информацию о навыке');
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchData();
-    return () => {
-      isMounted = false;
-    };
-  }, [authorId]);
-
-  useEffect(() => {
-    setSelectedSkillId(null);
-  }, [authorId]);
 
   useEffect(() => {
     setIsProposalSent(false);
     setIsSuccessModalOpen(false);
   }, [selectedSkillId, authorId]);
-
-  const currentAuthor = useMemo(
-    () => authors.find((author) => author.id === authorId) ?? null,
-    [authors, authorId]
-  );
-
-  const authorInfo = useMemo(() => {
-    if (!currentAuthor) return null;
-    return {
-      name: currentAuthor.name,
-      avatarUrl: currentAuthor.avatarUrl,
-      bio: currentAuthor.about,
-      city: currentAuthor.city,
-      age: currentAuthor.age,
-      status: normalizeUserStatus(currentAuthor.status)
-    };
-  }, [currentAuthor]);
-
-  const teachSkills = useMemo(
-    () => currentAuthor?.canTeach ?? [],
-    [currentAuthor]
-  );
-
-  const learnSkills = useMemo(
-    () => currentAuthor?.wantsToLearn ?? [],
-    [currentAuthor]
-  );
-
-  useEffect(() => {
-    if (teachSkills.length && !selectedSkillId) {
-      setSelectedSkillId(teachSkills[0].id);
-    }
-  }, [teachSkills, selectedSkillId]);
-
-  const selectedSkill = useMemo<CatalogAuthorSkill | null>(
-    () =>
-      teachSkills.find((skill) => skill.id === selectedSkillId) ??
-      teachSkills[0] ??
-      null,
-    [teachSkills, selectedSkillId]
-  );
 
   useEffect(() => {
     const userSkillId = selectedSkill?.userSkillId;
@@ -359,7 +285,7 @@ const SkillDetails = (): ReactElement => {
     : 'Привет! Я увлекаюсь этим навыком уже больше 10 лет — от первых занятий дома до выступлений на сцене. Научу вас основам, поделюсь любимыми техниками и помогу уверенно чувствовать себя даже без подготовки.';
 
   const authorBio = authorInfo.bio?.trim() || skillDescription;
-  const authorStatus = normalizeUserStatus(authorInfo.status);
+  const authorStatus = authorInfo.status;
 
   const proposeButtonLabel = isProposalSent
     ? 'Обмен предложен'
