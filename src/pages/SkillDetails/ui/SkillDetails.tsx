@@ -1,11 +1,11 @@
-import { useCallback, type ReactElement } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import type { ReactElement } from 'react';
+import { useParams } from 'react-router-dom';
 import styles from './skillDetails.module.scss';
-import { ROUTES } from '@/shared/constants';
 import { useUserRatings } from '@/entities/User/model/useUserRatings';
 import { useSkillDetailsActions } from '../model/useSkillDetailsActions';
 import { useSkillDetailsData } from '../model/useSkillDetailsData';
 import { useSkillDetailsMaterials } from '../model/useSkillDetailsMaterials';
+import { useSkillDetailsNavigation } from '../model/useSkillDetailsNavigation';
 import { useSkillDetailsRelatedAuthors } from '../model/useSkillDetailsRelatedAuthors';
 import { useSkillDetailsViewModel } from '../model/useSkillDetailsViewModel';
 import { AuthorCard } from './AuthorCard';
@@ -18,7 +18,6 @@ import { SkillOverviewCard } from './SkillOverviewCard';
 const SkillDetails = (): ReactElement => {
   const { authorId: authorIdParam } = useParams();
   const authorId = authorIdParam ?? '';
-  const navigate = useNavigate();
   const {
     ratings: authorRatings,
     averageRating,
@@ -84,12 +83,7 @@ const SkillDetails = (): ReactElement => {
     authorRatings
   });
 
-  const handleDetailsClick = useCallback(
-    (targetAuthorId: string) => {
-      navigate(ROUTES.SKILL_DETAILS.replace(':authorId', targetAuthorId));
-    },
-    [navigate]
-  );
+  const { handleDetailsClick } = useSkillDetailsNavigation();
 
   if (isLoading) {
     return <div className={styles.state}>Загрузка данных…</div>;
