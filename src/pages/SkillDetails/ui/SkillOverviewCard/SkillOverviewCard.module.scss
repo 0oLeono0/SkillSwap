@@ -1,0 +1,111 @@
+.skillInfo {
+  button {
+    width: 100%;
+  }
+}
+
+.skillCard {
+  align-items: end;
+  background: var(--bg-color-secondary);
+  border-radius: 32px;
+  padding: 32px 52px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+  position: relative;
+}
+
+.skillContent {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 77px;
+}
+
+.skillHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 27px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+
+  .actionButton {
+    color: var(--bg-color-primary);
+
+    svg path {
+      fill: currentColor;
+      transition: fill 0.2s ease;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+  }
+
+  button {
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 50%;
+    background: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--font-color-primary);
+  }
+
+  .actionButtonActive {
+    color: var(--button-color-accent);
+  }
+}
+
+.skillCategory {
+  color: var(--font-color-secondary);
+  font-size: 12px;
+  margin: 4px 0 20px;
+}
+
+.skillDescription {
+  margin: 0 0 28px;
+  color: rgba(0, 0, 0, 0.75);
+  line-height: 1.5;
+}
+
+.gallery {
+  background: var(--bg-color-secondary);
+  border-radius: 32px;
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.galleryMain {
+  width: 100%;
+  border-radius: 24px;
+  object-fit: cover;
+}
+
+.galleryThumbs {
+  display: grid;
+  gap: 24px;
+
+  img {
+    width: 92px;
+    height: 92px;
+    border-radius: 16px;
+    object-fit: cover;
+  }
+}
+
+@media (max-width: 640px) {
+
+  .skillCard,
+  .gallery {
+    padding: 24px;
+  }
+}

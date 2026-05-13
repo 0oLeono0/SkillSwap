@@ -1,0 +1,17 @@
+.relatedSection {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.relatedHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.state {
+  padding: 24px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.04);
+}

@@ -16,39 +16,25 @@ import { useAuth } from '@/app/providers/auth';
 
 import { useFavorites } from '@/app/providers/favorites';
 import { createRequest } from '@/features/requests/model/actions';
-import { Button } from '@/shared/ui/button/Button';
-import { Tag } from '@/shared/ui/Tag/Tag';
-import { Title } from '@/shared/ui/Title';
-import { Modal } from '@/shared/ui/Modal/Modal';
 import { ROUTES } from '@/shared/constants';
-import type { SkillCategory } from '@/shared/lib/constants';
 import { materialsApi, type MaterialDto } from '@/shared/api/materials';
 import {
   MATERIAL_TYPE_LABELS,
   MATERIAL_TYPE_ORDER
 } from '@/shared/lib/materials';
-import { MaterialTestRunner } from './MaterialTestRunner';
-import {
-  formatAverageRating,
-  formatReviewDate,
-  formatReviewsCount
-} from '@/shared/lib/ratings';
-import { SkillsList } from '@/widgets/SkillsList';
-import GalleryIcon from '@/shared/assets/icons/actions/like.svg?react';
-import ShareIcon from '@/shared/assets/icons/actions/share.svg?react';
-import MoreIcon from '@/shared/assets/icons/actions/more-square.svg?react';
 import stock1 from '@/shared/assets/images/stock/stock.jpg';
 import stock2 from '@/shared/assets/images/stock/stock2.jpg';
 import stock3 from '@/shared/assets/images/stock/stock3.jpg';
 import stock4 from '@/shared/assets/images/stock/stock4.jpg';
-import OkIcon from '@/shared/assets/icons/status/done.svg?react';
-import NotificationIcon from '@/shared/assets/icons/content/notification.svg?react';
 import { useAuthEntryNavigation } from '@/shared/lib/router/useAuthEntryNavigation';
 import { useUserRatings } from '@/entities/User/model/useUserRatings';
-import {
-  normalizeUserStatus,
-  USER_STATUS_LABELS
-} from '@/shared/types/userStatus';
+import { normalizeUserStatus } from '@/shared/types/userStatus';
+import { AuthorCard } from './AuthorCard';
+import { MaterialsSection } from './MaterialsSection';
+import { RelatedSkillsSection } from './RelatedSkillsSection';
+import { ReviewsSection } from './ReviewsSection';
+import { SkillDetailsModals } from './SkillDetailsModals';
+import { SkillOverviewCard } from './SkillOverviewCard';
 
 const RELATED_AUTHORS_LIMIT = 4;
 const LATEST_REVIEWS_LIMIT = 3;
@@ -308,9 +294,6 @@ const SkillDetails = (): ReactElement => {
   const favoriteButtonLabel = isCurrentAuthorFavorite
     ? 'Убрать из избранного'
     : 'Добавить в избранное';
-  const favoriteButtonClassName = isCurrentAuthorFavorite
-    ? `${styles.actionButton} ${styles.actionButtonActive}`
-    : styles.actionButton;
 
   const handleDetailsClick = useCallback(
     (targetAuthorId: string) => {
@@ -392,310 +375,64 @@ const SkillDetails = (): ReactElement => {
   return (
     <section className={styles.skillDetails}>
       <div className={styles.hero}>
-        <article className={styles.authorCard}>
-          <div className={styles.authorInfo}>
-            <img
-              className={styles.authorAvatar}
-              src={
-                authorInfo.avatarUrl ||
-                selectedSkill.imageUrl ||
-                galleryImages[0]
-              }
-              alt={authorInfo.name}
-            />
-            <div>
-              <Title tag='h2' variant='lg'>
-                {authorInfo.name}
-              </Title>
-              <p className={styles.authorMeta}>
-                {authorInfo.city || 'Город не указан'}, {authorInfo.age} лет
-              </p>
-              <span
-                className={
-                  authorStatus === 'active'
-                    ? `${styles.authorStatus} ${styles.authorStatusActive}`
-                    : `${styles.authorStatus} ${styles.authorStatusInactive}`
-                }
-              >
-                {USER_STATUS_LABELS[authorStatus]}
-              </span>
-            </div>
-          </div>
-          <div className={styles.authorRating} aria-label='Рейтинг автора'>
-            {isRatingsLoading ? (
-              <span className={styles.authorRatingStatus}>
-                Загрузка рейтинга...
-              </span>
-            ) : ratingsError ? (
-              <span className={styles.authorRatingStatus}>
-                Рейтинг недоступен
-              </span>
-            ) : ratingsCount > 0 && averageRating !== null ? (
-              <>
-                <span className={styles.authorRatingValue}>
-                  {formatAverageRating(averageRating)}
-                </span>
-                <span className={styles.authorRatingCount}>
-                  {formatReviewsCount(ratingsCount)}
-                </span>
-              </>
-            ) : (
-              <span className={styles.authorRatingStatus}>Нет оценок</span>
-            )}
-          </div>
-          <p className={styles.authorBio}>{authorBio}</p>
+        <AuthorCard
+          authorInfo={authorInfo}
+          authorBio={authorBio}
+          authorStatus={authorStatus}
+          avatarFallback={selectedSkill.imageUrl || galleryImages[0]}
+          teachSkills={teachSkills}
+          learnSkills={learnSkills}
+          selectedSkillId={selectedSkill.id}
+          isRatingsLoading={isRatingsLoading}
+          ratingsError={ratingsError}
+          ratingsCount={ratingsCount}
+          averageRating={averageRating}
+          onSelectSkill={setSelectedSkillId}
+        />
 
-          <div className={styles.authorSkills}>
-            <span>Может научить:</span>
-            <div className={styles.tags}>
-              {teachSkills.map((skill) => (
-                <button
-                  key={skill.id}
-                  type='button'
-                  className={
-                    skill.id === selectedSkill.id
-                      ? `${styles.skillTagButton} ${styles.skillTagButtonActive}`
-                      : styles.skillTagButton
-                  }
-                  onClick={() => setSelectedSkillId(skill.id)}
-                  aria-pressed={skill.id === selectedSkill.id}
-                >
-                  <Tag category={skill.category as SkillCategory}>
-                    {skill.title}
-                  </Tag>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className={styles.authorSkills}>
-            <span>Хочет научиться:</span>
-            <div className={styles.tags}>
-              {learnSkills.map((skill) => (
-                <Tag key={skill.id} category={skill.category as SkillCategory}>
-                  {skill.title}
-                </Tag>
-              ))}
-            </div>
-          </div>
-        </article>
-
-        <article className={styles.skillCard}>
-          <div className={styles.skillHeader}>
-            <div className={styles.actions}>
-              <button
-                type='button'
-                className={favoriteButtonClassName}
-                onClick={handleAuthorFavoriteClick}
-                aria-label={favoriteButtonLabel}
-                aria-pressed={isCurrentAuthorFavorite}
-                disabled={!authorId}
-              >
-                <GalleryIcon />
-              </button>
-              <button type='button' aria-label='Поделиться'>
-                <ShareIcon />
-              </button>
-              <button type='button' aria-label='Ещё'>
-                <MoreIcon />
-              </button>
-            </div>
-          </div>
-          <div className={styles.skillContent}>
-            <div className={styles.skillInfo}>
-              <Title tag='h1' variant='xl'>
-                {selectedSkill.title}
-              </Title>
-              <p className={styles.skillCategory}>{selectedSkill.category}</p>
-              <p className={styles.skillDescription}>{skillDescription}</p>
-              <Button
-                variant='primary'
-                onClick={handleProposeExchange}
-                style={proposeButtonInlineStyle}
-              >
-                {proposeButtonLabel}
-              </Button>
-            </div>
-            <div className={styles.gallery}>
-              <img
-                className={styles.galleryMain}
-                src={galleryImages[0]}
-                alt={selectedSkill.title}
-              />
-              <div className={styles.galleryThumbs}>
-                {galleryImages.slice(1).map((image, index) => (
-                  <img
-                    key={`${image}-${index}`}
-                    src={image}
-                    alt={`${selectedSkill.title} ${index + 2}`}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </article>
+        <SkillOverviewCard
+          selectedSkill={selectedSkill}
+          skillDescription={skillDescription}
+          galleryImages={galleryImages}
+          isFavorite={isCurrentAuthorFavorite}
+          favoriteButtonLabel={favoriteButtonLabel}
+          isFavoriteDisabled={!authorId}
+          proposeButtonLabel={proposeButtonLabel}
+          proposeButtonStyle={proposeButtonInlineStyle}
+          onFavoriteClick={handleAuthorFavoriteClick}
+          onProposeExchange={handleProposeExchange}
+        />
       </div>
 
-      <div className={styles.materialsSection}>
-        <Title tag='h2' variant='lg'>
-          Методические материалы
-        </Title>
-        {isMaterialsLoading ? (
-          <div className={styles.state}>Загрузка материалов…</div>
-        ) : materialsError ? (
-          <div className={styles.stateError}>{materialsError}</div>
-        ) : materials.length === 0 ? (
-          <div className={styles.state}>
-            Материалы для этого навыка пока не добавлены
-          </div>
-        ) : (
-          <div className={styles.materialGroups}>
-            {materialsByType.map((group) => (
-              <section key={group.type} className={styles.materialGroup}>
-                <h3 className={styles.materialGroupTitle}>{group.label}</h3>
-                <div className={styles.materialCards}>
-                  {group.items.map((material) => (
-                    <article key={material.id} className={styles.materialCard}>
-                      <h4>{material.title}</h4>
-                      {material.description ? (
-                        <p className={styles.materialText}>
-                          {material.description}
-                        </p>
-                      ) : null}
-                      {material.content ? (
-                        <p className={styles.materialContent}>
-                          {material.content}
-                        </p>
-                      ) : null}
-                      {material.attachments?.length ? (
-                        <ul className={styles.attachmentList}>
-                          {material.attachments.map((attachment) => (
-                            <li key={attachment.id}>
-                              <a href={attachment.url} download={attachment.name}>
-                                {attachment.name}
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : null}
-                      {material.type === 'testing' ? (
-                        <div className={styles.testQuestions}>
-                          <span>
-                            Вопросов: {material.questions?.length ?? 0}
-                          </span>
-                          <MaterialTestRunner material={material} />
-                        </div>
-                      ) : null}
-                    </article>
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
-        )}
-      </div>
+      <MaterialsSection
+        isLoading={isMaterialsLoading}
+        error={materialsError}
+        materialsCount={materials.length}
+        materialGroups={materialsByType}
+      />
 
-      <section className={styles.reviewsSection}>
-        <div className={styles.reviewsHeader}>
-          <Title tag='h2' variant='lg'>
-            Отзывы
-          </Title>
-          {!isRatingsLoading &&
-            !ratingsError &&
-            ratingsCount > 0 &&
-            averageRating !== null && (
-              <div
-                className={styles.reviewsSummary}
-                aria-label='Средний рейтинг автора'
-              >
-                <span className={styles.reviewsAverage}>
-                  {formatAverageRating(averageRating)}
-                </span>
-                <span>{formatReviewsCount(ratingsCount)}</span>
-              </div>
-            )}
-        </div>
+      <ReviewsSection
+        latestRatings={latestRatings}
+        isLoading={isRatingsLoading}
+        error={ratingsError}
+        ratingsCount={ratingsCount}
+        averageRating={averageRating}
+      />
 
-        {isRatingsLoading ? (
-          <div className={styles.state}>Загрузка отзывов...</div>
-        ) : ratingsError ? (
-          <div className={styles.stateError}>Не удалось загрузить отзывы</div>
-        ) : latestRatings.length === 0 ? (
-          <div className={styles.state}>Пока нет отзывов</div>
-        ) : (
-          <div className={styles.reviewList}>
-            {latestRatings.map((rating) => (
-              <article key={rating.id} className={styles.reviewItem}>
-                <div className={styles.reviewHeader}>
-                  <span className={styles.reviewName}>{rating.rater.name}</span>
-                  <span className={styles.reviewScore}>
-                    Оценка: {rating.score}
-                  </span>
-                </div>
-                <span className={styles.reviewDate}>
-                  {formatReviewDate(rating.createdAt)}
-                </span>
-                {rating.comment ? (
-                  <p className={styles.reviewComment}>{rating.comment}</p>
-                ) : null}
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
+      <RelatedSkillsSection
+        authors={relatedAuthorsWithFavorites}
+        onToggleFavorite={handleToggleFavorite}
+        onDetailsClick={handleDetailsClick}
+      />
 
-      <div className={styles.relatedSection}>
-        <div className={styles.relatedHeader}>
-          <Title tag='h2' variant='lg'>
-            Похожие предложения
-          </Title>
-        </div>
-        {relatedAuthors.length ? (
-          <SkillsList
-            authors={relatedAuthorsWithFavorites}
-            onToggleFavorite={handleToggleFavorite}
-            onDetailsClick={handleDetailsClick}
-          />
-        ) : (
-          <div className={styles.state}>Пока нет похожих предложений</div>
-        )}
-      </div>
-      <Modal isOpen={isAuthModalOpen} onClose={handleCloseAuthModal}>
-        <div className={styles.authPrompt}>
-          <div className={styles.modalIcon}>
-            <OkIcon />
-          </div>
-          <Title tag='h3' variant='lg'>
-            Чтобы предложить обмен, войдите или зарегистрируйтесь
-          </Title>
-          <p>
-            После авторизации вы сможете отправлять запросы авторам и следить за
-            статусом обменов в личном кабинете.
-          </p>
-          <div className={styles.authPromptActions}>
-            <Button variant='secondary' onClick={handleLoginRedirect}>
-              Войти
-            </Button>
-            <Button variant='primary' onClick={handleRegisterRedirect}>
-              Зарегистрироваться
-            </Button>
-          </div>
-        </div>
-      </Modal>
-      <Modal isOpen={isSuccessModalOpen} onClose={handleCloseSuccessModal}>
-        <div className={styles.exchangeModal}>
-          <div className={styles.modalIcon}>
-            <NotificationIcon />
-          </div>
-          <Title tag='h3' variant='lg'>
-            Обмен предложен
-          </Title>
-          <p>Теперь дождитесь подтверждения. Вам придёт уведомление.</p>
-          <Button variant='primary' onClick={handleCloseSuccessModal}>
-            Готово
-          </Button>
-        </div>
-      </Modal>
+      <SkillDetailsModals
+        isAuthModalOpen={isAuthModalOpen}
+        isSuccessModalOpen={isSuccessModalOpen}
+        onCloseAuthModal={handleCloseAuthModal}
+        onCloseSuccessModal={handleCloseSuccessModal}
+        onLoginRedirect={handleLoginRedirect}
+        onRegisterRedirect={handleRegisterRedirect}
+      />
     </section>
   );
 };
