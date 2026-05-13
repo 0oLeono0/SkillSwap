@@ -1,27 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { CSSProperties } from 'react';
-import type {
-  CatalogAuthor,
-  CatalogAuthorSkill
-} from '@/pages/Catalog/model/catalogData';
 import { useAuth } from '@/app/providers/auth';
 import { useFavorites } from '@/app/providers/favorites';
 import { createRequest } from '@/features/requests/model/actions';
 import { useAuthEntryNavigation } from '@/shared/lib/router/useAuthEntryNavigation';
-
-type UseSkillDetailsActionsParams = {
-  authorId: string;
-  currentAuthor: CatalogAuthor | null;
-  selectedSkill: CatalogAuthorSkill | null;
-  selectedSkillId: string | null;
-};
+import type {
+  UseSkillDetailsActionsParams,
+  UseSkillDetailsActionsResult
+} from './types';
 
 export const useSkillDetailsActions = ({
   authorId,
   currentAuthor,
   selectedSkill,
   selectedSkillId
-}: UseSkillDetailsActionsParams) => {
+}: UseSkillDetailsActionsParams): UseSkillDetailsActionsResult => {
   const { navigateToLogin, navigateToRegister } = useAuthEntryNavigation();
   const { isAuthenticated, user, accessToken } = useAuth();
   const { toggleFavorite, isFavorite } = useFavorites();
@@ -103,7 +95,7 @@ export const useSkillDetailsActions = ({
   const proposeButtonLabel = isProposalSent
     ? 'Обмен предложен'
     : 'Предложить обмен';
-  const proposeButtonStyle: CSSProperties | undefined = isProposalSent
+  const proposeButtonStyle = isProposalSent
     ? {
         backgroundColor: '#fff',
         color: '#000',

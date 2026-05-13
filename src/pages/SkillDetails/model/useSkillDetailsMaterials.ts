@@ -4,20 +4,15 @@ import {
   MATERIAL_TYPE_LABELS,
   MATERIAL_TYPE_ORDER
 } from '@/shared/lib/materials';
-
-type UseSkillDetailsMaterialsParams = {
-  userSkillId?: string | null;
-};
-
-export type SkillDetailsMaterialGroup = {
-  type: MaterialDto['type'];
-  label: string;
-  items: MaterialDto[];
-};
+import type {
+  SkillDetailsMaterialGroup,
+  UseSkillDetailsMaterialsParams,
+  UseSkillDetailsMaterialsResult
+} from './types';
 
 export const useSkillDetailsMaterials = ({
   userSkillId
-}: UseSkillDetailsMaterialsParams) => {
+}: UseSkillDetailsMaterialsParams): UseSkillDetailsMaterialsResult => {
   const [materials, setMaterials] = useState<MaterialDto[]>([]);
   const [isMaterialsLoading, setIsMaterialsLoading] = useState(false);
   const [materialsError, setMaterialsError] = useState<string | null>(null);

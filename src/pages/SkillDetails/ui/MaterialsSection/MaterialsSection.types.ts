@@ -1,10 +1,6 @@
-import type { MaterialDto } from '@/shared/api/materials';
+import type { SkillDetailsMaterialGroup } from '@/pages/SkillDetails/model/types';
 
-export type MaterialGroup = {
-  type: MaterialDto['type'];
-  label: string;
-  items: MaterialDto[];
-};
+export type MaterialGroup = SkillDetailsMaterialGroup;
 
 export type MaterialsSectionProps = {
   isLoading: boolean;

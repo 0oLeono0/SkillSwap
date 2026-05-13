@@ -1,23 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   loadCatalogAuthors,
-  type CatalogAuthor,
-  type CatalogAuthorSkill
+  type CatalogAuthor
 } from '@/pages/Catalog/model/catalogData';
+import type {
+  UseSkillDetailsRelatedAuthorsParams,
+  UseSkillDetailsRelatedAuthorsResult
+} from './types';
 
 const RELATED_AUTHORS_LIMIT = 4;
-
-type UseSkillDetailsRelatedAuthorsParams = {
-  authorId: string;
-  selectedSkill: CatalogAuthorSkill | null;
-  isFavorite: (authorId: string) => boolean;
-};
 
 export const useSkillDetailsRelatedAuthors = ({
   authorId,
   selectedSkill,
   isFavorite
-}: UseSkillDetailsRelatedAuthorsParams) => {
+}: UseSkillDetailsRelatedAuthorsParams): UseSkillDetailsRelatedAuthorsResult => {
   const [relatedAuthors, setRelatedAuthors] = useState<CatalogAuthor[]>([]);
   const selectedCategoryId = selectedSkill?.categoryId;
 

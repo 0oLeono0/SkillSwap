@@ -5,14 +5,14 @@ import {
   type CatalogAuthorSkill
 } from '@/pages/Catalog/model/catalogData';
 import { normalizeUserStatus } from '@/shared/types/userStatus';
-
-type UseSkillDetailsDataParams = {
-  authorId: string;
-};
+import type {
+  UseSkillDetailsDataParams,
+  UseSkillDetailsDataResult
+} from './types';
 
 export const useSkillDetailsData = ({
   authorId
-}: UseSkillDetailsDataParams) => {
+}: UseSkillDetailsDataParams): UseSkillDetailsDataResult => {
   const [authors, setAuthors] = useState<CatalogAuthor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
