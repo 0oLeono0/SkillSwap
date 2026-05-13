@@ -5,40 +5,17 @@ import BaseLayout from '@/app/layouts/BaseLayout';
 import { NotFound } from '@/pages/NotFound';
 import { ServerError } from '@/pages/ServerError';
 import { ROUTES } from '@/shared/constants';
-import { GuestOnlyRoute } from '@/shared/lib/GuestOnlyRoute/GuestOnlyRoute';
 import { ProtectedRoute } from '@/shared/lib/ProtectedRoute/ProtectedRoute';
 import Catalog from '@/pages/Catalog/ui/Catalog';
-import { AuthStepOne, AuthStepTwo, AuthStepThree } from '@/pages/Auth';
 import SkillDetails from '@/pages/SkillDetails';
 import Create from '@/pages/Create/ui/Create';
-import { AuthLayout } from '@/app/layouts/AuthLayout';
 import { ProfileLayout } from '@/pages/Profile';
+import { authRoutes } from './authRoutes';
 import { profileRoutes } from './profileRoutes';
 import { RouteStub } from './RouteStub';
 
 export const router = createBrowserRouter([
-  {
-    path: ROUTES.LOGIN,
-    element: (
-      <GuestOnlyRoute>
-        <AuthLayout />
-      </GuestOnlyRoute>
-    ),
-    children: [{ index: true, element: <AuthStepOne isRegistered /> }]
-  },
-  {
-    path: ROUTES.REGISTER,
-    element: (
-      <GuestOnlyRoute>
-        <AuthLayout />
-      </GuestOnlyRoute>
-    ),
-    children: [
-      { index: true, element: <AuthStepOne /> },
-      { path: 'step-2', element: <AuthStepTwo /> },
-      { path: 'step-3', element: <AuthStepThree /> }
-    ]
-  },
+  ...authRoutes,
   {
     path: ROUTES.HOME,
     element: <BaseLayout />,
