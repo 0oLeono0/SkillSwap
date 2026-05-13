@@ -1,26 +1,19 @@
-﻿import { useCallback, useMemo, type ReactElement } from 'react';
+import { useCallback, type ReactElement } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styles from './skillDetails.module.scss';
 import { ROUTES } from '@/shared/constants';
-import stock1 from '@/shared/assets/images/stock/stock.jpg';
-import stock2 from '@/shared/assets/images/stock/stock2.jpg';
-import stock3 from '@/shared/assets/images/stock/stock3.jpg';
-import stock4 from '@/shared/assets/images/stock/stock4.jpg';
 import { useUserRatings } from '@/entities/User/model/useUserRatings';
 import { useSkillDetailsActions } from '../model/useSkillDetailsActions';
 import { useSkillDetailsData } from '../model/useSkillDetailsData';
 import { useSkillDetailsMaterials } from '../model/useSkillDetailsMaterials';
 import { useSkillDetailsRelatedAuthors } from '../model/useSkillDetailsRelatedAuthors';
+import { useSkillDetailsViewModel } from '../model/useSkillDetailsViewModel';
 import { AuthorCard } from './AuthorCard';
 import { MaterialsSection } from './MaterialsSection';
 import { RelatedSkillsSection } from './RelatedSkillsSection';
 import { ReviewsSection } from './ReviewsSection';
 import { SkillDetailsModals } from './SkillDetailsModals';
 import { SkillOverviewCard } from './SkillOverviewCard';
-
-const LATEST_REVIEWS_LIMIT = 3;
-
-const GALLERY_IMAGES = [stock1, stock2, stock3, stock4];
 
 const SkillDetails = (): ReactElement => {
   const { authorId: authorIdParam } = useParams();
@@ -79,26 +72,17 @@ const SkillDetails = (): ReactElement => {
     isFavorite
   });
 
-  const galleryImages = useMemo(() => {
-    if (selectedSkill?.imageUrls && selectedSkill.imageUrls.length > 0) {
-      return selectedSkill.imageUrls;
-    }
-
-    if (selectedSkill?.imageUrl) {
-      return [selectedSkill.imageUrl];
-    }
-
-    if (authorInfo?.avatarUrl) {
-      return [authorInfo.avatarUrl];
-    }
-
-    return GALLERY_IMAGES;
-  }, [authorInfo, selectedSkill]);
-
-  const latestRatings = useMemo(
-    () => authorRatings.slice(0, LATEST_REVIEWS_LIMIT),
-    [authorRatings]
-  );
+  const {
+    galleryImages,
+    latestRatings,
+    skillDescription,
+    authorBio,
+    authorStatus
+  } = useSkillDetailsViewModel({
+    authorInfo,
+    selectedSkill,
+    authorRatings
+  });
 
   const handleDetailsClick = useCallback(
     (targetAuthorId: string) => {
@@ -118,13 +102,6 @@ const SkillDetails = (): ReactElement => {
       </div>
     );
   }
-
-  const skillDescription = selectedSkill.description.trim()
-    ? selectedSkill.description
-    : 'Привет! Я увлекаюсь этим навыком уже больше 10 лет — от первых занятий дома до выступлений на сцене. Научу вас основам, поделюсь любимыми техниками и помогу уверенно чувствовать себя даже без подготовки.';
-
-  const authorBio = authorInfo.bio?.trim() || skillDescription;
-  const authorStatus = authorInfo.status;
 
   return (
     <section className={styles.skillDetails}>
