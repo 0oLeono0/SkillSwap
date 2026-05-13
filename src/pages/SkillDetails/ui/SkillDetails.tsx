@@ -16,11 +16,6 @@ import { useAuth } from '@/app/providers/auth';
 import { useFavorites } from '@/app/providers/favorites';
 import { createRequest } from '@/features/requests/model/actions';
 import { ROUTES } from '@/shared/constants';
-import { materialsApi, type MaterialDto } from '@/shared/api/materials';
-import {
-  MATERIAL_TYPE_LABELS,
-  MATERIAL_TYPE_ORDER
-} from '@/shared/lib/materials';
 import stock1 from '@/shared/assets/images/stock/stock.jpg';
 import stock2 from '@/shared/assets/images/stock/stock2.jpg';
 import stock3 from '@/shared/assets/images/stock/stock3.jpg';
@@ -28,6 +23,7 @@ import stock4 from '@/shared/assets/images/stock/stock4.jpg';
 import { useAuthEntryNavigation } from '@/shared/lib/router/useAuthEntryNavigation';
 import { useUserRatings } from '@/entities/User/model/useUserRatings';
 import { useSkillDetailsData } from '../model/useSkillDetailsData';
+import { useSkillDetailsMaterials } from '../model/useSkillDetailsMaterials';
 import { AuthorCard } from './AuthorCard';
 import { MaterialsSection } from './MaterialsSection';
 import { RelatedSkillsSection } from './RelatedSkillsSection';
@@ -68,10 +64,12 @@ const SkillDetails = (): ReactElement => {
     error
   } = useSkillDetailsData({ authorId });
 
+  const { materials, materialsByType, isMaterialsLoading, materialsError } =
+    useSkillDetailsMaterials({
+      userSkillId: selectedSkill?.userSkillId
+    });
+
   const [relatedAuthors, setRelatedAuthors] = useState<CatalogAuthor[]>([]);
-  const [materials, setMaterials] = useState<MaterialDto[]>([]);
-  const [isMaterialsLoading, setIsMaterialsLoading] = useState(false);
-  const [materialsError, setMaterialsError] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [isProposalSent, setIsProposalSent] = useState(false);
@@ -80,44 +78,6 @@ const SkillDetails = (): ReactElement => {
     setIsProposalSent(false);
     setIsSuccessModalOpen(false);
   }, [selectedSkillId, authorId]);
-
-  useEffect(() => {
-    const userSkillId = selectedSkill?.userSkillId;
-    if (!userSkillId) {
-      setMaterials([]);
-      setMaterialsError(null);
-      setIsMaterialsLoading(false);
-      return;
-    }
-
-    let isMounted = true;
-    setMaterials([]);
-    setMaterialsError(null);
-    setIsMaterialsLoading(true);
-
-    const fetchMaterials = async () => {
-      try {
-        const response = await materialsApi.listByUserSkill(userSkillId);
-        if (!isMounted) return;
-        setMaterials(response.materials);
-      } catch (err) {
-        if (!isMounted) return;
-        console.error('[SkillDetails] Failed to load materials', err);
-        setMaterials([]);
-        setMaterialsError('Не удалось загрузить материалы');
-      } finally {
-        if (isMounted) {
-          setIsMaterialsLoading(false);
-        }
-      }
-    };
-
-    fetchMaterials();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [selectedSkill?.userSkillId]);
 
   const galleryImages = useMemo(() => {
     if (selectedSkill?.imageUrls && selectedSkill.imageUrls.length > 0) {
@@ -134,16 +94,6 @@ const SkillDetails = (): ReactElement => {
 
     return GALLERY_IMAGES;
   }, [authorInfo, selectedSkill]);
-
-  const materialsByType = useMemo(
-    () =>
-      MATERIAL_TYPE_ORDER.map((type) => ({
-        type,
-        label: MATERIAL_TYPE_LABELS[type],
-        items: materials.filter((material) => material.type === type)
-      })).filter((group) => group.items.length > 0),
-    [materials]
-  );
 
   const latestRatings = useMemo(
     () => authorRatings.slice(0, LATEST_REVIEWS_LIMIT),
