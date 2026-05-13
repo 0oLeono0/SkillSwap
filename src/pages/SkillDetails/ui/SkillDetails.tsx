@@ -1,23 +1,13 @@
-﻿import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactElement
-} from 'react';
+﻿import { useCallback, useMemo, type ReactElement } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styles from './skillDetails.module.scss';
-import { useAuth } from '@/app/providers/auth';
-
-import { useFavorites } from '@/app/providers/favorites';
-import { createRequest } from '@/features/requests/model/actions';
 import { ROUTES } from '@/shared/constants';
 import stock1 from '@/shared/assets/images/stock/stock.jpg';
 import stock2 from '@/shared/assets/images/stock/stock2.jpg';
 import stock3 from '@/shared/assets/images/stock/stock3.jpg';
 import stock4 from '@/shared/assets/images/stock/stock4.jpg';
-import { useAuthEntryNavigation } from '@/shared/lib/router/useAuthEntryNavigation';
 import { useUserRatings } from '@/entities/User/model/useUserRatings';
+import { useSkillDetailsActions } from '../model/useSkillDetailsActions';
 import { useSkillDetailsData } from '../model/useSkillDetailsData';
 import { useSkillDetailsMaterials } from '../model/useSkillDetailsMaterials';
 import { useSkillDetailsRelatedAuthors } from '../model/useSkillDetailsRelatedAuthors';
@@ -36,8 +26,6 @@ const SkillDetails = (): ReactElement => {
   const { authorId: authorIdParam } = useParams();
   const authorId = authorIdParam ?? '';
   const navigate = useNavigate();
-  const { navigateToLogin, navigateToRegister } = useAuthEntryNavigation();
-  const { isAuthenticated, user, accessToken } = useAuth();
   const {
     ratings: authorRatings,
     averageRating,
@@ -45,8 +33,6 @@ const SkillDetails = (): ReactElement => {
     isLoading: isRatingsLoading,
     error: ratingsError
   } = useUserRatings(authorId);
-
-  const { toggleFavorite, isFavorite } = useFavorites();
 
   const {
     currentAuthor,
@@ -60,6 +46,28 @@ const SkillDetails = (): ReactElement => {
     error
   } = useSkillDetailsData({ authorId });
 
+  const {
+    isFavorite,
+    isCurrentAuthorFavorite,
+    favoriteButtonLabel,
+    isAuthModalOpen,
+    isSuccessModalOpen,
+    proposeButtonLabel,
+    proposeButtonStyle,
+    handleToggleFavorite,
+    handleAuthorFavoriteClick,
+    handleProposeExchange,
+    handleCloseAuthModal,
+    handleCloseSuccessModal,
+    handleLoginRedirect,
+    handleRegisterRedirect
+  } = useSkillDetailsActions({
+    authorId,
+    currentAuthor,
+    selectedSkill,
+    selectedSkillId
+  });
+
   const { materials, materialsByType, isMaterialsLoading, materialsError } =
     useSkillDetailsMaterials({
       userSkillId: selectedSkill?.userSkillId
@@ -70,15 +78,6 @@ const SkillDetails = (): ReactElement => {
     selectedSkill,
     isFavorite
   });
-
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-  const [isProposalSent, setIsProposalSent] = useState(false);
-
-  useEffect(() => {
-    setIsProposalSent(false);
-    setIsSuccessModalOpen(false);
-  }, [selectedSkillId, authorId]);
 
   const galleryImages = useMemo(() => {
     if (selectedSkill?.imageUrls && selectedSkill.imageUrls.length > 0) {
@@ -101,78 +100,12 @@ const SkillDetails = (): ReactElement => {
     [authorRatings]
   );
 
-  const handleToggleFavorite = useCallback(
-    (targetAuthorId: string) => {
-      toggleFavorite(targetAuthorId);
-    },
-    [toggleFavorite]
-  );
-
-  const handleAuthorFavoriteClick = useCallback(() => {
-    if (isAuthenticated) {
-      if (authorId) {
-        handleToggleFavorite(authorId);
-      }
-    } else {
-      setIsAuthModalOpen(true);
-    }
-  }, [authorId, handleToggleFavorite, isAuthenticated]);
-
-  const isCurrentAuthorFavorite = useMemo(
-    () => (authorId ? isFavorite(authorId) : false),
-    [authorId, isFavorite]
-  );
-
-  const favoriteButtonLabel = isCurrentAuthorFavorite
-    ? 'Убрать из избранного'
-    : 'Добавить в избранное';
-
   const handleDetailsClick = useCallback(
     (targetAuthorId: string) => {
       navigate(ROUTES.SKILL_DETAILS.replace(':authorId', targetAuthorId));
     },
     [navigate]
   );
-
-  const handleProposeExchange = useCallback(async () => {
-    if (!selectedSkill || !currentAuthor) {
-      return;
-    }
-
-    if (!isAuthenticated || !user || !accessToken) {
-      setIsAuthModalOpen(true);
-      return;
-    }
-
-    try {
-      await createRequest(accessToken, {
-        toUserId: currentAuthor.id,
-        userSkillId: selectedSkill.userSkillId
-      });
-      setIsProposalSent(true);
-      setIsSuccessModalOpen(true);
-    } catch (err) {
-      console.error('[SkillDetails] Failed to create request', err);
-    }
-  }, [accessToken, currentAuthor, isAuthenticated, selectedSkill, user]);
-
-  const handleCloseAuthModal = useCallback(() => {
-    setIsAuthModalOpen(false);
-  }, []);
-
-  const handleCloseSuccessModal = useCallback(() => {
-    setIsSuccessModalOpen(false);
-  }, []);
-
-  const handleLoginRedirect = useCallback(() => {
-    setIsAuthModalOpen(false);
-    navigateToLogin();
-  }, [navigateToLogin]);
-
-  const handleRegisterRedirect = useCallback(() => {
-    setIsAuthModalOpen(false);
-    navigateToRegister();
-  }, [navigateToRegister]);
 
   if (isLoading) {
     return <div className={styles.state}>Загрузка данных…</div>;
@@ -192,17 +125,6 @@ const SkillDetails = (): ReactElement => {
 
   const authorBio = authorInfo.bio?.trim() || skillDescription;
   const authorStatus = authorInfo.status;
-
-  const proposeButtonLabel = isProposalSent
-    ? 'Обмен предложен'
-    : 'Предложить обмен';
-  const proposeButtonInlineStyle = isProposalSent
-    ? {
-        backgroundColor: '#fff',
-        color: '#000',
-        borderColor: 'var(--button-color-accent)'
-      }
-    : undefined;
 
   return (
     <section className={styles.skillDetails}>
@@ -230,7 +152,7 @@ const SkillDetails = (): ReactElement => {
           favoriteButtonLabel={favoriteButtonLabel}
           isFavoriteDisabled={!authorId}
           proposeButtonLabel={proposeButtonLabel}
-          proposeButtonStyle={proposeButtonInlineStyle}
+          proposeButtonStyle={proposeButtonStyle}
           onFavoriteClick={handleAuthorFavoriteClick}
           onProposeExchange={handleProposeExchange}
         />
