@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import type { RouteObject } from 'react-router-dom';
-import Catalog from '@/pages/Catalog/ui/Catalog';
+import Catalog from '@/pages/Catalog';
 import Create from '@/pages/Create/ui/Create';
 import { ProfileLayout } from '@/pages/Profile';
 import SkillDetails from '@/pages/SkillDetails';

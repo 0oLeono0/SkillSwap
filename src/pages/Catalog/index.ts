@@ -1,5 +1,2 @@
-import { lazy } from 'react';
-
-export const CatalogPage = lazy(() => import('./ui/Catalog'));
-
-export default CatalogPage;
+export { default } from './ui';
+export { Catalog } from './ui';
