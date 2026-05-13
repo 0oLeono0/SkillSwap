@@ -99,6 +99,14 @@ export type UseSkillDetailsExchangeResult = {
   handleCloseSuccessModal: () => void;
 };
 
+export type UseSkillDetailsAuthModalResult = {
+  isAuthModalOpen: boolean;
+  handleOpenAuthModal: () => void;
+  handleCloseAuthModal: () => void;
+  handleLoginRedirect: () => void;
+  handleRegisterRedirect: () => void;
+};
+
 export type UseSkillDetailsActionsResult = {
   isFavorite: (authorId: string) => boolean;
   isCurrentAuthorFavorite: boolean;
