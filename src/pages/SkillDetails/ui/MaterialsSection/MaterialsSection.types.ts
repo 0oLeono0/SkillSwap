@@ -1,4 +1,4 @@
-import type { SkillDetailsMaterialGroup } from '@/pages/SkillDetails/model/types';
+import type { SkillDetailsMaterialGroup } from '@/pages/SkillDetails/model';
 
 export type MaterialGroup = SkillDetailsMaterialGroup;
 

@@ -2,12 +2,14 @@ import type { ReactElement } from 'react';
 import { useParams } from 'react-router-dom';
 import styles from './skillDetails.module.scss';
 import { useUserRatings } from '@/entities/User/model/useUserRatings';
-import { useSkillDetailsActions } from '../model/useSkillDetailsActions';
-import { useSkillDetailsData } from '../model/useSkillDetailsData';
-import { useSkillDetailsMaterials } from '../model/useSkillDetailsMaterials';
-import { useSkillDetailsNavigation } from '../model/useSkillDetailsNavigation';
-import { useSkillDetailsRelatedAuthors } from '../model/useSkillDetailsRelatedAuthors';
-import { useSkillDetailsViewModel } from '../model/useSkillDetailsViewModel';
+import {
+  useSkillDetailsActions,
+  useSkillDetailsData,
+  useSkillDetailsMaterials,
+  useSkillDetailsNavigation,
+  useSkillDetailsRelatedAuthors,
+  useSkillDetailsViewModel
+} from '../model';
 import { AuthorCard } from './AuthorCard';
 import { MaterialsSection } from './MaterialsSection';
 import { RelatedSkillsSection } from './RelatedSkillsSection';
