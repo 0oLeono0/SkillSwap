@@ -1,1 +1,2 @@
-export { default as SkillDetails } from './ui/SkillDetails';
+export { default } from './ui';
+export { SkillDetails } from './ui';

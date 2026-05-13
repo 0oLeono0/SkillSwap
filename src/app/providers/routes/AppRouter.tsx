@@ -9,7 +9,7 @@ import { GuestOnlyRoute } from '@/shared/lib/GuestOnlyRoute/GuestOnlyRoute';
 import { ProtectedRoute } from '@/shared/lib/ProtectedRoute/ProtectedRoute';
 import Catalog from '@/pages/Catalog/ui/Catalog';
 import { AuthStepOne, AuthStepTwo, AuthStepThree } from '@/pages/Auth';
-import SkillDetails from '@/pages/SkillDetails/ui/SkillDetails';
+import SkillDetails from '@/pages/SkillDetails';
 import Create from '@/pages/Create/ui/Create';
 import { AuthLayout } from '@/app/layouts/AuthLayout';
 import {
