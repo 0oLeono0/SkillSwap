@@ -2,7 +2,7 @@ import type { CSSProperties, Dispatch, SetStateAction } from 'react';
 import type {
   CatalogAuthor,
   CatalogAuthorSkill
-} from '@/pages/Catalog/model/catalogData';
+} from '@/entities/CatalogAuthor';
 import type { MaterialDto } from '@/shared/api/materials';
 import type { UserRatingDto } from '@/shared/api/users';
 import type { UserStatus } from '@/shared/types/userStatus';

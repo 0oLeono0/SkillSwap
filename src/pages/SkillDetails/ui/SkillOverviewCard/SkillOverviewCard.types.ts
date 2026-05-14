@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { CatalogAuthorSkill } from '@/pages/Catalog/model/catalogData';
+import type { CatalogAuthorSkill } from '@/entities/CatalogAuthor';
 
 export type SkillOverviewCardProps = {
   selectedSkill: CatalogAuthorSkill;

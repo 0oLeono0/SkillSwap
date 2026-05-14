@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   loadCatalogAuthors,
   type CatalogAuthor
-} from '@/pages/Catalog/model/catalogData';
+} from '@/entities/CatalogAuthor';
 import {
   SKILL_DETAILS_RELATED_AUTHORS_LIMIT,
   SKILL_DETAILS_RELATED_AUTHORS_PAGE

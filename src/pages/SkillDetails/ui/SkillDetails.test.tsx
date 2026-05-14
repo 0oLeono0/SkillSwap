@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ROUTES } from '@/shared/constants';
 import { SkillCategories } from '@/shared/lib/constants';
-import { loadCatalogAuthors } from '@/pages/Catalog/model/catalogData';
+import { loadCatalogAuthors } from '@/entities/CatalogAuthor';
 import { materialsApi } from '@/shared/api/materials';
 import { useUserRatings } from '@/entities/User/model/useUserRatings';
 import SkillDetails from './SkillDetails';
@@ -11,7 +11,7 @@ import userEvent from '@testing-library/user-event';
 const mockToggleFavorite = jest.fn();
 const mockIsFavorite = jest.fn(() => false);
 
-jest.mock('@/pages/Catalog/model/catalogData', () => ({
+jest.mock('@/entities/CatalogAuthor', () => ({
   loadCatalogAuthors: jest.fn()
 }));
 

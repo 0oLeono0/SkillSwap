@@ -1,4 +1,4 @@
-import type { CatalogAuthorSkill } from '@/pages/Catalog/model/catalogData';
+import type { CatalogAuthorSkill } from '@/entities/CatalogAuthor';
 import type { SkillDetailsAuthorInfo } from '@/pages/SkillDetails/model';
 import type { UserStatus } from '@/shared/types/userStatus';
 

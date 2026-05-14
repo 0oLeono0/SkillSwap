@@ -1,4 +1,4 @@
-import type { CatalogAuthor } from '@/pages/Catalog/model/catalogData';
+import type { CatalogAuthor } from '@/entities/CatalogAuthor';
 
 export type RelatedSkillsSectionProps = {
   authors: CatalogAuthor[];

@@ -7,8 +7,8 @@ import type {
   CatalogAuthor,
   CatalogAuthorSkill,
   CatalogSearchResponse
-} from '@/pages/Catalog/model/catalogData';
-import { loadCatalogAuthors } from '@/pages/Catalog/model/catalogData';
+} from '@/entities/CatalogAuthor';
+import { loadCatalogAuthors } from '@/entities/CatalogAuthor';
 import type { SkillsListProps } from '@/widgets/SkillsList/types';
 import Catalog from './Catalog';
 
@@ -277,7 +277,7 @@ jest.mock('@/features/Filter/model/filterBaseDataStore', () => ({
   loadFiltersBaseData: jest.fn()
 }));
 
-jest.mock('@/pages/Catalog/model/catalogData', () => ({
+jest.mock('@/entities/CatalogAuthor', () => ({
   loadCatalogAuthors: jest.fn()
 }));
 

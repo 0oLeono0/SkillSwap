@@ -3,7 +3,7 @@ import {
   loadCatalogAuthors,
   type CatalogAuthor,
   type CatalogAuthorSkill
-} from '@/pages/Catalog/model/catalogData';
+} from '@/entities/CatalogAuthor';
 import { normalizeUserStatus } from '@/shared/types/userStatus';
 import {
   SKILL_DETAILS_AUTHOR_LOAD_ERROR,

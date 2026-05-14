@@ -31,7 +31,7 @@ import { Title } from '@/shared/ui/Title';
 import {
   loadCatalogAuthors,
   type CatalogAuthor
-} from '@/pages/Catalog/model/catalogData';
+} from '@/entities/CatalogAuthor';
 import { Button } from '@/shared/ui/button/Button';
 import { ROUTES } from '@/shared/constants';
 import { useAuth } from '@/app/providers/auth';

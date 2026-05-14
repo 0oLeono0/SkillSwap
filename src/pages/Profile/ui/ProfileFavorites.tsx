@@ -13,7 +13,7 @@ import { SkillsList } from '@/widgets/SkillsList';
 import {
   loadCatalogAuthors,
   type CatalogAuthor
-} from '@/pages/Catalog/model/catalogData';
+} from '@/entities/CatalogAuthor';
 import { useFavorites } from '@/app/providers/favorites';
 import { ROUTES } from '@/shared/constants';
 
